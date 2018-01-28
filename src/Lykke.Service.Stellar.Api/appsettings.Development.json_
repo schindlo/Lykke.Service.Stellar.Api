@@ -1,0 +1,13 @@
+﻿{
+  "Stellar.ApiService": {
+    "Db": {
+      "LogsConnString": "UseDevelopmentStorage=true"
+    }
+  },
+  "SlackNotifications": {
+    "AzureQueue": {
+      "ConnectionString": "UseDevelopmentStorage=true",
+      "QueueName": "slack-notifications"
+    }
+  }
+}
