@@ -16,6 +16,7 @@
 *.tmp
 *.user
 *.lock.json
+*.userprefs
 
 # Well-known infrastructure folders
 /packages/
