@@ -1,5 +1,5 @@
 ﻿{
-  "Stellar.ApiService": {
+  "StellarApiService": {
     "Db": {
       "LogsConnString": "UseDevelopmentStorage=true"
     }

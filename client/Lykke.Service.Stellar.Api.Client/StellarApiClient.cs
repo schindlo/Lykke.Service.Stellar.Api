@@ -3,11 +3,11 @@ using Common.Log;
 
 namespace Lykke.Service.Stellar.Api.Client
 {
-    public class Stellar.ApiClient : IStellar.ApiClient, IDisposable
+    public class StellarApiClient : IStellarApiClient, IDisposable
     {
         private readonly ILog _log;
 
-        public Stellar.ApiClient(string serviceUrl, ILog log)
+        public StellarApiClient(string serviceUrl, ILog log)
         {
             _log = log;
         }

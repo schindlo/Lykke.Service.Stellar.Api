@@ -2,7 +2,7 @@ using System;
 
 namespace Lykke.Service.Stellar.Api.Client 
 {
-    public class Stellar.ApiServiceClientSettings 
+    public class StellarApiServiceClientSettings 
     {
         public string ServiceUrl {get; set;}
     }

@@ -1,6 +1,6 @@
 ﻿namespace Lykke.Service.Stellar.Api.Core.Settings.ServiceSettings
 {
-    public class Stellar.ApiSettings
+    public class StellarApiSettings
     {
         public DbSettings Db { get; set; }
     }
