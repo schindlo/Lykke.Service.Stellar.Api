@@ -59,6 +59,9 @@
     <ProjectReference Include="..\Lykke.Service.Stellar.Api.Services\Lykke.Service.Stellar.Api.Services.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Helpers\" />
+  </ItemGroup>
   <Target Name="PrepublishScript" BeforeTargets="PrepareForPublish">
     <ItemGroup>
       <DocFile Include="$(OutputPath)$(AssemblyName).xml" />
