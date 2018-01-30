@@ -12,8 +12,6 @@ namespace Lykke.Service.Stellar.Api.Core.Domain
         public string Name { get; }
         public int Accuracy { get; }
 
-        // TODO: address / accuracy?
-        // https://www.stellar.org/developers/guides/concepts/assets.html
-        public static Asset Stellar { get; } = new Asset("XLM", "", "Stellar", 7);
+        public static Asset Stellar { get; } = new Asset("XLM", "", "Stellar Lumen", 7);
     }
 }
