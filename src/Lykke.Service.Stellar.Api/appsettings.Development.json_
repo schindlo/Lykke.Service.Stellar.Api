@@ -2,6 +2,7 @@
   "StellarApiService": {
     "Db": {
       "LogsConnString": "UseDevelopmentStorage=true"
+      "DataConnString": "UseDevelopmentStorage=true"
     }
   },
   "SlackNotifications": {

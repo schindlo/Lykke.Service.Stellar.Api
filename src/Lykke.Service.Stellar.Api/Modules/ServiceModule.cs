@@ -1,6 +1,8 @@
 ﻿using Autofac;
 using Autofac.Extensions.DependencyInjection;
 using Common.Log;
+using Lykke.Service.Stellar.Api.AzureRepositories.Transaction;
+using Lykke.Service.Stellar.Api.Core.Domain.Transaction;
 using Lykke.Service.Stellar.Api.Core.Services;
 using Lykke.Service.Stellar.Api.Core.Settings.ServiceSettings;
 using Lykke.Service.Stellar.Api.Services;
@@ -45,6 +47,11 @@ namespace Lykke.Service.Stellar.Api.Modules
 
             builder.RegisterType<ShutdownManager>()
                 .As<IShutdownManager>();
+
+            var dataConnStringManager = _settings.ConnectionString(x => x.Db.DataConnString);
+            builder.RegisterType<TxBroadcastRepository>()
+                .As<ITxBroadcastRepository>()
+                .WithParameter(TypedParameter.From(dataConnStringManager));
 
             builder.RegisterType<StellarService>()
                 .As<IStellarService>()

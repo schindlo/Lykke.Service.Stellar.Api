@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Net.Http;
 using System.Threading.Tasks;
+using Lykke.Service.Stellar.Api.Core.Domain.Transaction;
 using Lykke.Service.Stellar.Api.Core.Exceptions;
 using Lykke.Service.Stellar.Api.Core.Services;
 using Newtonsoft.Json.Linq;
@@ -12,7 +13,19 @@ namespace Lykke.Service.Stellar.Api.Services
     {
         private string _horizonUrl = "https://horizon-testnet.stellar.org/";
 
-        public async Task BroadcastAsync(Guid operationId, string xdrBase64)
+        private readonly ITxBroadcastRepository _broadcastRepository;
+
+        public StellarService(ITxBroadcastRepository broadcastRepository)
+        {
+            _broadcastRepository = broadcastRepository;
+        }
+
+        public async Task<TxBroadcast> GetTxBroadcastAsync(Guid operationId)
+        {
+            return await _broadcastRepository.GetAsync(operationId);
+        }
+
+        public async Task BroadcastTxAsync(Guid operationId, string xdrBase64)
         {
             try
             {
@@ -21,14 +34,26 @@ namespace Lykke.Service.Stellar.Api.Services
                 {
                     throw new ServiceException($"Transaction hash is empty");
                 }
+
+                var broadcast = new TxBroadcast
+                {
+                    OperationId = operationId,
+                    State = TxBroadcastState.Completed,
+                    Hash = hash
+                };
+                await _broadcastRepository.AddAsync(broadcast);
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
-                // TODO: update presistence: failed
+                var broadcast = new TxBroadcast
+                {
+                    OperationId = operationId,
+                    State = TxBroadcastState.Failed
+                };
+                await _broadcastRepository.AddAsync(broadcast);
+
                 throw new ServiceException($"Broadcasting transaction failed (operationId: {operationId}).", ex);
             }
-
-            // TODO: update presistence: broadcasted
         }
 
         private async Task<string> PostTransactionAsync(string signedTx)

@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Lykke.Service.BlockchainApi.Contract.Transactions;
 using Lykke.Service.Stellar.Api.Core.Services;
 using Lykke.Common.Api.Contract.Responses;
+using Microsoft.AspNetCore.Http;
 
 namespace Lykke.Service.Stellar.Api.Controllers
 {
@@ -26,7 +27,13 @@ namespace Lykke.Service.Stellar.Api.Controllers
                 return BadRequest();
             }
 
-            await _stellarService.BroadcastAsync(request.OperationId, request.SignedTransaction);
+            var broadcast = await _stellarService.GetTxBroadcastAsync(request.OperationId);
+            if (broadcast != null)
+            {
+                return new StatusCodeResult(StatusCodes.Status409Conflict);
+            }
+
+            await _stellarService.BroadcastTxAsync(request.OperationId, request.SignedTransaction);
 
             return Ok();
         }
