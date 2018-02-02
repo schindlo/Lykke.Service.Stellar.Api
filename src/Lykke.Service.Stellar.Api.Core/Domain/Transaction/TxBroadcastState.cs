@@ -2,7 +2,8 @@
 {
     public enum TxBroadcastState
     {
-        Completed = 0,
-        Failed = 1
+        InProgress = 0,
+        Completed = 1,
+        Failed = 2
     }
 }

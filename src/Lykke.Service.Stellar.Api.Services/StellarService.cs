@@ -56,6 +56,11 @@ namespace Lykke.Service.Stellar.Api.Services
             }
         }
 
+        public async Task DeleteTxBroadcastAsync(Guid operationId)
+        {
+            await _broadcastRepository.DeleteAsync(operationId);
+        }
+
         private async Task<string> PostTransactionAsync(string signedTx)
         {
             try
