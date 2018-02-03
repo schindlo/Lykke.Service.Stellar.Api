@@ -2,6 +2,7 @@
 using System.Threading.Tasks;
 using Lykke.Service.Stellar.Api.Core.Domain;
 using Lykke.Service.Stellar.Api.Core.Domain.Transaction;
+using Lykke.Service.Stellar.Api.Core.Domain.Balance;
 
 namespace Lykke.Service.Stellar.Api.Core.Services
 {
@@ -22,5 +23,9 @@ namespace Lykke.Service.Stellar.Api.Core.Services
         Task<TxBuild> GetTxBuildAsync(Guid operationId);
 
         Task<string> BuildTransactionAsync(Guid operationId, string fromAddress, string toAddress, long amount);
+
+        Task<Boolean> IsBalanceObservedAsync(string address);
+
+        Task AddBalanceObservationAsync(string address);          Task DeleteBalanceObservationAsync(string address);          Task<WalletBalance[]> GetBalancesAsync(); 
     }
 }

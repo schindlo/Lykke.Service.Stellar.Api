@@ -12,6 +12,7 @@
     <Folder Include="Services\" />
     <Folder Include="Exceptions\" />
     <Folder Include="Domain\Transaction\" />
+    <Folder Include="Domain\Balance\" />
   </ItemGroup>
 
   <ItemGroup>

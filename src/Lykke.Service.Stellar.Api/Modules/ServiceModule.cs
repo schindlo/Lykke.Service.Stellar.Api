@@ -2,7 +2,9 @@
 using Autofac.Extensions.DependencyInjection;
 using Common.Log;
 using Lykke.Service.Stellar.Api.AzureRepositories.Transaction;
+using Lykke.Service.Stellar.Api.AzureRepositories.Balance;
 using Lykke.Service.Stellar.Api.Core.Domain.Transaction;
+using Lykke.Service.Stellar.Api.Core.Domain.Balance;
 using Lykke.Service.Stellar.Api.Core.Services;
 using Lykke.Service.Stellar.Api.Core.Settings.ServiceSettings;
 using Lykke.Service.Stellar.Api.Services;
@@ -55,6 +57,10 @@ namespace Lykke.Service.Stellar.Api.Modules
 
             builder.RegisterType<TxBuildRepository>()
                 .As<ITxBuildRepository>()
+                .WithParameter(TypedParameter.From(dataConnStringManager));
+
+            builder.RegisterType<BalanceRepository>()
+                .As<IBalanceRepository>()
                 .WithParameter(TypedParameter.From(dataConnStringManager));
 
             builder.RegisterType<StellarService>()

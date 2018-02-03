@@ -6,6 +6,7 @@ using StellarGenerated = Stellar.Generated;
 using StellarSdk;
 using StellarSdk.Model;
 using Lykke.Service.Stellar.Api.Core.Domain.Transaction;
+using Lykke.Service.Stellar.Api.Core.Domain.Balance;
 using Lykke.Service.Stellar.Api.Core.Exceptions;
 using Lykke.Service.Stellar.Api.Core.Services;
 using Lykke.Service.Stellar.Api.Core.Domain;
@@ -18,11 +19,13 @@ namespace Lykke.Service.Stellar.Api.Services
 
         private readonly ITxBroadcastRepository _broadcastRepository;
         private readonly ITxBuildRepository _buildRepository;
+        private readonly IBalanceRepository _balanceRepository;
 
-        public StellarService(ITxBroadcastRepository broadcastRepository, ITxBuildRepository buildRepository)
+        public StellarService(ITxBroadcastRepository broadcastRepository, ITxBuildRepository buildRepository, IBalanceRepository balanceRepository)
         {
             _broadcastRepository = broadcastRepository;
             _buildRepository = buildRepository;
+            _balanceRepository = balanceRepository;
         }
 
         public Boolean IsAddressValid(string address)
@@ -185,6 +188,26 @@ namespace Lykke.Service.Stellar.Api.Services
             _buildRepository.AddAsync(build);
 
             return xdrBase64;
+        }
+
+        public async Task<Boolean> IsBalanceObservedAsync(string address)
+        {
+            return await _balanceRepository.GetAsync(address) != null;
+        }
+
+        public async Task AddBalanceObservationAsync(string address)
+        {
+            await _balanceRepository.AddAsync(address);
+        }
+
+        public async Task DeleteBalanceObservationAsync(string address)
+        {
+            await _balanceRepository.DeleteAsync(address);
+        }
+
+        public async Task<WalletBalance[]> GetBalancesAsync()
+        {
+            return await _balanceRepository.GetAsync();
         }
     }
 }
