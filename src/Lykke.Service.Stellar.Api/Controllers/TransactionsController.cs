@@ -9,7 +9,7 @@ using Lykke.Service.Stellar.Api.Core.Services;
 namespace Lykke.Service.Stellar.Api.Controllers
 {
     [Route("api/transactions")]
-    public class TransactionsController: Controller
+    public class TransactionsController : Controller
     {
         private readonly IStellarService _stellarService;
 

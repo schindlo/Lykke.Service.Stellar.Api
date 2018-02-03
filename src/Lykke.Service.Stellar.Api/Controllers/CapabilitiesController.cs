@@ -6,7 +6,7 @@ using Lykke.Service.BlockchainApi.Contract.Common;
 
 namespace Lykke.Service.Stellar.Api.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/capabilities")]
     public class CapabilitiesController : Controller
     {
         

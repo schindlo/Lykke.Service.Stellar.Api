@@ -6,6 +6,8 @@ namespace Lykke.Service.Stellar.Api.Core.Services
 {
     public interface IStellarService
     {
+        Boolean IsAddressValid(string address);
+
         Task<TxBroadcast> GetTxBroadcastAsync(Guid operationId);
 
         Task BroadcastTxAsync(Guid operationId, string xdrBase64);

@@ -1,4 +1,5 @@
 ﻿using System;
+using StellarBase = Stellar;
 using System.Collections.Generic;
 using System.Net.Http;
 using System.Threading.Tasks;
@@ -18,6 +19,19 @@ namespace Lykke.Service.Stellar.Api.Services
         public StellarService(ITxBroadcastRepository broadcastRepository)
         {
             _broadcastRepository = broadcastRepository;
+        }
+
+        public Boolean IsAddressValid(string address)
+        {
+            try
+            {
+                StellarBase.StrKey.DecodeCheck(StellarBase.VersionByte.ed25519Publickey, address);
+                return true;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
         }
 
         public async Task<TxBroadcast> GetTxBroadcastAsync(Guid operationId)

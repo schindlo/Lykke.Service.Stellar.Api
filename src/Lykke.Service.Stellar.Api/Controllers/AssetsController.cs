@@ -12,7 +12,7 @@ using Lykke.Service.BlockchainApi.Contract.Assets;
 
 namespace Lykke.Service.Stellar.Api.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/assets")]
     public class AssetsController : Controller
     {
         public AssetsController()

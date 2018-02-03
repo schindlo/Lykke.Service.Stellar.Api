@@ -9,7 +9,7 @@ using Swashbuckle.AspNetCore.SwaggerGen;
 namespace Lykke.Service.Stellar.Api.Controllers
 {
     // NOTE: See https://lykkex.atlassian.net/wiki/spaces/LKEWALLET/pages/35755585/Add+your+app+to+Monitoring
-    [Route("api/[controller]")]
+    [Route("api/isalive")]
     public class IsAliveController : Controller
     {
         private readonly IHealthService _healthService;
@@ -24,7 +24,7 @@ namespace Lykke.Service.Stellar.Api.Controllers
         /// </summary>
         /// <returns></returns>
         [HttpGet]
-        [SwaggerOperation("IsAlive")]
+        [SwaggerOperation("isalive")]
         [ProducesResponseType(typeof(IsAliveResponse), (int)HttpStatusCode.OK)]
         [ProducesResponseType(typeof(ErrorResponse), (int)HttpStatusCode.InternalServerError)]
         public IActionResult Get()
