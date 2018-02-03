@@ -46,10 +46,10 @@ namespace Lykke.Service.Stellar.Api.Controllers
             }
 
             var amount = Int64.Parse(request.Amount);
-            var fee = await _stellarService.GetFeeAsync();
-            var fromAddressBalance = await _stellarService.GetAddressBalanceAsync(request.FromAddress, true);
+            var fees = await _stellarService.GetFeesAsync();
+            var fromAddressBalance = await _stellarService.GetAddressBalanceAsync(request.FromAddress, fees);
 
-            var requiredBalance = request.IncludeFee ? amount : amount + fee;
+            var requiredBalance = request.IncludeFee ? amount : amount + fees.BaseFee;
             if (requiredBalance >= fromAddressBalance)
             {
                 return StatusCode(StatusCodes.Status406NotAcceptable,

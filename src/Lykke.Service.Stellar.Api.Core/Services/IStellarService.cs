@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
+using Lykke.Service.Stellar.Api.Core.Domain;
 using Lykke.Service.Stellar.Api.Core.Domain.Transaction;
 
 namespace Lykke.Service.Stellar.Api.Core.Services
@@ -14,9 +15,9 @@ namespace Lykke.Service.Stellar.Api.Core.Services
 
         Task DeleteTxBroadcastAsync(Guid operationId);
 
-        Task<long> GetAddressBalanceAsync(string address, bool excludeMinBalance);
+        Task<Fees> GetFeesAsync();
 
-        Task<long> GetFeeAsync();
+        Task<long> GetAddressBalanceAsync(string address, Fees fees = null);
 
         Task<string> BuildTransactionAsync(Guid operationId, string fromAddress, string toAddress, long amount);
     }

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Threading.Tasks;
 using StellarBase = Stellar;
 using StellarGenerated = Stellar.Generated;
@@ -7,6 +8,7 @@ using StellarSdk.Model;
 using Lykke.Service.Stellar.Api.Core.Domain.Transaction;
 using Lykke.Service.Stellar.Api.Core.Exceptions;
 using Lykke.Service.Stellar.Api.Core.Services;
+using Lykke.Service.Stellar.Api.Core.Domain;
 
 namespace Lykke.Service.Stellar.Api.Services
 {
@@ -103,22 +105,71 @@ namespace Lykke.Service.Stellar.Api.Services
             return txDetails;
         }
 
-        public async Task<long> GetAddressBalanceAsync(string address, bool excludeMinBalance)
+        public async Task<Fees> GetFeesAsync()
         {
-            // TODO
-            return 0;
+            LedgerCallBuilder builder = new LedgerCallBuilder(_horizonUrl);
+            builder.order("desc").limit(1);
+            var ledgers = await builder.Call();
+
+            var latest = ledgers.Embedded.Records[0];
+            var fees = new Fees
+            {
+                BaseFee = latest.BaseFee,
+                BaseReserve = Convert.ToDecimal(latest.BaseReserve)
+            };
+            return fees;
         }
 
-        public async Task<long> GetFeeAsync()
+        public async Task<long> GetAddressBalanceAsync(string address, Fees fees = null)
         {
-            // TODO: use dynamic fee
-            return 100;
+            var builder = new AccountCallBuilder(_horizonUrl);
+            builder.accountId(address);
+            var accountDetails = await builder.Call();
+
+            var nativeBalance = accountDetails.Balances.Single(b => "native".Equals(b.AssetType, StringComparison.OrdinalIgnoreCase));
+            // exclude min account balance
+            long minAccountBalance = 0;
+            if (fees != null)
+            {
+                long entries = accountDetails.Signers.Length + accountDetails.SubentryCount;
+                var minBalance = (2 + entries) * fees.BaseReserve * StellarBase.One.Value;
+                minAccountBalance = Convert.ToInt64(minBalance);
+            }
+
+            var balance = Convert.ToInt64(Decimal.Parse(nativeBalance.Balance) * StellarBase.One.Value);
+            var available = balance - minAccountBalance;
+            return available;
         }
 
         public async Task<string> BuildTransactionAsync(Guid operationId, string fromAddress, string toAddress, long amount)
         {
-            // TODO
-            return string.Empty;
+            var builder = new AccountCallBuilder(_horizonUrl);
+            builder.accountId(fromAddress);
+            var accountDetails = await builder.Call();
+            var sequence = Int64.Parse(accountDetails.Sequence);
+
+            var fromKeyPair = StellarBase.KeyPair.FromAddress(fromAddress);
+            var fromAccount = new StellarBase.Account(fromKeyPair, sequence);
+
+            var toKeyPair = StellarBase.KeyPair.FromAddress(toAddress);
+
+            var asset = new StellarBase.Asset();
+            var operation = new StellarBase.PaymentOperation.Builder(toKeyPair, asset, amount)
+                                           .SetSourceAccount(fromKeyPair)
+                                           .Build();
+
+            fromAccount.IncrementSequenceNumber();
+
+            var tx = new StellarBase.Transaction.Builder(fromAccount)
+                                    .AddOperation(operation)
+                                    .Build();
+
+            var xdr = tx.ToXDR();
+            var writer = new StellarGenerated.ByteWriter();
+            StellarGenerated.Transaction.Encode(writer, xdr);
+            var xdrBase64 = Convert.ToBase64String(writer.ToArray());
+
+            return xdrBase64;
         }
     }
 }
