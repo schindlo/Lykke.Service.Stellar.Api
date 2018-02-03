@@ -53,6 +53,10 @@ namespace Lykke.Service.Stellar.Api.Modules
                 .As<ITxBroadcastRepository>()
                 .WithParameter(TypedParameter.From(dataConnStringManager));
 
+            builder.RegisterType<TxBuildRepository>()
+                .As<ITxBuildRepository>()
+                .WithParameter(TypedParameter.From(dataConnStringManager));
+
             builder.RegisterType<StellarService>()
                 .As<IStellarService>()
                 .SingleInstance();

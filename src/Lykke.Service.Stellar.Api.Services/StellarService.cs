@@ -17,10 +17,12 @@ namespace Lykke.Service.Stellar.Api.Services
         private string _horizonUrl = "https://horizon-testnet.stellar.org/";
 
         private readonly ITxBroadcastRepository _broadcastRepository;
+        private readonly ITxBuildRepository _buildRepository;
 
-        public StellarService(ITxBroadcastRepository broadcastRepository)
+        public StellarService(ITxBroadcastRepository broadcastRepository, ITxBuildRepository buildRepository)
         {
             _broadcastRepository = broadcastRepository;
+            _buildRepository = buildRepository;
         }
 
         public Boolean IsAddressValid(string address)
@@ -141,6 +143,11 @@ namespace Lykke.Service.Stellar.Api.Services
             return available;
         }
 
+        public async Task<TxBuild> GetTxBuildAsync(Guid operationId)
+        {
+            return await _buildRepository.GetAsync(operationId);
+        }
+
         public async Task<string> BuildTransactionAsync(Guid operationId, string fromAddress, string toAddress, long amount)
         {
             var builder = new AccountCallBuilder(_horizonUrl);
@@ -168,6 +175,14 @@ namespace Lykke.Service.Stellar.Api.Services
             var writer = new StellarGenerated.ByteWriter();
             StellarGenerated.Transaction.Encode(writer, xdr);
             var xdrBase64 = Convert.ToBase64String(writer.ToArray());
+
+            var build = new TxBuild
+            {
+                OperationId = operationId,
+                Timestamp = DateTimeOffset.UtcNow,
+                XdrBase64 = xdrBase64
+            };
+            _buildRepository.AddAsync(build);
 
             return xdrBase64;
         }

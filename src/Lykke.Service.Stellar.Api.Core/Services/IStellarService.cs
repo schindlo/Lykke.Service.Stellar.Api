@@ -19,6 +19,8 @@ namespace Lykke.Service.Stellar.Api.Core.Services
 
         Task<long> GetAddressBalanceAsync(string address, Fees fees = null);
 
+        Task<TxBuild> GetTxBuildAsync(Guid operationId);
+
         Task<string> BuildTransactionAsync(Guid operationId, string fromAddress, string toAddress, long amount);
     }
 }

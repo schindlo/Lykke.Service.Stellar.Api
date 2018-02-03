@@ -30,34 +30,44 @@ namespace Lykke.Service.Stellar.Api.Controllers
                 return BadRequest();
             }
 
-            if (!_stellarService.IsAddressValid(request.FromAddress))
+            string xdrBase64;
+            var build = await _stellarService.GetTxBuildAsync(request.OperationId);
+            if (build != null)
             {
-                return BadRequest(ErrorResponse.Create($"{nameof(request.FromAddress)} is not a valid"));
+                xdrBase64 = build.XdrBase64;
+            }
+            else
+            {
+                if (!_stellarService.IsAddressValid(request.FromAddress))
+                {
+                    return BadRequest(ErrorResponse.Create($"{nameof(request.FromAddress)} is not a valid"));
+                }
+
+                if (!_stellarService.IsAddressValid(request.ToAddress))
+                {
+                    return BadRequest(ErrorResponse.Create($"{nameof(request.ToAddress)} is not a valid"));
+                }
+
+                if (request.AssetId != Asset.Stellar.Id)
+                {
+                    return BadRequest(ErrorResponse.Create($"{nameof(request.AssetId)} was not found"));
+                }
+
+                var amount = Int64.Parse(request.Amount);
+                var fees = await _stellarService.GetFeesAsync();
+                var fromAddressBalance = await _stellarService.GetAddressBalanceAsync(request.FromAddress, fees);
+
+                var requiredBalance = request.IncludeFee ? amount : amount + fees.BaseFee;
+                if (requiredBalance >= fromAddressBalance)
+                {
+                    return StatusCode(StatusCodes.Status406NotAcceptable,
+                        ErrorResponse.Create($"There no enough funds on {nameof(request.FromAddress)} (" +
+                                             $"required: {requiredBalance}, available: {fromAddressBalance})"));
+                }
+
+                xdrBase64 = await _stellarService.BuildTransactionAsync(request.OperationId, request.FromAddress, request.ToAddress, amount);
             }
 
-            if (!_stellarService.IsAddressValid(request.ToAddress))
-            {
-                return BadRequest(ErrorResponse.Create($"{nameof(request.ToAddress)} is not a valid"));
-            }
-
-            if (request.AssetId != Asset.Stellar.Id)
-            {
-                return BadRequest(ErrorResponse.Create($"{nameof(request.AssetId)} was not found"));
-            }
-
-            var amount = Int64.Parse(request.Amount);
-            var fees = await _stellarService.GetFeesAsync();
-            var fromAddressBalance = await _stellarService.GetAddressBalanceAsync(request.FromAddress, fees);
-
-            var requiredBalance = request.IncludeFee ? amount : amount + fees.BaseFee;
-            if (requiredBalance >= fromAddressBalance)
-            {
-                return StatusCode(StatusCodes.Status406NotAcceptable,
-                    ErrorResponse.Create($"There no enough funds on {nameof(request.FromAddress)} (" +
-                                         $"required: {requiredBalance}, available: {fromAddressBalance})"));
-            }
-
-            var xdrBase64 = await _stellarService.BuildTransactionAsync(request.OperationId, request.FromAddress, request.ToAddress, amount);
             return Ok(new BuildTransactionResponse
             {
                 TransactionContext = xdrBase64
