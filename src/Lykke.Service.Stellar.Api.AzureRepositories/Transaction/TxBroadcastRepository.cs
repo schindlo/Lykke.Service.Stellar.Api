@@ -29,7 +29,13 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Transaction
                 {
                     OperationId = entity.OperationId,
                     State = entity.State,
-                    Hash = entity.Hash
+                    Timestamp = entity.Timestamp,
+                    Amount = entity.Amount,
+                    Fee = entity.Fee,
+                    Hash = entity.Hash,
+                    Ledger = entity.Ledger,
+                    Error = entity.Error,
+                    ErrorCode = entity.ErrorCode
                 };
             }
 
@@ -43,7 +49,13 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Transaction
                 PartitionKey = GetPartitionKey(),
                 RowKey = GetRowKey(broadcast.OperationId),
                 State = broadcast.State,
-                Hash = broadcast.Hash
+                Timestamp = broadcast.Timestamp,
+                Amount = broadcast.Amount,
+                Fee = broadcast.Fee,
+                Hash = broadcast.Hash,
+                Ledger = broadcast.Ledger,
+                Error = broadcast.Error,
+                ErrorCode = broadcast.ErrorCode
             };
 
             await _table.InsertAsync(entity);

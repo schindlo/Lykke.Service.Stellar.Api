@@ -16,6 +16,16 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Transaction
 
         public TxBroadcastState State { get; set; }
 
+        public long Amount { get; set; }
+
+        public long Fee { get; set; }
+
         public string Hash { get; set; }
+
+        public long? Ledger { get; set; }
+
+        public string Error { get; set; }
+
+        public TxExecutionError? ErrorCode { get; set; }
     }
 }

@@ -1,12 +1,12 @@
 ﻿using System;
-using StellarBase = Stellar;
-using System.Collections.Generic;
-using System.Net.Http;
 using System.Threading.Tasks;
+using StellarBase = Stellar;
+using StellarGenerated = Stellar.Generated;
+using StellarSdk;
+using StellarSdk.Model;
 using Lykke.Service.Stellar.Api.Core.Domain.Transaction;
 using Lykke.Service.Stellar.Api.Core.Exceptions;
 using Lykke.Service.Stellar.Api.Core.Services;
-using Newtonsoft.Json.Linq;
 
 namespace Lykke.Service.Stellar.Api.Services
 {
@@ -43,17 +43,23 @@ namespace Lykke.Service.Stellar.Api.Services
         {
             try
             {
-                var hash = await PostTransactionAsync(xdrBase64);
-                if (string.IsNullOrWhiteSpace(hash))
-                {
-                    throw new ServiceException($"Transaction hash is empty");
-                }
+                var tx = await SubmitTransactionAsync(xdrBase64);
+
+                // TODO: Move to stellar-base
+                var xdr = Convert.FromBase64String(tx.EnvelopeXdr);
+                var reader = new StellarGenerated.ByteReader(xdr);
+                var txEnvelope = StellarGenerated.TransactionEnvelope.Decode(reader);
+                var paymentOp = txEnvelope.Tx.Operations[0].Body.PaymentOp;
 
                 var broadcast = new TxBroadcast
                 {
                     OperationId = operationId,
                     State = TxBroadcastState.Completed,
-                    Hash = hash
+                    Timestamp = tx.CreatedAt,
+                    Amount = paymentOp.Amount.InnerValue,
+                    Fee = tx.FeePaid,
+                    Hash = tx.Hash,
+                    Ledger = tx.Ledger
                 };
                 await _broadcastRepository.AddAsync(broadcast);
             }
@@ -62,7 +68,11 @@ namespace Lykke.Service.Stellar.Api.Services
                 var broadcast = new TxBroadcast
                 {
                     OperationId = operationId,
-                    State = TxBroadcastState.Failed
+                    State = TxBroadcastState.Failed,
+                    Timestamp = DateTime.UtcNow,
+                    Error = ex.Message,
+                    // TODO: set correct error
+                    ErrorCode = TxExecutionError.Unknown
                 };
                 await _broadcastRepository.AddAsync(broadcast);
 
@@ -75,28 +85,22 @@ namespace Lykke.Service.Stellar.Api.Services
             await _broadcastRepository.DeleteAsync(operationId);
         }
 
-        private async Task<string> PostTransactionAsync(string signedTx)
+        private async Task<TransactionDetails> SubmitTransactionAsync(string signedTx)
         {
-            try
+            // submit a tx
+            var builder = new TransactionCallBuilder(_horizonUrl);
+            builder.submitTransaction(signedTx);
+            var tx = await builder.Call();
+            if (tx == null || string.IsNullOrEmpty(tx.Hash))
             {
-                // TODO: use client from stellar-sdk instead
-                using (var client = new HttpClient())
-                {
-                    var body = new List<KeyValuePair<string, string>>();
-                    body.Add(new KeyValuePair<string, string>("tx", signedTx));
-                    var formUrlEncodedContent = new FormUrlEncodedContent(body);
+                throw new HorizonApiException($"Submitting transaction failed. No valid transaction was returned.");
+            }
 
-                    var response = await client.PostAsync(_horizonUrl + "transactions", formUrlEncodedContent);
-                    response.EnsureSuccessStatusCode();
-      
-                    var json = JObject.Parse(await response.Content.ReadAsStringAsync());
-                    return json["hash"].ToString();
-                }
-            }
-            catch (Exception ex)
-            {
-                throw new HorizonApiException($"Horizon api request failed", ex);
-            }
+            // read details of this tx
+            builder = new TransactionCallBuilder(_horizonUrl);
+            builder.transaction(tx.Hash);
+            var txDetails = await builder.Call();
+            return txDetails;
         }
     }
 }

@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Http;
 using Lykke.Service.BlockchainApi.Contract.Transactions;
 using Lykke.Service.Stellar.Api.Core.Services;
+using Lykke.Service.Stellar.Api.Helpers;
 
 namespace Lykke.Service.Stellar.Api.Controllers
 {
@@ -64,8 +65,14 @@ namespace Lykke.Service.Stellar.Api.Controllers
             return Ok(new BroadcastedSingleTransactionResponse
             {
                 OperationId = broadcast.OperationId,
+                State = broadcast.State.ToBroadcastedTransactionState(),
+                Timestamp = broadcast.Timestamp.UtcDateTime,
+                Amount = broadcast.Amount.ToString(),
+                Fee = broadcast.Fee.ToString(),
                 Hash = broadcast.Hash,
-                State = (BroadcastedTransactionState)broadcast.State,
+                Block = broadcast.Ledger ?? 0,
+                Error = broadcast.Error,
+                ErrorCode = broadcast.ErrorCode.HasValue ? broadcast.ErrorCode.Value.ToTransactionExecutionError() : null
             });
         }
 
