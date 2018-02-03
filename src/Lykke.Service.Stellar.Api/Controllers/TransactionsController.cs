@@ -6,6 +6,8 @@ using Microsoft.AspNetCore.Http;
 using Lykke.Service.BlockchainApi.Contract.Transactions;
 using Lykke.Service.Stellar.Api.Core.Services;
 using Lykke.Service.Stellar.Api.Helpers;
+using Lykke.Common.Api.Contract.Responses;
+using Lykke.Service.Stellar.Api.Core.Domain;
 
 namespace Lykke.Service.Stellar.Api.Controllers
 {
@@ -17,6 +19,49 @@ namespace Lykke.Service.Stellar.Api.Controllers
         public TransactionsController(IStellarService stellarService)
         {
             _stellarService = stellarService;
+        }
+
+        [HttpPost("single")]
+        [ProducesResponseType(typeof(BuildTransactionResponse), StatusCodes.Status200OK)]
+        public async Task<IActionResult> BuildSingle([Required, FromBody] BuildSingleTransactionRequest request)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest();
+            }
+
+            if (!_stellarService.IsAddressValid(request.FromAddress))
+            {
+                return BadRequest(ErrorResponse.Create($"{nameof(request.FromAddress)} is not a valid"));
+            }
+
+            if (!_stellarService.IsAddressValid(request.ToAddress))
+            {
+                return BadRequest(ErrorResponse.Create($"{nameof(request.ToAddress)} is not a valid"));
+            }
+
+            if (request.AssetId != Asset.Stellar.Id)
+            {
+                return BadRequest(ErrorResponse.Create($"{nameof(request.AssetId)} was not found"));
+            }
+
+            var amount = Int64.Parse(request.Amount);
+            var fee = await _stellarService.GetFeeAsync();
+            var fromAddressBalance = await _stellarService.GetAddressBalanceAsync(request.FromAddress, true);
+
+            var requiredBalance = request.IncludeFee ? amount : amount + fee;
+            if (requiredBalance >= fromAddressBalance)
+            {
+                return StatusCode(StatusCodes.Status406NotAcceptable,
+                    ErrorResponse.Create($"There no enough funds on {nameof(request.FromAddress)} (" +
+                                         $"required: {requiredBalance}, available: {fromAddressBalance})"));
+            }
+
+            var xdrBase64 = await _stellarService.BuildTransactionAsync(request.OperationId, request.FromAddress, request.ToAddress, amount);
+            return Ok(new BuildTransactionResponse
+            {
+                TransactionContext = xdrBase64
+            });
         }
 
         [HttpPost("broadcast")]

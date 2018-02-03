@@ -13,5 +13,11 @@ namespace Lykke.Service.Stellar.Api.Core.Services
         Task BroadcastTxAsync(Guid operationId, string xdrBase64);
 
         Task DeleteTxBroadcastAsync(Guid operationId);
+
+        Task<long> GetAddressBalanceAsync(string address, bool excludeMinBalance);
+
+        Task<long> GetFeeAsync();
+
+        Task<string> BuildTransactionAsync(Guid operationId, string fromAddress, string toAddress, long amount);
     }
 }

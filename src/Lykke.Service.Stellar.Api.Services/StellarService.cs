@@ -102,5 +102,23 @@ namespace Lykke.Service.Stellar.Api.Services
             var txDetails = await builder.Call();
             return txDetails;
         }
+
+        public async Task<long> GetAddressBalanceAsync(string address, bool excludeMinBalance)
+        {
+            // TODO
+            return 0;
+        }
+
+        public async Task<long> GetFeeAsync()
+        {
+            // TODO: use dynamic fee
+            return 100;
+        }
+
+        public async Task<string> BuildTransactionAsync(Guid operationId, string fromAddress, string toAddress, long amount)
+        {
+            // TODO
+            return string.Empty;
+        }
     }
 }
