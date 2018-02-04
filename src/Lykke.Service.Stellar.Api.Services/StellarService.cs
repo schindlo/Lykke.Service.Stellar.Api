@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using StellarBase = Stellar;
 using StellarGenerated = Stellar.Generated;
@@ -125,25 +126,28 @@ namespace Lykke.Service.Stellar.Api.Services
             return fees;
         }
 
-        public async Task<long> GetAddressBalanceAsync(string address, Fees fees = null)
+        public async Task<AddressBalance> GetAddressBalanceAsync(string address, Fees fees = null)
         {
+            var result = new AddressBalance
+            {
+                Address = address
+            };
+
             var builder = new AccountCallBuilder(_horizonUrl);
             builder.accountId(address);
             var accountDetails = await builder.Call();
+            result.Sequence = Int64.Parse(accountDetails.Sequence);
 
             var nativeBalance = accountDetails.Balances.Single(b => "native".Equals(b.AssetType, StringComparison.OrdinalIgnoreCase));
-            // exclude min account balance
-            long minAccountBalance = 0;
+            result.Balance = Convert.ToInt64(Decimal.Parse(nativeBalance.Balance) * StellarBase.One.Value);
             if (fees != null)
             {
                 long entries = accountDetails.Signers.Length + accountDetails.SubentryCount;
                 var minBalance = (2 + entries) * fees.BaseReserve * StellarBase.One.Value;
-                minAccountBalance = Convert.ToInt64(minBalance);
+                result.MinBalance = Convert.ToInt64(minBalance);
             }
 
-            var balance = Convert.ToInt64(Decimal.Parse(nativeBalance.Balance) * StellarBase.One.Value);
-            var available = balance - minAccountBalance;
-            return available;
+            return result;
         }
 
         public async Task<TxBuild> GetTxBuildAsync(Guid operationId)
@@ -151,15 +155,10 @@ namespace Lykke.Service.Stellar.Api.Services
             return await _buildRepository.GetAsync(operationId);
         }
 
-        public async Task<string> BuildTransactionAsync(Guid operationId, string fromAddress, string toAddress, long amount)
+        public async Task<string> BuildTransactionAsync(Guid operationId, AddressBalance from, string toAddress, long amount)
         {
-            var builder = new AccountCallBuilder(_horizonUrl);
-            builder.accountId(fromAddress);
-            var accountDetails = await builder.Call();
-            var sequence = Int64.Parse(accountDetails.Sequence);
-
-            var fromKeyPair = StellarBase.KeyPair.FromAddress(fromAddress);
-            var fromAccount = new StellarBase.Account(fromKeyPair, sequence);
+            var fromKeyPair = StellarBase.KeyPair.FromAddress(from.Address);
+            var fromAccount = new StellarBase.Account(fromKeyPair, from.Sequence);
 
             var toKeyPair = StellarBase.KeyPair.FromAddress(toAddress);
 
@@ -185,29 +184,29 @@ namespace Lykke.Service.Stellar.Api.Services
                 Timestamp = DateTimeOffset.UtcNow,
                 XdrBase64 = xdrBase64
             };
-            _buildRepository.AddAsync(build);
+            await _buildRepository.AddAsync(build);
 
             return xdrBase64;
         }
 
-        public async Task<Boolean> IsBalanceObservedAsync(string address)
+        public async Task<bool> IsBalanceObservedAsync(string address)
         {
-            return await _balanceRepository.GetAsync(address) != null;
+            return await _balanceRepository.GetAsync(address, null) != null;
         }
 
         public async Task AddBalanceObservationAsync(string address)
         {
-            await _balanceRepository.AddAsync(address);
+            await _balanceRepository.AddAsync(address, null);
         }
 
         public async Task DeleteBalanceObservationAsync(string address)
         {
-            await _balanceRepository.DeleteAsync(address);
+            await _balanceRepository.DeleteAsync(address, null);
         }
 
-        public async Task<WalletBalance[]> GetBalancesAsync()
+        public async Task<(List<WalletBalance> Wallets, string ContinuationToken)> GetBalancesAsync(int take, string continuationToken)
         {
-            return await _balanceRepository.GetAsync();
+            return await _balanceRepository.GetAllAsync(take, continuationToken);
         }
     }
 }

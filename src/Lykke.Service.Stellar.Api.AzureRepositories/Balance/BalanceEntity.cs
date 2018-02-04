@@ -8,17 +8,23 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Balance
     [ValueTypeMergingStrategy(ValueTypeMergingStrategy.UpdateAlways)]
     public class BalanceEntity : AzureTableEntity
     {
-        public Guid OperationId
+        public string AssetId
         {
-            get => Guid.Parse(RowKey);
+            get => PartitionKey.Split(":")[0];
         }
 
-        public string Address { get; set; }
+        public string Address
+        {
+            get => PartitionKey.Split(":")[1];
+        }
 
-        public string AssetId { get; set; }
+        public string DestinationTag
+        {
+            get => RowKey;
+        }
 
-        public string Balance { get; set; }
+        public long Balance { get; set; }
 
-        public long Block { get; set; }
+        public long Ledger { get; set; }
     }
 }

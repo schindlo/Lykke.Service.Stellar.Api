@@ -1,93 +1,84 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Common.Log;
 using AzureStorage;
 using AzureStorage.Tables;
 using Lykke.SettingsReader;
+using Lykke.Service.Stellar.Api.Core.Domain;
 using Lykke.Service.Stellar.Api.Core.Domain.Balance;
 using Microsoft.WindowsAzure.Storage.Table;
-using Microsoft.WindowsAzure.Storage.RetryPolicies;
 
 namespace Lykke.Service.Stellar.Api.AzureRepositories.Balance
 {
     public class BalanceRepository: IBalanceRepository
     {
-        private static string GetPartitionKey() => "";
-        private static string GetRowKey() => Guid.NewGuid().ToString();
+        private static string GetPartitionKey(string address) => Asset.Stellar.Id + ":" + address;
+        private static string GetRowKey(string destinationTag) => destinationTag ?? string.Empty;
 
         private INoSQLTableStorage<BalanceEntity> _table;
 
         public BalanceRepository(IReloadingManager<string> dataConnStringManager, ILog log)
         {
-            _table = AzureTableStorage<BalanceEntity>.Create(dataConnStringManager, "Balance", log);
+            _table = AzureTableStorage<BalanceEntity>.Create(dataConnStringManager, "StellarApiBalance", log);
         }
 
-        public async Task<WalletBalance[]> GetAsync()
+        public async Task<List<WalletBalance>> GetAllAsync()
         {
             var all = await _table.GetDataAsync();
-            var balances = new WalletBalance[all.Count];
-            int i = 0;
+
+            var balances = new List<WalletBalance>();
             foreach(BalanceEntity entity in all)
             {
-                balances[i++] = new WalletBalance
-                {
-                    Address = entity.Address,
-                    AssetId = entity.AssetId,
-                    Balance = entity.Balance,
-                    Block = entity.Block
-                };
+                var balance = entity.ToDomain();
+                balances.Add(balance);
             }
 
             return balances;
         }
 
-        public async Task<WalletBalance> GetAsync(string address)
+        public async Task<(List<WalletBalance> Entities, string ContinuationToken)> GetAllAsync(int take, string continuationToken)
         {
-            WalletBalance balance = null;
-            TableQuery<BalanceEntity> query = new TableQuery<BalanceEntity>().Where(TableQuery.GenerateFilterCondition("Address", QueryComparisons.Equal, address));
-            await _table.ExecuteAsync(query, results =>
-            {
-                var e = results.GetEnumerator();
-                if(e.MoveNext())
-                {
-                    var entity = e.Current;
-                    balance = new WalletBalance
-                    {
-                        Address = entity.Address,
-                        AssetId = entity.AssetId,
-                        Balance = entity.Balance,
-                        Block = entity.Block
-                    };
-                }
-            });
+            var query = new TableQuery<BalanceEntity>().Take(take);
+            var data = await _table.GetDataWithContinuationTokenAsync(query, continuationToken);
 
-            return balance;
+            var balances = new List<WalletBalance>();
+            foreach (BalanceEntity entity in data.Entities)
+            {
+                var balance = entity.ToDomain();
+                balances.Add(balance);
+            }
+
+            return (balances, data.ContinuationToken);
         }
 
-        public async Task AddAsync(string address)
+        public async Task<WalletBalance> GetAsync(string address, string destinationTag)
+        {
+            var entity = await _table.GetDataAsync(GetPartitionKey(address), GetRowKey(destinationTag));
+            if (entity != null)
+            {
+                var balance = entity.ToDomain();
+                return balance;
+            }
+
+            return null;
+        }
+
+        public async Task AddAsync(string address, string destinationTag)
         {
             var entity = new BalanceEntity
             {
-                PartitionKey = GetPartitionKey(),
-                RowKey = GetRowKey(),
-                Address = address
+                PartitionKey = GetPartitionKey(address),
+                RowKey = GetRowKey(destinationTag),
+                Timestamp = DateTimeOffset.UtcNow
             };
 
             await _table.InsertAsync(entity);
         }
 
-        public async Task DeleteAsync(string address)
+        public async Task DeleteAsync(string address, string destinationTag)
         {
-            TableQuery<BalanceEntity> query = new TableQuery<BalanceEntity>().Where(TableQuery.GenerateFilterCondition("Address", QueryComparisons.Equal, address));
-            await _table.ExecuteAsync(query, results =>
-            {
-                var e = results.GetEnumerator();
-                if (e.MoveNext())
-                {
-                    var entity = e.Current;
-                    _table.DeleteAsync(GetPartitionKey(), entity.RowKey);
-                }
-            });
+            await _table.DeleteAsync(GetPartitionKey(address), GetRowKey(destinationTag));
         }
     }
 }

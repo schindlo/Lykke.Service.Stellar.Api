@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Lykke.Service.Stellar.Api.Core.Domain;
 using Lykke.Service.Stellar.Api.Core.Domain.Transaction;
@@ -18,14 +19,14 @@ namespace Lykke.Service.Stellar.Api.Core.Services
 
         Task<Fees> GetFeesAsync();
 
-        Task<long> GetAddressBalanceAsync(string address, Fees fees = null);
+        Task<AddressBalance> GetAddressBalanceAsync(string address, Fees fees = null);
 
         Task<TxBuild> GetTxBuildAsync(Guid operationId);
 
-        Task<string> BuildTransactionAsync(Guid operationId, string fromAddress, string toAddress, long amount);
+        Task<string> BuildTransactionAsync(Guid operationId, AddressBalance from, string toAddress, long amount);
 
-        Task<Boolean> IsBalanceObservedAsync(string address);
+        Task<bool> IsBalanceObservedAsync(string address);
 
-        Task AddBalanceObservationAsync(string address);          Task DeleteBalanceObservationAsync(string address);          Task<WalletBalance[]> GetBalancesAsync(); 
+        Task AddBalanceObservationAsync(string address);          Task DeleteBalanceObservationAsync(string address);          Task<(List<WalletBalance> Wallets, string ContinuationToken)> GetBalancesAsync(int take, string continuationToken); 
     }
 }

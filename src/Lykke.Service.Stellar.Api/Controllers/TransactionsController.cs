@@ -58,14 +58,15 @@ namespace Lykke.Service.Stellar.Api.Controllers
                 var fromAddressBalance = await _stellarService.GetAddressBalanceAsync(request.FromAddress, fees);
 
                 var requiredBalance = request.IncludeFee ? amount : amount + fees.BaseFee;
-                if (requiredBalance >= fromAddressBalance)
+                var availableBalance = fromAddressBalance.Balance - fromAddressBalance.MinBalance;
+                if (requiredBalance >= availableBalance)
                 {
                     return StatusCode(StatusCodes.Status406NotAcceptable,
                         ErrorResponse.Create($"There no enough funds on {nameof(request.FromAddress)} (" +
-                                             $"required: {requiredBalance}, available: {fromAddressBalance})"));
+                                             $"required: {requiredBalance}, available: {availableBalance})"));
                 }
 
-                xdrBase64 = await _stellarService.BuildTransactionAsync(request.OperationId, request.FromAddress, request.ToAddress, amount);
+                xdrBase64 = await _stellarService.BuildTransactionAsync(request.OperationId, fromAddressBalance, request.ToAddress, amount);
             }
 
             return Ok(new BuildTransactionResponse

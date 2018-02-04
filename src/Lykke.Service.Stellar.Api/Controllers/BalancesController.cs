@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Mvc;
@@ -25,30 +26,29 @@ namespace Lykke.Service.Stellar.Api.Controllers
         [SwaggerOperation("balances")]
         public async Task<PaginationResponse<WalletBalanceContract>> Get([Required, FromQuery] int take, [FromQuery] string continuation)
         {
-            // TODO: take / continuation!
-            var balances = await _stellarService.GetBalancesAsync();
+            var balances = await _stellarService.GetBalancesAsync(take, continuation);
 
-            var balanceContracts = new WalletBalanceContract[balances.Length];
-            int i = 0;
-            foreach(WalletBalance b in balances)
+            var results = new List<WalletBalanceContract>();
+            foreach(WalletBalance b in balances.Wallets)
             {
-                balanceContracts[i++] = new WalletBalanceContract()
+                var result = new WalletBalanceContract
                 {
                     Address = b.Address,
                     AssetId = b.AssetId,
-                    Balance = b.Balance,
-                    Block = b.Block
+                    Balance = b.Balance.ToString(),
+                    Block = b.Ledger
                 };
+                results.Add(result);
             }
 
-            return PaginationResponse.From("", balanceContracts);
+            return PaginationResponse.From(balances.ContinuationToken, results);
         }
 
         [HttpPost("{address}/observation")]
         [SwaggerOperation("balances/")]
         public async Task<IActionResult> AddObservation([Required] string address)
         {
-            Boolean exists = await _stellarService.IsBalanceObservedAsync(address);
+            var exists = await _stellarService.IsBalanceObservedAsync(address);
             if (exists)
             {
                 return new StatusCodeResult(StatusCodes.Status409Conflict);
@@ -60,7 +60,7 @@ namespace Lykke.Service.Stellar.Api.Controllers
         [HttpDelete("balances/{address}/observation")]
         public async Task<IActionResult> DeleteObservation([Required] string address)
         {
-            Boolean exists = await _stellarService.IsBalanceObservedAsync(address);
+            var exists = await _stellarService.IsBalanceObservedAsync(address);
             if (!exists)
             {
                 return new StatusCodeResult(StatusCodes.Status204NoContent);
