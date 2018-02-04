@@ -20,13 +20,11 @@ namespace Lykke.Service.Stellar.Api.Services
 
         private readonly ITxBroadcastRepository _broadcastRepository;
         private readonly ITxBuildRepository _buildRepository;
-        private readonly IBalanceRepository _balanceRepository;
 
-        public StellarService(ITxBroadcastRepository broadcastRepository, ITxBuildRepository buildRepository, IBalanceRepository balanceRepository)
+        public StellarService(ITxBroadcastRepository broadcastRepository, ITxBuildRepository buildRepository)
         {
             _broadcastRepository = broadcastRepository;
             _buildRepository = buildRepository;
-            _balanceRepository = balanceRepository;
         }
 
         public Boolean IsAddressValid(string address)
@@ -126,30 +124,6 @@ namespace Lykke.Service.Stellar.Api.Services
             return fees;
         }
 
-        public async Task<AddressBalance> GetAddressBalanceAsync(string address, Fees fees = null)
-        {
-            var result = new AddressBalance
-            {
-                Address = address
-            };
-
-            var builder = new AccountCallBuilder(_horizonUrl);
-            builder.accountId(address);
-            var accountDetails = await builder.Call();
-            result.Sequence = Int64.Parse(accountDetails.Sequence);
-
-            var nativeBalance = accountDetails.Balances.Single(b => "native".Equals(b.AssetType, StringComparison.OrdinalIgnoreCase));
-            result.Balance = Convert.ToInt64(Decimal.Parse(nativeBalance.Balance) * StellarBase.One.Value);
-            if (fees != null)
-            {
-                long entries = accountDetails.Signers.Length + accountDetails.SubentryCount;
-                var minBalance = (2 + entries) * fees.BaseReserve * StellarBase.One.Value;
-                result.MinBalance = Convert.ToInt64(minBalance);
-            }
-
-            return result;
-        }
-
         public async Task<TxBuild> GetTxBuildAsync(Guid operationId)
         {
             return await _buildRepository.GetAsync(operationId);
@@ -187,26 +161,6 @@ namespace Lykke.Service.Stellar.Api.Services
             await _buildRepository.AddAsync(build);
 
             return xdrBase64;
-        }
-
-        public async Task<bool> IsBalanceObservedAsync(string address)
-        {
-            return await _balanceRepository.GetAsync(address, null) != null;
-        }
-
-        public async Task AddBalanceObservationAsync(string address)
-        {
-            await _balanceRepository.AddAsync(address, null);
-        }
-
-        public async Task DeleteBalanceObservationAsync(string address)
-        {
-            await _balanceRepository.DeleteAsync(address, null);
-        }
-
-        public async Task<(List<WalletBalance> Wallets, string ContinuationToken)> GetBalancesAsync(int take, string continuationToken)
-        {
-            return await _balanceRepository.GetAllAsync(take, continuationToken);
         }
     }
 }

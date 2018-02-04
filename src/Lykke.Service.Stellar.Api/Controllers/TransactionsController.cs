@@ -15,10 +15,12 @@ namespace Lykke.Service.Stellar.Api.Controllers
     public class TransactionsController : Controller
     {
         private readonly IStellarService _stellarService;
+        private readonly IBalanceService _balanceService;
 
-        public TransactionsController(IStellarService stellarService)
+        public TransactionsController(IStellarService stellarService, IBalanceService balanceService)
         {
             _stellarService = stellarService;
+            _balanceService = balanceService;
         }
 
         [HttpPost("single")]
@@ -55,7 +57,7 @@ namespace Lykke.Service.Stellar.Api.Controllers
 
                 var amount = Int64.Parse(request.Amount);
                 var fees = await _stellarService.GetFeesAsync();
-                var fromAddressBalance = await _stellarService.GetAddressBalanceAsync(request.FromAddress, fees);
+                var fromAddressBalance = await _balanceService.GetAddressBalanceAsync(request.FromAddress, fees);
 
                 var requiredBalance = request.IncludeFee ? amount : amount + fees.BaseFee;
                 var availableBalance = fromAddressBalance.Balance - fromAddressBalance.MinBalance;

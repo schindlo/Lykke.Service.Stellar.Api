@@ -10,6 +10,9 @@ using Lykke.Service.Stellar.Api.Core.Settings.ServiceSettings;
 using Lykke.Service.Stellar.Api.Services;
 using Lykke.SettingsReader;
 using Microsoft.Extensions.DependencyInjection;
+using Lykke.Service.Stellar.Api.Jobs;
+using Lykke.Service.Stellar.Api.AzureRepositories.Observation;
+using Lykke.Service.Stellar.Api.Core.Domain.Observation;
 
 namespace Lykke.Service.Stellar.Api.Modules
 {
@@ -59,12 +62,26 @@ namespace Lykke.Service.Stellar.Api.Modules
                 .As<ITxBuildRepository>()
                 .WithParameter(TypedParameter.From(dataConnStringManager));
 
-            builder.RegisterType<BalanceRepository>()
-                .As<IBalanceRepository>()
+            builder.RegisterType<BalanceObservationRepository>()
+                .As<IBalanceObservationRepository>()
+                .WithParameter(TypedParameter.From(dataConnStringManager));
+
+            builder.RegisterType<WalletBalanceRepository>()
+                .As<IWalletBalanceRepository>()
                 .WithParameter(TypedParameter.From(dataConnStringManager));
 
             builder.RegisterType<StellarService>()
                 .As<IStellarService>()
+                .SingleInstance();
+
+            builder.RegisterType<BalanceService>()
+                .As<IBalanceService>()
+                .SingleInstance();
+
+            builder.RegisterType<UpdateBalancesJob>()
+                .As<IStartable>()
+                .AutoActivate()
+                .WithParameter("period", 60 * 1000) // TODO: configureable
                 .SingleInstance();
             
             builder.Populate(_services);

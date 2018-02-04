@@ -61,6 +61,7 @@
 
   <ItemGroup>
     <Folder Include="Helpers\" />
+    <Folder Include="Jobs\" />
   </ItemGroup>
   <Target Name="PrepublishScript" BeforeTargets="PrepareForPublish">
     <ItemGroup>

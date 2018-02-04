@@ -17,4 +17,7 @@
     <ProjectReference Include="..\Lykke.Service.Stellar.Api.Core\Lykke.Service.Stellar.Api.Core.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Balance\" />
+  </ItemGroup>
 </Project>

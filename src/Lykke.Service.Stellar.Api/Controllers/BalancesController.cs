@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Mvc;
@@ -15,18 +14,18 @@ namespace Lykke.Service.Stellar.Api.Controllers
     [Route("api/balances")]
     public class BalancesController : Controller
     {
-        private readonly IStellarService _stellarService;
+        private readonly IBalanceService _balanceService;
 
-        public BalancesController(IStellarService stellarService)
+        public BalancesController(IBalanceService balanceService)
         {
-            _stellarService = stellarService;
+            _balanceService = balanceService;
         }
 
         [HttpGet]
         [SwaggerOperation("balances")]
         public async Task<PaginationResponse<WalletBalanceContract>> Get([Required, FromQuery] int take, [FromQuery] string continuation)
         {
-            var balances = await _stellarService.GetBalancesAsync(take, continuation);
+            var balances = await _balanceService.GetBalancesAsync(take, continuation);
 
             var results = new List<WalletBalanceContract>();
             foreach(WalletBalance b in balances.Wallets)
@@ -48,24 +47,24 @@ namespace Lykke.Service.Stellar.Api.Controllers
         [SwaggerOperation("balances/")]
         public async Task<IActionResult> AddObservation([Required] string address)
         {
-            var exists = await _stellarService.IsBalanceObservedAsync(address);
+            var exists = await _balanceService.IsBalanceObservedAsync(address);
             if (exists)
             {
                 return new StatusCodeResult(StatusCodes.Status409Conflict);
             }
-            await _stellarService.AddBalanceObservationAsync(address);
+            await _balanceService.AddBalanceObservationAsync(address);
             return Ok();
         }
 
         [HttpDelete("balances/{address}/observation")]
         public async Task<IActionResult> DeleteObservation([Required] string address)
         {
-            var exists = await _stellarService.IsBalanceObservedAsync(address);
+            var exists = await _balanceService.IsBalanceObservedAsync(address);
             if (!exists)
             {
                 return new StatusCodeResult(StatusCodes.Status204NoContent);
             }
-            await _stellarService.DeleteBalanceObservationAsync(address);
+            await _balanceService.DeleteBalanceObservationAsync(address);
             return Ok();
         }
     }

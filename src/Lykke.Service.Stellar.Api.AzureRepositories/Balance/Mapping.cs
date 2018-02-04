@@ -4,7 +4,7 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Balance
 {
     public static class Mapping
     {
-        public static WalletBalance ToDomain(this BalanceEntity entity)
+        public static WalletBalance ToDomain(this WalletBalanceEntity entity)
         {
             var balance = new WalletBalance
             {
