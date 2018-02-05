@@ -17,11 +17,11 @@ namespace Lykke.Service.Stellar.Api.Services
 
         private string _horizonUrl = "https://horizon-testnet.stellar.org/";
 
-        private readonly IBalanceObservationRepository _observationRepository;
+        private readonly IObservationRepository<BalanceObservation> _observationRepository;
 
         private readonly IWalletBalanceRepository _walletBalanceRepository;
 
-        public BalanceService(IBalanceObservationRepository observationRepository, IWalletBalanceRepository walletBalanceRepository)
+        public BalanceService(IObservationRepository<BalanceObservation> observationRepository, IWalletBalanceRepository walletBalanceRepository)
         {
             _observationRepository = observationRepository;
             _walletBalanceRepository = walletBalanceRepository;
@@ -58,7 +58,11 @@ namespace Lykke.Service.Stellar.Api.Services
 
         public async Task AddBalanceObservationAsync(string address)
         {
-            await _observationRepository.AddAsync(address);
+            var observation = new BalanceObservation
+            {
+                Address = address
+            };
+            await _observationRepository.AddAsync(observation);
         }
 
         public async Task DeleteBalanceObservationAsync(string address)
