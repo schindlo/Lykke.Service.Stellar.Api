@@ -12,7 +12,7 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Observation
     public class BalanceObservationRepository : IBalanceObservationRepository
     {
         private static string GetPartitionKey() => "BalanceObservation";
-        private static string GetRowKey(string address, string destinationTag) => address + (!string.IsNullOrEmpty(destinationTag) ? ":" + destinationTag : string.Empty);
+        private static string GetRowKey(string address) => address;
 
         private INoSQLTableStorage<ObservationEntity> _table;
 
@@ -36,9 +36,9 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Observation
             return (observations, data.ContinuationToken);
         }
 
-        public async Task<BalanceObservation> GetAsync(string address, string destinationTag)
+        public async Task<BalanceObservation> GetAsync(string address)
         {
-            var entity = await _table.GetDataAsync(GetPartitionKey(), GetRowKey(address, destinationTag));
+            var entity = await _table.GetDataAsync(GetPartitionKey(), GetRowKey(address));
             if (entity != null)
             {
                 var observation = entity.ToDomain();
@@ -48,20 +48,20 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Observation
             return null;
         }
 
-        public async Task AddAsync(string address, string destinationTag)
+        public async Task AddAsync(string address)
         {
             var entity = new ObservationEntity
             {
                 PartitionKey = GetPartitionKey(),
-                RowKey = GetRowKey(address, destinationTag)
+                RowKey = GetRowKey(address)
             };
 
             await _table.InsertAsync(entity);
         }
 
-        public async Task DeleteAsync(string address, string destinationTag)
+        public async Task DeleteAsync(string address)
         {
-            await _table.DeleteAsync(GetPartitionKey(), GetRowKey(address, destinationTag));
+            await _table.DeleteAsync(GetPartitionKey(), GetRowKey(address));
         }
     }
 }

@@ -15,12 +15,7 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Balance
 
         public string Address
         {
-            get => RowKey.Split(":")[0];
-        }
-
-        public string DestinationTag
-        {
-            get => RowKey.Contains(":") ? RowKey.Split(":")[1] : null;
+            get => RowKey;
         }
 
         public long Balance { get; set; }

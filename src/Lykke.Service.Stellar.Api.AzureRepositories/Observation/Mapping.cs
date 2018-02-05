@@ -8,8 +8,7 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Observation
         {
             var observation = new BalanceObservation
             {
-                Address = entity.RowKey.Split(":")[0],
-                DestinationTag = entity.RowKey.Contains(":") ? entity.RowKey.Split(":")[1] : null
+                Address = entity.RowKey
             };
             return observation;
         }

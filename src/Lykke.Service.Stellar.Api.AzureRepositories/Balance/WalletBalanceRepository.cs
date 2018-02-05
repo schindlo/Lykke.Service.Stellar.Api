@@ -14,7 +14,7 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Balance
     public class WalletBalanceRepository: IWalletBalanceRepository
     {
         private static string GetPartitionKey() => Asset.Stellar.Id;
-        private static string GetRowKey(string address, string destinationTag) => address + (!string.IsNullOrEmpty(destinationTag) ? ":" + destinationTag : string.Empty);
+        private static string GetRowKey(string address) => address;
 
         private INoSQLTableStorage<WalletBalanceEntity> _table;
 
@@ -38,9 +38,9 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Balance
             return (balances, data.ContinuationToken);
         }
 
-        public async Task<WalletBalance> GetAsync(string address, string destinationTag)
+        public async Task<WalletBalance> GetAsync(string address)
         {
-            var entity = await _table.GetDataAsync(GetPartitionKey(), GetRowKey(address, destinationTag));
+            var entity = await _table.GetDataAsync(GetPartitionKey(), GetRowKey(address));
             if (entity != null)
             {
                 var wallet = entity.ToDomain();
@@ -55,7 +55,7 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Balance
             var entity = new WalletBalanceEntity
             {
                 PartitionKey = GetPartitionKey(),
-                RowKey = GetRowKey(balance.Address, balance.DestinationTag),
+                RowKey = GetRowKey(balance.Address),
                 Timestamp = DateTimeOffset.UtcNow,
                 Balance = balance.Balance,
                 Ledger = balance.Ledger
@@ -64,9 +64,9 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Balance
             await _table.InsertOrReplaceAsync(entity);
         }
 
-        public async Task DeleteIfExistAsync(string address, string destinationTag)
+        public async Task DeleteIfExistAsync(string address)
         {
-            await _table.DeleteIfExistAsync(GetPartitionKey(), GetRowKey(address, destinationTag));
+            await _table.DeleteIfExistAsync(GetPartitionKey(), GetRowKey(address));
         }
     }
 }

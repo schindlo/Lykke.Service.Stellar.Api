@@ -8,10 +8,10 @@ namespace Lykke.Service.Stellar.Api.Core.Domain.Balance
     {
         Task<(List<WalletBalance> Entities, string ContinuationToken)> GetAllAsync(int take, string continuationToken);
 
-        Task<WalletBalance> GetAsync(string address, string destinationTag);
+        Task<WalletBalance> GetAsync(string address);
 
         Task InsertOrReplaceAsync(WalletBalance balance);
 
-        Task DeleteIfExistAsync(string address, string destinationTag);
+        Task DeleteIfExistAsync(string address);
     }
 }

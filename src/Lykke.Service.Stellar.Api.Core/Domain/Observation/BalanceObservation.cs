@@ -3,7 +3,5 @@
     public class BalanceObservation
     {
         public string Address { get; set; }
-
-        public string DestinationTag { get; set; }
     }
 }

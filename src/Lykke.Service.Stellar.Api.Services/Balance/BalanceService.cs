@@ -53,18 +53,18 @@ namespace Lykke.Service.Stellar.Api.Services
 
         public async Task<bool> IsBalanceObservedAsync(string address)
         {
-            return await _observationRepository.GetAsync(address, null) != null;
+            return await _observationRepository.GetAsync(address) != null;
         }
 
         public async Task AddBalanceObservationAsync(string address)
         {
-            await _observationRepository.AddAsync(address, null);
+            await _observationRepository.AddAsync(address);
         }
 
         public async Task DeleteBalanceObservationAsync(string address)
         {
-            await _observationRepository.DeleteAsync(address, null);
-            await _walletBalanceRepository.DeleteIfExistAsync(address, null);
+            await _observationRepository.DeleteAsync(address);
+            await _walletBalanceRepository.DeleteIfExistAsync(address);
         }
 
         public async Task<(List<WalletBalance> Wallets, string ContinuationToken)> GetBalancesAsync(int take, string continuationToken)
@@ -83,13 +83,12 @@ namespace Lykke.Service.Stellar.Api.Services
                     var addressBalance = await GetAddressBalanceAsync(entry.Address);
                     if (addressBalance.Balance > 0)
                     {
-                        var walletEntry = await _walletBalanceRepository.GetAsync(entry.Address, entry.DestinationTag);
+                        var walletEntry = await _walletBalanceRepository.GetAsync(entry.Address);
                         if (walletEntry == null)
                         {
                             walletEntry = new WalletBalance
                             {
-                                Address = entry.Address,
-                                DestinationTag = entry.DestinationTag
+                                Address = entry.Address
                             };
                         }
                         if (walletEntry.Balance != addressBalance.Balance)
@@ -101,7 +100,7 @@ namespace Lykke.Service.Stellar.Api.Services
                     }
                     else
                     {
-                        await _walletBalanceRepository.DeleteIfExistAsync(entry.Address, entry.DestinationTag);
+                        await _walletBalanceRepository.DeleteIfExistAsync(entry.Address);
                     }
                 }
                 continuationToken = observations.ContinuationToken;
