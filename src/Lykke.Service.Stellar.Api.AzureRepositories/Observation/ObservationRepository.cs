@@ -48,13 +48,15 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Observation
             return null;
         }
 
-        public async Task AddAsync(U observation)
+        public async Task InsertOrReplaceAsync(U observation)
         {
-            var entity = new T();
-            entity.PartitionKey = typeof(U).Name;
-            entity.Timestamp = DateTimeOffset.UtcNow;
+            var entity = new T()
+            {
+                PartitionKey = typeof(U).Name,
+                Timestamp = DateTimeOffset.UtcNow,
+            };
             entity.ToEntity(observation);
-            await _table.InsertAsync(entity);
+            await _table.InsertOrReplaceAsync(entity);
         }
 
         public async Task DeleteAsync(string key)

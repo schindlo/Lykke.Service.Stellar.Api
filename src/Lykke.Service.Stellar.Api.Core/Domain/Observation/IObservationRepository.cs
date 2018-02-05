@@ -9,7 +9,7 @@ namespace Lykke.Service.Stellar.Api.Core.Domain.Observation
 
         Task<T> GetAsync(string key);
 
-        Task AddAsync(T obersvation);
+        Task InsertOrReplaceAsync(T observation);
 
         Task DeleteAsync(string key);
     }

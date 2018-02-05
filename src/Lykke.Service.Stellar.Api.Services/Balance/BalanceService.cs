@@ -62,7 +62,7 @@ namespace Lykke.Service.Stellar.Api.Services
             {
                 Address = address
             };
-            await _observationRepository.AddAsync(observation);
+            await _observationRepository.InsertOrReplaceAsync(observation);
         }
 
         public async Task DeleteBalanceObservationAsync(string address)
