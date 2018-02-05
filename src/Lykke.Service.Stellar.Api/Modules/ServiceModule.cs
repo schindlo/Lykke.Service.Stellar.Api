@@ -61,7 +61,11 @@ namespace Lykke.Service.Stellar.Api.Modules
             builder.RegisterType<TxBuildRepository>()
                 .As<ITxBuildRepository>()
                 .WithParameter(TypedParameter.From(dataConnStringManager));
-
+            
+            builder.RegisterType<TxHistoryRepository>()
+                .As<ITxHistoryRepository>()
+                .WithParameter(TypedParameter.From(dataConnStringManager));
+            
             builder.RegisterType<ObservationRepository<BalanceObservationEntity, BalanceObservation>>()
                 .As<IObservationRepository<BalanceObservation>>()
                 .WithParameter(TypedParameter.From(dataConnStringManager));
