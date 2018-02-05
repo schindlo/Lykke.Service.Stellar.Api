@@ -86,7 +86,7 @@ namespace Lykke.Service.Stellar.Api.Modules
                    .As<ITransactionObservationService>()
                 .SingleInstance();
 
-            builder.RegisterType<UpdateBalancesJob>()
+            builder.RegisterType<WalletBalanceJob>()
                 .As<IStartable>()
                 .AutoActivate()
                 .WithParameter("period", 60 * 1000) // TODO: configureable

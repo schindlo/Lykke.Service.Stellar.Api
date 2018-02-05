@@ -76,7 +76,7 @@ namespace Lykke.Service.Stellar.Api.Services
             return await _walletBalanceRepository.GetAllAsync(take, continuationToken);
         }
 
-        public async Task UpdateBalances()
+        public async Task UpdateWalletBalances()
         {
             string continuationToken = null;
             do

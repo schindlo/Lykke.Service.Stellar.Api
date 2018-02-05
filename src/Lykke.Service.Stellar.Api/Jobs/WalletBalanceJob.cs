@@ -6,13 +6,13 @@ using Lykke.Service.Stellar.Api.Core.Services;
 
 namespace Lykke.Service.Stellar.Api.Jobs
 {
-    public class UpdateBalancesJob : TimerPeriod
+    public class WalletBalanceJob : TimerPeriod
     {
         private ILog _log;
         private IBalanceService _balanceService;
 
-        public UpdateBalancesJob(IBalanceService balanceService, int period, ILog log)
-            : base(nameof(UpdateBalancesJob), period, log)
+        public WalletBalanceJob(IBalanceService balanceService, int period, ILog log)
+            : base(nameof(WalletBalanceJob), period, log)
         {
             _log = log;
             _balanceService = balanceService;
@@ -22,11 +22,11 @@ namespace Lykke.Service.Stellar.Api.Jobs
         {
             try
             {
-                await _balanceService.UpdateBalances();
+                await _balanceService.UpdateWalletBalances();
             }
             catch (Exception ex)
             {
-                await _log.WriteErrorAsync(nameof(UpdateBalancesJob), nameof(Execute),
+                await _log.WriteErrorAsync(nameof(WalletBalanceJob), nameof(Execute),
                     "Failed to execute balances update", ex);
             }
         }
