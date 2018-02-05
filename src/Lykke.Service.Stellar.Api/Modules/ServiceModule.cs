@@ -91,6 +91,12 @@ namespace Lykke.Service.Stellar.Api.Modules
                 .AutoActivate()
                 .WithParameter("period", 60 * 1000) // TODO: configureable
                 .SingleInstance();
+
+            builder.RegisterType<TransactionHistoryJob>()
+                .As<IStartable>()
+                .AutoActivate()
+                .WithParameter("period", 60 * 1000) // TODO: configureable
+                .SingleInstance();
             
             builder.Populate(_services);
         }

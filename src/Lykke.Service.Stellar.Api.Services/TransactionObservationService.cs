@@ -93,5 +93,10 @@ namespace Lykke.Service.Stellar.Api.Services
                 await _txObservationService.InsertOrReplaceAsync(observation);
             }
         }
+
+        public async Task UpdateTransactionHistory()
+        {
+            // TODO
+        }
     }
 }

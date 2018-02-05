@@ -16,5 +16,7 @@ namespace Lykke.Service.Stellar.Api.Core.Services
         Task DeleteIncomingTransactionObservationAsync(string address);
 
         Task DeleteOutgoingTransactionObservationAsync(string address);
+
+        Task UpdateTransactionHistory();
     }
 }
