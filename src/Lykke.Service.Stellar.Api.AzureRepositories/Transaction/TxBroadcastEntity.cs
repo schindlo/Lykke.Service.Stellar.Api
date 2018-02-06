@@ -24,6 +24,8 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Transaction
 
         public long? Ledger { get; set; }
 
+        public DateTime? CreatedAt { get; set; }
+
         public string Error { get; set; }
 
         public TxExecutionError? ErrorCode { get; set; }

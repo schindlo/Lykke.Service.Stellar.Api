@@ -29,11 +29,11 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Transaction
                 {
                     OperationId = entity.OperationId,
                     State = entity.State,
-                    Timestamp = entity.Timestamp,
                     Amount = entity.Amount,
                     Fee = entity.Fee,
                     Hash = entity.Hash,
                     Ledger = entity.Ledger,
+                    CreatedAt = entity.CreatedAt,
                     Error = entity.Error,
                     ErrorCode = entity.ErrorCode
                 };
@@ -49,11 +49,11 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Transaction
                 PartitionKey = GetPartitionKey(),
                 RowKey = GetRowKey(broadcast.OperationId),
                 State = broadcast.State,
-                Timestamp = broadcast.Timestamp,
                 Amount = broadcast.Amount,
                 Fee = broadcast.Fee,
                 Hash = broadcast.Hash,
                 Ledger = broadcast.Ledger,
+                CreatedAt = broadcast.CreatedAt,
                 Error = broadcast.Error,
                 ErrorCode = broadcast.ErrorCode
             };

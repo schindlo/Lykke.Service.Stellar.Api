@@ -62,10 +62,10 @@ namespace Lykke.Service.Stellar.Api.Services
                 {
                     OperationId = operationId,
                     State = TxBroadcastState.Completed,
-                    Timestamp = tx.CreatedAt,
                     Amount = paymentOp.Amount.InnerValue,
                     Fee = tx.FeePaid,
                     Hash = tx.Hash,
+                    CreatedAt = tx.CreatedAt,
                     Ledger = tx.Ledger
                 };
                 await _broadcastRepository.AddAsync(broadcast);
@@ -76,7 +76,6 @@ namespace Lykke.Service.Stellar.Api.Services
                 {
                     OperationId = operationId,
                     State = TxBroadcastState.Failed,
-                    Timestamp = DateTime.UtcNow,
                     Error = ex.Message,
                     // TODO: set correct error
                     ErrorCode = TxExecutionError.Unknown
