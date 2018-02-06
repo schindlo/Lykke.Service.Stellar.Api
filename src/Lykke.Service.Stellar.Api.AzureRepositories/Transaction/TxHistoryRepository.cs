@@ -12,7 +12,7 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Transaction
 {
     public class TxHistoryRepository : ITxHistoryRepository
     {
-        private static string GetPartitionKey() => "Transaction";
+        private static string GetPartitionKey(TxDirectionType direction) => direction.ToString();
         private static string GetRowKey(ulong paymentOperationId) => (UInt64.MaxValue - paymentOperationId).ToString();
 
         private IReloadingManager<string> _dataConnStringManager;
@@ -25,18 +25,18 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Transaction
             _log = log;
         }
 
-        private INoSQLTableStorage<TxHistoryEntity> GetTable(TxAddressType type, string address)
+        private INoSQLTableStorage<TxHistoryEntity> GetTable(string address)
         {
             // TODO: cache
-            var tableName = $"{type}{address}";
+            var tableName = $"Account{address}";
             var table = AzureTableStorage<TxHistoryEntity>.Create(_dataConnStringManager, tableName, _log);
             return table;
         }
 
-        public async Task<(List<TxHistory> Items, string ContinuationToken)> GetAllAsync(TxAddressType type, string address, int take, string continuationToken)
+        public async Task<(List<TxHistory> Items, string ContinuationToken)> GetAllAsync(TxDirectionType direction, string address, int take, string continuationToken)
         {
-            var table = GetTable(type, address);
-            var filter = TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, address);
+            var table = GetTable(address);
+            var filter = TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, direction.ToString());
             var query = new TableQuery<TxHistoryEntity>().Where(filter).Take(take);
             var data = await table.GetDataWithContinuationTokenAsync(query, continuationToken);
 
@@ -50,38 +50,32 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Transaction
             return (itmes, data.ContinuationToken);
         }
 
-        public async Task<TxHistory> GetTopRecordAsync(TxAddressType type, string address)
+        public async Task<TxHistory> GetTopRecordAsync(TxDirectionType direction, string address)
         {
-            var table = GetTable(type, address);
-            var entity = await table.GetTopRecordAsync(GetPartitionKey());
-            var history = entity.ToDomain();
-            return history;
-        }
+            var table = GetTable(address);
 
-        public async Task AddAsync(TxAddressType type, TxHistory history)
-        {
-            var address = type == TxAddressType.From ? history.FromAddress : history.ToAddress;
-            var table = GetTable(type, address);
-
-            var entity = new TxHistoryEntity
+            var entity = await table.GetTopRecordAsync(GetPartitionKey(direction));
+            if (entity != null)
             {
-                PartitionKey = GetPartitionKey(),
-                RowKey = GetRowKey(history.PaymentOperationId),
-                Timestamp = history.Timestamp,
-                FromAddress = history.FromAddress,
-                ToAddress = history.ToAddress,
-                AssetId = history.AssetId,
-                Amount = history.Amount,
-                Hash = history.Hash,
-                PaymentOperationId = history.PaymentOperationId
-            };
+                var history = entity.ToDomain();
+                return history;
+            }
 
-            await table.InsertAsync(entity);
+            return null;
         }
 
-        public async Task DeleteAsync(TxAddressType type, string address)
+        public async Task InsertOrReplaceAsync(TxDirectionType direction, TxHistory history)
         {
-            var table = GetTable(type, address);
+            var address = direction == TxDirectionType.Outgoing ? history.FromAddress : history.ToAddress;
+            var table = GetTable(address);
+
+            var entity = history.ToEntity(GetPartitionKey(direction), GetRowKey(history.PaymentOperationId));
+            await table.InsertOrReplaceAsync(entity);
+        }
+
+        public async Task DeleteAsync(string address)
+        {
+            var table = GetTable(address);
             await table.DeleteAsync();
         }
     }

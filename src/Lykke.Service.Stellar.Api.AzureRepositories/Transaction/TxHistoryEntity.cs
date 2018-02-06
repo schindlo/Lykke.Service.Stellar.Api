@@ -22,5 +22,11 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Transaction
         public string Hash { get; set; }
 
         public ulong PaymentOperationId { get; set; }
+
+        public DateTime CreatedAt { get; set; }
+
+        public PaymentType PaymentType { get; set; }
+
+        public string Memo { get; set; }
     }
 }

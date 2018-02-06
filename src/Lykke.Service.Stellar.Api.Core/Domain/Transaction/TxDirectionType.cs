@@ -1,8 +1,8 @@
 ﻿namespace Lykke.Service.Stellar.Api.Core.Domain.Transaction
 {
-    public enum TxAddressType
+    public enum TxDirectionType
     {
-        From = 0,
-        To = 1
+        Incoming = 0,
+        Outgoing = 1,
     }
 }

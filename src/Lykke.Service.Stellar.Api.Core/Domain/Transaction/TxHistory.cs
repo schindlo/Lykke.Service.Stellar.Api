@@ -6,8 +6,6 @@ namespace Lykke.Service.Stellar.Api.Core.Domain.Transaction
     {
         public Guid? OperationId { get; set; }
 
-        public DateTimeOffset Timestamp { get; set; }
-
         public string FromAddress { get; set; }
 
         public string ToAddress { get; set; }
@@ -19,5 +17,11 @@ namespace Lykke.Service.Stellar.Api.Core.Domain.Transaction
         public string Hash { get; set; }
 
         public ulong PaymentOperationId { get; set; }
+
+        public DateTime CreatedAt { get; set; }
+
+        public PaymentType PaymentType { get; set; }
+
+        public string Memo { get; set; }
     }
 }

@@ -6,18 +6,39 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Transaction
     {
         public static TxHistory ToDomain(this TxHistoryEntity entity)
         {
-            var history = new TxHistory
+            var domain = new TxHistory
             {
                 OperationId = entity.OperationId,
-                Timestamp = entity.Timestamp,
                 FromAddress = entity.FromAddress,
                 ToAddress = entity.ToAddress,
                 AssetId = entity.AssetId,
                 Amount = entity.Amount,
                 Hash = entity.Hash,
-                PaymentOperationId = entity.PaymentOperationId
+                PaymentOperationId = entity.PaymentOperationId,
+                CreatedAt = entity.CreatedAt,
+                PaymentType = entity.PaymentType,
+                Memo = entity.Memo
             };
-            return history;
+            return domain;
+        }
+
+        public static TxHistoryEntity ToEntity(this TxHistory domain, string partitionKey, string rowKey)
+        {
+            var entity = new TxHistoryEntity
+            {
+                PartitionKey = partitionKey,
+                RowKey = rowKey,
+                FromAddress = domain.FromAddress,
+                ToAddress = domain.ToAddress,
+                AssetId = domain.AssetId,
+                Amount = domain.Amount,
+                Hash = domain.Hash,
+                PaymentOperationId = domain.PaymentOperationId,
+                CreatedAt = domain.CreatedAt,
+                PaymentType = domain.PaymentType,
+                Memo = domain.Memo
+            };
+            return entity;
         }
     }
 }
