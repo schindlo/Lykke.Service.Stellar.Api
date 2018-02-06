@@ -16,15 +16,16 @@ namespace Lykke.Service.Stellar.Api.Services
 {
     public class StellarService: IStellarService
     {
-        private string _horizonUrl = "https://horizon-testnet.stellar.org/";
+        private string _horizonUrl = null;
 
         private readonly ITxBroadcastRepository _broadcastRepository;
         private readonly ITxBuildRepository _buildRepository;
 
-        public StellarService(ITxBroadcastRepository broadcastRepository, ITxBuildRepository buildRepository)
+        public StellarService(ITxBroadcastRepository broadcastRepository, ITxBuildRepository buildRepository, string horizonUrl)
         {
             _broadcastRepository = broadcastRepository;
             _buildRepository = buildRepository;
+            _horizonUrl = horizonUrl;
         }
 
         public Boolean IsAddressValid(string address)

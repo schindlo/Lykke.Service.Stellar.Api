@@ -65,10 +65,11 @@ namespace Lykke.Service.Stellar.Api.Modules
             builder.RegisterType<TxHistoryRepository>()
                 .As<ITxHistoryRepository>()
                 .WithParameter(TypedParameter.From(dataConnStringManager));
-            
+
             builder.RegisterType<ObservationRepository<BalanceObservationEntity, BalanceObservation>>()
                 .As<IObservationRepository<BalanceObservation>>()
                 .WithParameter(TypedParameter.From(dataConnStringManager));
+                               
 
             builder.RegisterType<ObservationRepository<TransactionObservationEntity, TransactionObservation>>()
                 .As<IObservationRepository<TransactionObservation>>()
@@ -79,28 +80,30 @@ namespace Lykke.Service.Stellar.Api.Modules
                 .WithParameter(TypedParameter.From(dataConnStringManager));
 
             builder.RegisterType<StellarService>()
-                .As<IStellarService>()
-                .SingleInstance();
+                    .As<IStellarService>()
+                    .WithParameter("horizonUrl", _settings.CurrentValue.HorizonUrl)
+                    .SingleInstance();
 
             builder.RegisterType<BalanceService>()
-                .As<IBalanceService>()
-                .SingleInstance();
+                   .As<IBalanceService>()
+                   .WithParameter("horizonUrl",_settings.CurrentValue.HorizonUrl)
+                   .SingleInstance();
 
             builder.RegisterType<TransactionObservationService>()
                    .As<ITransactionObservationService>()
-                .SingleInstance();
+                    .SingleInstance();
 
             builder.RegisterType<WalletBalanceJob>()
-                .As<IStartable>()
-                .AutoActivate()
-                .WithParameter("period", 60 * 1000) // TODO: configureable
-                .SingleInstance();
+                    .As<IStartable>()
+                    .AutoActivate()
+                    .WithParameter("period", _settings.CurrentValue.WalletBalanceJobPeriodSeconds * 1000)
+                    .SingleInstance();
 
             builder.RegisterType<TransactionHistoryJob>()
-                .As<IStartable>()
-                .AutoActivate()
-                .WithParameter("period", 60 * 1000) // TODO: configureable
-                .SingleInstance();
+                    .As<IStartable>()
+                    .AutoActivate()
+                    .WithParameter("period", _settings.CurrentValue.TransactionHistoryJobPeriodSeconds * 1000)
+                    .SingleInstance();
             
             builder.Populate(_services);
         }

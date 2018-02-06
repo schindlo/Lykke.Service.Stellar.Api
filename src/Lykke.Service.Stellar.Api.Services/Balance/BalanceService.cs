@@ -15,16 +15,17 @@ namespace Lykke.Service.Stellar.Api.Services
     {
         private const int BatchSize = 100;
 
-        private string _horizonUrl = "https://horizon-testnet.stellar.org/";
+        private string _horizonUrl = null;
 
         private readonly IObservationRepository<BalanceObservation> _observationRepository;
 
         private readonly IWalletBalanceRepository _walletBalanceRepository;
 
-        public BalanceService(IObservationRepository<BalanceObservation> observationRepository, IWalletBalanceRepository walletBalanceRepository)
+        public BalanceService(IObservationRepository<BalanceObservation> observationRepository, IWalletBalanceRepository walletBalanceRepository, string horizonUrl)
         {
             _observationRepository = observationRepository;
             _walletBalanceRepository = walletBalanceRepository;
+            _horizonUrl = horizonUrl;
         }
 
         public async Task<AddressBalance> GetAddressBalanceAsync(string address, Fees fees = null)

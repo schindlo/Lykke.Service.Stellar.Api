@@ -3,7 +3,10 @@
     "Db": {
       "LogsConnString": "UseDevelopmentStorage=true"
       "DataConnString": "UseDevelopmentStorage=true"
-    }
+    },
+    "HorizonUrl": "",
+    "WalletBalanceJobPeriodSeconds": 60,
+    "TransactionHistoryJobPeriodSeconds": 60
   },
   "SlackNotifications": {
     "AzureQueue": {
