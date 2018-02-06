@@ -9,6 +9,7 @@ using Lykke.Service.Stellar.Api.Core.Domain.Transaction;
 using Lykke.Service.Stellar.Api.Core.Services;
 using Lykke.Service.Stellar.Api.Core.Exceptions;
 using StellarSdk.Model;
+using System.Collections.Generic;
 
 namespace Lykke.Service.Stellar.Api.Services
 {
@@ -109,6 +110,13 @@ namespace Lykke.Service.Stellar.Api.Services
             {
                 await _observationRepository.InsertOrReplaceAsync(observation);
             }
+        }
+
+        public async Task<List<TxHistory>> GetHistory(TxDirectionType direction, string address, int take, string afterHash)
+        {
+            // TODO: afterHash
+            var result = await _txHistoryRepository.GetAllAsync(direction, address, take, null);
+            return result.Items;
         }
 
         public async Task UpdateTransactionHistory()

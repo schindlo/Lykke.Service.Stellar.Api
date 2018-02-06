@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
+using Lykke.Service.Stellar.Api.Core.Domain.Transaction;
 
 namespace Lykke.Service.Stellar.Api.Core.Services
 {
@@ -16,6 +18,8 @@ namespace Lykke.Service.Stellar.Api.Core.Services
         Task DeleteIncomingTransactionObservationAsync(string address);
 
         Task DeleteOutgoingTransactionObservationAsync(string address);
+
+        Task<List<TxHistory>> GetHistory(TxDirectionType direction, string address, int take, string afterHash);
 
         Task UpdateTransactionHistory();
     }
