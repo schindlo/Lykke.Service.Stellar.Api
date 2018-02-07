@@ -162,10 +162,11 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
             return null;
         }
 
-        private async Task QueryAndProcessPayments(string address, PaymentCursor cursor)
+        private async Task<TransactionDetails> QueryAndProcessPayments(string address, PaymentCursor cursor, TransactionDetails lastTx)
         {
             var payments = await _horizonService.GetPayments(address, "asc", cursor.Cursor);
 
+            TransactionDetails tx = lastTx;
             cursor.Cursor = null;
             foreach (var payment in payments.Embedded.Records)
             {
@@ -176,8 +177,10 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
                     payment.TypeI == 1 && "native".Equals(payment.AssetType, StringComparison.OrdinalIgnoreCase) ||
                     payment.TypeI == 8)
                 {
-                    // TODO: cash latest tx details
-                    var tx = await _horizonService.GetTransactionDetails(payment.TransactionHash);
+                    if (tx == null || !tx.Hash.Equals(payment.TransactionHash, StringComparison.OrdinalIgnoreCase))
+                    {
+                        tx = await _horizonService.GetTransactionDetails(payment.TransactionHash);
+                    }
 
                     var history = new TxHistory
                     {
@@ -236,6 +239,8 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
                     }
                 }
             }
+
+            return tx;
         }
 
         private async Task ProcessTransactionObservation(TransactionObservation observation)
@@ -249,10 +254,11 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
                     cursor.Cursor = top.PaymentOperationId;
                     cursor.Sequence = top.Sequence + 1;
                 }
-   
+
+                TransactionDetails lastTx = null;
                 do
                 {
-                    await QueryAndProcessPayments(observation.Address, cursor);
+                    lastTx = await QueryAndProcessPayments(observation.Address, cursor, lastTx);
                 }
                 while (!string.IsNullOrEmpty(cursor.Cursor));
             }
