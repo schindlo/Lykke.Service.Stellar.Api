@@ -34,6 +34,6 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Transaction
 
         public string Memo { get; set; }
 
-        public string IndexedValue { get; set; }
+        public string Value { get; set; }
     }
 }
