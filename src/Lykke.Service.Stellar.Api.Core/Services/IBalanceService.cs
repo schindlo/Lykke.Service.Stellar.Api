@@ -22,5 +22,7 @@ namespace Lykke.Service.Stellar.Api.Core.Services
         Task<(List<WalletBalance> Wallets, string ContinuationToken)> GetBalancesAsync(int take, string continuationToken);
 
         Task UpdateWalletBalances();
+
+        string GetLastJobError();
     }
 }

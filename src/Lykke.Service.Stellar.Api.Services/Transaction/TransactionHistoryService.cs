@@ -16,6 +16,8 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
     {
         private const int BatchSize = 100;
 
+        public string _LastJobError { get; private set; }
+
         private readonly IHorizonService _horizonService;
         private readonly IObservationRepository<TransactionObservation> _observationRepository;
         private readonly ITxHistoryRepository _txHistoryRepository;
@@ -117,18 +119,35 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
             return result;
         }
 
+        public string GetLastJobError()
+        {
+            return _LastJobError;
+        }
+
         public async Task UpdateTransactionHistory()
         {
-            string continuationToken = null;
-            do
+            try
             {
-                var observations = await _observationRepository.GetAllAsync(BatchSize, continuationToken);
-                foreach (var item in observations.Items)
+                string continuationToken = null;
+                do
                 {
-                    await ProcessTransactionObservation(item);
-                }
-                continuationToken = observations.ContinuationToken;
-            } while (continuationToken != null);
+                    var observations = await _observationRepository.GetAllAsync(BatchSize, continuationToken);
+                    foreach (var item in observations.Items)
+                    {
+                        await ProcessTransactionObservation(item);
+                    }
+                    continuationToken = observations.ContinuationToken;
+                } while (continuationToken != null);
+
+                _LastJobError = null;
+            }
+            catch (Exception ex)
+            {
+                _LastJobError = "Error in job " + nameof(TransactionHistoryService) + "." + nameof(UpdateTransactionHistory) +
+                    ": " + ex.Message;
+                await _log.WriteErrorAsync(nameof(TransactionHistoryService), nameof(UpdateTransactionHistory),
+                    "Failed to execute transaction history update", ex);
+            }
         }
 
         private string GetMemo(TransactionDetails tx)
