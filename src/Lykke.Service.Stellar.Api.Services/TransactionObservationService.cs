@@ -221,13 +221,15 @@ namespace Lykke.Service.Stellar.Api.Services
                     if (address.Equals(history.ToAddress, StringComparison.OrdinalIgnoreCase))
                     {
                         await _txHistoryRepository.InsertOrReplaceAsync(TxDirectionType.Incoming, history);
+
+                        inverseSeq--;
+                        history.InverseSequence = inverseSeq;
                     }
                     if (address.Equals(history.FromAddress, StringComparison.OrdinalIgnoreCase))
                     {
                         await _txHistoryRepository.InsertOrReplaceAsync(TxDirectionType.Outgoing, history);
+                        inverseSeq--;
                     }
-
-                    inverseSeq--;
                 }
             }
 
