@@ -110,17 +110,21 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Transaction
             await table.InsertOrReplaceAsync(entity);
 
             // hash to payments index
+            var value = entity.RowKey;
             var index = await table.GetDataAsync(GetPartitionKeyHashIndex(), entity.Hash);
-            if (index == null)
+            if (index == null || string.IsNullOrEmpty(index.Value))
             {
                 index = new TxHistoryEntity
                 {
                     PartitionKey = GetPartitionKeyHashIndex(),
                     RowKey = history.Hash,
+                    Value = value
                 };
             }
-            index.Value += string.IsNullOrEmpty(index.Value) ? "" : ";";
-            index.Value += entity.RowKey;
+            else if (!index.Value.Contains(value))
+            {
+                index.Value += ";" + value;
+            }
             await table.InsertOrReplaceAsync(index);
 
             // index to latest payment
