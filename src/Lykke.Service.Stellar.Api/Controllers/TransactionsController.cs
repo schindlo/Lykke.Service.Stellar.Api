@@ -8,6 +8,7 @@ using Lykke.Service.Stellar.Api.Core.Services;
 using Lykke.Service.Stellar.Api.Helpers;
 using Lykke.Common.Api.Contract.Responses;
 using Lykke.Service.Stellar.Api.Core.Domain;
+using Lykke.Service.Stellar.Api.Core.Exceptions;
 
 namespace Lykke.Service.Stellar.Api.Controllers
 {
@@ -55,7 +56,19 @@ namespace Lykke.Service.Stellar.Api.Controllers
                     return BadRequest(ErrorResponse.Create($"{nameof(request.AssetId)} was not found"));
                 }
 
-                var amount = Int64.Parse(request.Amount);
+                Int64 amount;
+                try
+                {
+                    amount = Int64.Parse(request.Amount);
+                }
+                catch(FormatException)
+                {
+                    // too small (e.g. 0.1)
+                    return BadRequest(new BuildTransactionResponse()
+                    {
+                        ErrorCode = TransactionExecutionError.AmountIsTooSmall
+                    });
+                }
                 var fees = await _stellarService.GetFeesAsync();
                 var fromAddressBalance = await _balanceService.GetAddressBalanceAsync(request.FromAddress, fees);
 
@@ -63,9 +76,10 @@ namespace Lykke.Service.Stellar.Api.Controllers
                 var availableBalance = fromAddressBalance.Balance - fromAddressBalance.MinBalance;
                 if (requiredBalance >= availableBalance)
                 {
-                    return StatusCode(StatusCodes.Status406NotAcceptable,
-                        ErrorResponse.Create($"There no enough funds on {nameof(request.FromAddress)} (" +
-                                             $"required: {requiredBalance}, available: {availableBalance})"));
+                    return BadRequest(new BuildTransactionResponse()
+                    {
+                        ErrorCode = TransactionExecutionError.NotEnoughtBalance
+                    });
                 }
 
                 xdrBase64 = await _stellarService.BuildTransactionAsync(request.OperationId, fromAddressBalance, request.ToAddress, amount);
@@ -91,7 +105,25 @@ namespace Lykke.Service.Stellar.Api.Controllers
                 return new StatusCodeResult(StatusCodes.Status409Conflict);
             }
 
-            await _stellarService.BroadcastTxAsync(request.OperationId, request.SignedTransaction);
+            try
+            {
+                await _stellarService.BroadcastTxAsync(request.OperationId, request.SignedTransaction);
+            }
+            catch(BusinessException ex)
+            {
+                if(ex.Data.Contains("ErrorCode"))
+                {
+                    return BadRequest(new BuildTransactionResponse()
+                    {
+                        ErrorCode = (TransactionExecutionError)ex.Data["ErrorCode"]
+                    });
+                }
+                else
+                {
+                    // technical / unknown problem
+                    throw ex;
+                }
+            }
 
             return Ok();
         }

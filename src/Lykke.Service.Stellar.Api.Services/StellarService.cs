@@ -11,6 +11,7 @@ using Lykke.Service.Stellar.Api.Core.Domain.Balance;
 using Lykke.Service.Stellar.Api.Core.Exceptions;
 using Lykke.Service.Stellar.Api.Core.Services;
 using Lykke.Service.Stellar.Api.Core.Domain;
+using StellarSdk.Exceptions;
 
 namespace Lykke.Service.Stellar.Api.Services
 {
@@ -77,13 +78,28 @@ namespace Lykke.Service.Stellar.Api.Services
                     OperationId = operationId,
                     State = TxBroadcastState.Failed,
                     Error = ex.Message,
-                    // TODO: set correct error
-                    ErrorCode = TxExecutionError.Unknown
+                    ErrorCode = getErrorCode(ex)
                 };
                 await _broadcastRepository.AddAsync(broadcast);
 
-                throw new BusinessException($"Broadcasting transaction failed (operationId: {operationId}).", ex);
+                var be = new BusinessException($"Broadcasting transaction failed (operationId: {operationId}).", ex);
+                be.Data.Add("ErrorCode", broadcast.ErrorCode);
+                throw be;
             }
+        }
+
+        private TxExecutionError getErrorCode(Exception ex)
+        {
+            if(ex.GetType() == typeof(BadRequestException))
+            {
+                var bre = (BadRequestException)ex;
+                var ops = bre.ErrorDetails?.Extras?.ResultCodes?.Operations;
+                if(bre.ErrorDetails.Status == 400 && ops != null && ops.Length > 0 && ops[0].Equals("op_underfunded"))
+                {
+                    return TxExecutionError.NotEnoughtBalance;
+                }
+            }
+            return TxExecutionError.Unknown;
         }
 
         public async Task DeleteTxBroadcastAsync(Guid operationId)
