@@ -65,7 +65,7 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
                     OperationId = operationId,
                     State = TxBroadcastState.Failed,
                     Error = ex.Message,
-                    ErrorCode = getErrorCode(ex)
+                    ErrorCode = GetErrorCode(ex)
                 };
                 await _broadcastRepository.AddAsync(broadcast);
 
@@ -75,7 +75,7 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
             }
         }
 
-        private TxExecutionError getErrorCode(Exception ex)
+        private TxExecutionError GetErrorCode(Exception ex)
         {
             if(ex.GetType() == typeof(BadRequestException))
             {
