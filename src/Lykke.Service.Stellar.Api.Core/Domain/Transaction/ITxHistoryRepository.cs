@@ -8,7 +8,9 @@ namespace Lykke.Service.Stellar.Api.Core.Domain.Transaction
     {
         Task<(List<TxHistory> Items, string ContinuationToken)> GetAllAsync(TxDirectionType direction, string address, int take, string continuationToken);
 
-        Task<TxHistory> GetTopRecordAsync(TxDirectionType direction, string address);
+        Task<List<TxHistory>> GetAllAfterHashAsync(TxDirectionType direction, string address, int take, string afterHash);
+
+        Task<TxHistory> GetLastRecordAsync(string address);
 
         Task InsertOrReplaceAsync(TxDirectionType direction, TxHistory history);
 

@@ -19,5 +19,6 @@
 
   <ItemGroup>
     <Folder Include="Balance\" />
+    <Folder Include="Transaction\" />
   </ItemGroup>
 </Project>

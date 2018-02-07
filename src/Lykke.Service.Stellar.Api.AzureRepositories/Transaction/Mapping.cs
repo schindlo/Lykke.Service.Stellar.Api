@@ -1,14 +1,26 @@
-﻿using Lykke.Service.Stellar.Api.Core.Domain.Transaction;
+﻿using System.Collections.Generic;
+using Lykke.Service.Stellar.Api.Core.Domain.Transaction;
 
 namespace Lykke.Service.Stellar.Api.AzureRepositories.Transaction
 {
     public static class Mapping
     {
+        public static List<TxHistory> ToDomain(this IEnumerable<TxHistoryEntity> entities)
+        {
+            var items = new List<TxHistory>();
+            foreach (var entity in entities)
+            {
+                var history = entity.ToDomain();
+                items.Add(history);
+            }
+            return items;
+        }
+
         public static TxHistory ToDomain(this TxHistoryEntity entity)
         {
             var domain = new TxHistory
             {
-                InverseSequence = entity.InverseSequence,
+                Sequence = entity.Sequence,
                 OperationId = entity.OperationId,
                 FromAddress = entity.FromAddress,
                 ToAddress = entity.ToAddress,
@@ -29,7 +41,7 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Transaction
             var entity = new TxHistoryEntity
             {
                 PartitionKey = partitionKey,
-                RowKey = domain.InverseSequence.ToString(),
+                RowKey = domain.Sequence.ToString("D20"),
                 FromAddress = domain.FromAddress,
                 ToAddress = domain.ToAddress,
                 AssetId = domain.AssetId,

@@ -4,7 +4,7 @@ namespace Lykke.Service.Stellar.Api.Core.Domain.Transaction
 {
     public class TxHistory
     {
-        public ulong InverseSequence { get; set; }
+        public ulong Sequence { get; set; }
 
         public Guid? OperationId { get; set; }
 
