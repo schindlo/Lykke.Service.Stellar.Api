@@ -17,16 +17,17 @@ namespace Lykke.Service.Stellar.Api.Services
     {
         private const int BatchSize = 100;
 
-        private string _horizonUrl = "https://horizon-testnet.stellar.org/";
+        private readonly string _horizonUrl;
 
         private readonly IObservationRepository<TransactionObservation> _observationRepository;
         private readonly ITxHistoryRepository _txHistoryRepository;
         private readonly ILog _log;
 
-        public TransactionObservationService(IObservationRepository<TransactionObservation> observationRepository, ITxHistoryRepository txHistoryRepository, ILog log)
+        public TransactionObservationService(IObservationRepository<TransactionObservation> observationRepository, ITxHistoryRepository txHistoryRepository, string horizonUrl, ILog log)
         {
             _observationRepository = observationRepository;
             _txHistoryRepository = txHistoryRepository;
+            _horizonUrl = horizonUrl;
             _log = log;
         }
 
@@ -153,7 +154,7 @@ namespace Lykke.Service.Stellar.Api.Services
             return null;
         }
 
-        private async Task<string> QueryAndProcessPayments(string address, string cursor)
+        private async Task<(string, ulong)> QueryAndProcessPayments(string address, string cursor, ulong inverseSeq)
         {
             var builder = new PaymentCallBuilder(_horizonUrl);
             builder.accountId(address);
@@ -175,9 +176,10 @@ namespace Lykke.Service.Stellar.Api.Services
 
                     var history = new TxHistory
                     {
+                        InverseSequence = inverseSeq,
                         AssetId = Asset.Stellar.Id,
                         Hash = payment.TransactionHash,
-                        PaymentOperationId = UInt64.Parse(payment.Id),
+                        PaymentOperationId = payment.Id,
                         CreatedAt = payment.CreatedAt,
                         Memo = GetMemo(tx)
                     };
@@ -214,6 +216,8 @@ namespace Lykke.Service.Stellar.Api.Services
                     }
                     history.Amount = Convert.ToInt64(amount * StellarBase.One.Value);
 
+                    // TODO: map operation id
+
                     if (address.Equals(history.ToAddress, StringComparison.OrdinalIgnoreCase))
                     {
                         await _txHistoryRepository.InsertOrReplaceAsync(TxDirectionType.Incoming, history);
@@ -222,23 +226,27 @@ namespace Lykke.Service.Stellar.Api.Services
                     {
                         await _txHistoryRepository.InsertOrReplaceAsync(TxDirectionType.Outgoing, history);
                     }
+
+                    inverseSeq--;
                 }
             }
 
-            return nextCursor;
+            return (nextCursor, inverseSeq);
         }
 
         private async Task ProcessTransactionObservation(TransactionObservation observation)
         {
             try
             {
-                ulong latest = 0;
+                string latest = string.Empty;
+                ulong inverseSeq = UInt64.MaxValue;
                 if (observation.IsIncomingObserved)
                 {
                     var top = await _txHistoryRepository.GetTopRecordAsync(TxDirectionType.Incoming, observation.Address);
                     if (top != null)
                     {
                         latest = top.PaymentOperationId;
+                        inverseSeq = top.InverseSequence - 1;
                     }
                 }
                 if (observation.IsOutgoingObserved)
@@ -246,14 +254,19 @@ namespace Lykke.Service.Stellar.Api.Services
                     var top = await _txHistoryRepository.GetTopRecordAsync(TxDirectionType.Outgoing, observation.Address);
                     if (top != null)
                     {
-                        latest = Math.Max(latest, top.PaymentOperationId);
+                        var outInverseSeq = top.InverseSequence - 1;
+                        if (outInverseSeq < inverseSeq)
+                        {
+                            latest = top.PaymentOperationId;
+                            inverseSeq = outInverseSeq;
+                        }
                     }
                 }
 
                 string cursor = latest.ToString();
                 do
                 {
-                    cursor = await QueryAndProcessPayments(observation.Address, cursor);
+                    (cursor, inverseSeq) = await QueryAndProcessPayments(observation.Address, cursor, inverseSeq);
                 }
                 while (cursor != null);
             }

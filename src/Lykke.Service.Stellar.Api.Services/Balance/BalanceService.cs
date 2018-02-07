@@ -15,7 +15,7 @@ namespace Lykke.Service.Stellar.Api.Services
     {
         private const int BatchSize = 100;
 
-        private string _horizonUrl = null;
+        private readonly string _horizonUrl;
 
         private readonly IObservationRepository<BalanceObservation> _observationRepository;
 

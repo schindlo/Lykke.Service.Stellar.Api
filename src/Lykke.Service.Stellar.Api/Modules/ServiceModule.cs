@@ -91,7 +91,8 @@ namespace Lykke.Service.Stellar.Api.Modules
 
             builder.RegisterType<TransactionObservationService>()
                    .As<ITransactionObservationService>()
-                    .SingleInstance();
+                   .WithParameter("horizonUrl", _settings.CurrentValue.HorizonUrl)
+                   .SingleInstance();
 
             builder.RegisterType<WalletBalanceJob>()
                     .As<IStartable>()

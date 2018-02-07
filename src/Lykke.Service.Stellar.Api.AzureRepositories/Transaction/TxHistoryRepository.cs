@@ -13,7 +13,6 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Transaction
     public class TxHistoryRepository : ITxHistoryRepository
     {
         private static string GetPartitionKey(TxDirectionType direction) => direction.ToString();
-        private static string GetRowKey(ulong paymentOperationId) => (UInt64.MaxValue - paymentOperationId).ToString();
 
         private IReloadingManager<string> _dataConnStringManager;
 
@@ -69,7 +68,7 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Transaction
             var address = direction == TxDirectionType.Outgoing ? history.FromAddress : history.ToAddress;
             var table = GetTable(address);
 
-            var entity = history.ToEntity(GetPartitionKey(direction), GetRowKey(history.PaymentOperationId));
+            var entity = history.ToEntity(GetPartitionKey(direction));
             await table.InsertOrReplaceAsync(entity);
         }
 

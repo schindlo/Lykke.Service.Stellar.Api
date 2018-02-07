@@ -9,6 +9,11 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Transaction
     [ValueTypeMergingStrategy(ValueTypeMergingStrategy.UpdateAlways)]
     public class TxHistoryEntity : AzureTableEntity
     {
+        public ulong InverseSequence 
+        {
+            get => UInt64.Parse(RowKey); 
+        }
+
         public Guid? OperationId { get; set; }
 
         public string FromAddress { get; set; }
@@ -21,7 +26,7 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Transaction
 
         public string Hash { get; set; }
 
-        public ulong PaymentOperationId { get; set; }
+        public string PaymentOperationId { get; set; }
 
         public DateTime CreatedAt { get; set; }
 

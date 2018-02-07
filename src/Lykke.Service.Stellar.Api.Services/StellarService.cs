@@ -16,7 +16,7 @@ namespace Lykke.Service.Stellar.Api.Services
 {
     public class StellarService: IStellarService
     {
-        private string _horizonUrl = null;
+        private readonly string _horizonUrl;
 
         private readonly ITxBroadcastRepository _broadcastRepository;
         private readonly ITxBuildRepository _buildRepository;
