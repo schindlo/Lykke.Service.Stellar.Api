@@ -2,6 +2,11 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Lykke.Service.Stellar.Api.Core.Services;
+using System.Collections.Generic;
+using System;
+using Lykke.Service.Stellar.Api.Models;
+using Lykke.Service.Stellar.Api.Core.Domain.Transaction;
+
 namespace Lykke.Service.Stellar.Api.Controllers
 {
     [Route("/api/transactions/history")]
@@ -65,15 +70,34 @@ namespace Lykke.Service.Stellar.Api.Controllers
         [HttpGet("to/{address}")]
         public async Task<IActionResult> GetIncomingHistory(string address, [FromQuery] int take, [FromQuery] string afterHash = "")
         {
-            // TODO
-            return new StatusCodeResult(StatusCodes.Status501NotImplemented);
+            var transactions = await _txObservationService.GetHistory(Core.Domain.Transaction.TxDirectionType.Incoming, address, take, afterHash);
+            return Ok(HistoryToModel(transactions));
         }
 
         [HttpGet("from/{address}")]
         public async Task<IActionResult> GetOutgoingHistory(string address, [FromQuery] int take, [FromQuery] string afterHash = "")
         {
-            // TODO
-            return new StatusCodeResult(StatusCodes.Status501NotImplemented);
+            var transactions = await _txObservationService.GetHistory(Core.Domain.Transaction.TxDirectionType.Outgoing, address, take, afterHash);
+            return Ok(HistoryToModel(transactions));
+        }
+
+        private List<StellarHistoricalTransactionContract> HistoryToModel(List<TxHistory> transactions)
+        {
+            var ret = new List<StellarHistoricalTransactionContract>();
+            foreach (var tx in transactions)
+            {
+                ret.Add(new StellarHistoricalTransactionContract()
+                {
+                    OperationId = tx.OperationId.HasValue ? tx.OperationId.Value : Guid.Empty,
+                    Timestamp = tx.CreatedAt,
+                    FromAddress = tx.FromAddress,
+                    ToAddress = tx.ToAddress,
+                    AssetId = tx.AssetId,
+                    Amount = "" + tx.Amount,
+                    Hash = tx.Hash
+                });
+            }
+            return ret;
         }
     }
 }
