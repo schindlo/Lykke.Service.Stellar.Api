@@ -114,7 +114,8 @@ namespace Lykke.Service.Stellar.Api.Controllers
                     ToAddress = tx.ToAddress,
                     AssetId = tx.AssetId,
                     Amount = tx.Amount.ToString(),
-                    Hash = tx.Hash
+                    Hash = tx.Hash,
+                    DestinationTag = tx.Memo
                 });
             }
             return ret;
