@@ -14,5 +14,7 @@ namespace Lykke.Service.Stellar.Api.Core.Services
         Task<LedgerDetails> GetLatestLedger();
 
         Task<AccountDetails> GetAccountDetails(string address);
+
+        Task<long> GetLedgerNoOfLastPayment(string address);
     }
 }

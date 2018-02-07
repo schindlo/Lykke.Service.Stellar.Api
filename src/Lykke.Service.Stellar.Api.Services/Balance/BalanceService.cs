@@ -106,7 +106,7 @@ namespace Lykke.Service.Stellar.Api.Services
                 if (walletEntry.Balance != addressBalance.Balance)
                 {
                     walletEntry.Balance = addressBalance.Balance;
-                    // TODO: find ledger of last payment
+                    walletEntry.Ledger = await _horizonService.GetLedgerNoOfLastPayment(address);
                     await _walletBalanceRepository.InsertOrReplaceAsync(walletEntry);
                 }
             }

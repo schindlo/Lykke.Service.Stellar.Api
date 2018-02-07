@@ -64,5 +64,19 @@ namespace Lykke.Service.Stellar.Api.Services.Horizon
             var accountDetails = await builder.Call();
             return accountDetails;
         }
+
+        public async Task<long> GetLedgerNoOfLastPayment(string address)
+        {
+            var builder = new PaymentCallBuilder(_horizonUrl);
+            builder.accountId(address);
+            builder.order("desc").limit(1);
+            var payments = await builder.Call();
+            if (payments?.Embedded?.Records == null || payments?.Embedded?.Records.Length < 1)
+            {
+                throw new HorizonApiException($"Latest ledger missing from query result.");
+            }
+            var tx = await GetTransactionDetails(payments.Embedded.Records[0].TransactionHash);
+            return tx.Ledger;
+        }
     }
 }
