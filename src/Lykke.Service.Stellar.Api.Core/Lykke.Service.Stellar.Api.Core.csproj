@@ -17,6 +17,7 @@
   <ItemGroup>
     <PackageReference Include="Lykke.Common" Version="4.4.1" />
     <PackageReference Include="stellar-sdk" Version="0.1.6" />
+    <PackageReference Include="stellar-base" Version="0.1.1" />
   </ItemGroup>
 
 </Project>

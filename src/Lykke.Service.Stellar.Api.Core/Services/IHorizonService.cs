@@ -1,5 +1,6 @@
 ﻿using System.Threading.Tasks;
 using StellarSdk.Model;
+using StellarGenerated = Stellar.Generated;
 
 namespace Lykke.Service.Stellar.Api.Core.Services
 {
@@ -18,5 +19,7 @@ namespace Lykke.Service.Stellar.Api.Core.Services
         Task<long> GetLedgerNoOfLastPayment(string address);
 
         long GetAccountMergeAmount(string resultXdrBase64, int accountMergeInTx);
+
+        StellarGenerated.PaymentOp GetFirstPaymentFromTransaction(TransactionDetails tx);
     }
 }

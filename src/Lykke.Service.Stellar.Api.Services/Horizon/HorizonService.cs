@@ -107,5 +107,20 @@ namespace Lykke.Service.Stellar.Api.Services.Horizon
 
             return 0;
         }
+
+        public StellarGenerated.PaymentOp GetFirstPaymentFromTransaction(TransactionDetails tx)
+        {
+            var xdr = Convert.FromBase64String(tx.EnvelopeXdr);
+            var reader = new StellarGenerated.ByteReader(xdr);
+            var txEnvelope = StellarGenerated.TransactionEnvelope.Decode(reader);
+            if (txEnvelope?.Tx?.Operations == null || txEnvelope.Tx.Operations.Length < 1 ||
+                txEnvelope.Tx.Operations[0].Body?.PaymentOp == null)
+            {
+                throw new HorizonApiException($"Failed to extract first payment operation from transaction (hash: {tx.Hash}.");
+            }
+
+            var paymentOp = txEnvelope.Tx.Operations[0].Body.PaymentOp;
+            return paymentOp;
+        }
     }
 }

@@ -3,12 +3,12 @@ using System.Threading.Tasks;
 using StellarBase = Stellar;
 using StellarGenerated = Stellar.Generated;
 using StellarSdk.Model;
+using StellarSdk.Exceptions;
 using Lykke.Service.Stellar.Api.Core.Domain.Transaction;
 using Lykke.Service.Stellar.Api.Core.Domain.Balance;
 using Lykke.Service.Stellar.Api.Core.Exceptions;
 using Lykke.Service.Stellar.Api.Core.Services;
 using Lykke.Service.Stellar.Api.Core.Domain;
-using StellarSdk.Exceptions;
 
 namespace Lykke.Service.Stellar.Api.Services.Transaction
 {
@@ -35,13 +35,7 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
             try
             {
                 var tx = await SubmitTransactionAsync(xdrBase64);
-
-                // TODO: Move to stellar-base
-                var xdr = Convert.FromBase64String(tx.EnvelopeXdr);
-                var reader = new StellarGenerated.ByteReader(xdr);
-                var txEnvelope = StellarGenerated.TransactionEnvelope.Decode(reader);
-                var paymentOp = txEnvelope.Tx.Operations[0].Body.PaymentOp;
-
+                var paymentOp = _horizonService.GetFirstPaymentFromTransaction(tx);
                 var broadcast = new TxBroadcast
                 {
                     OperationId = operationId,
