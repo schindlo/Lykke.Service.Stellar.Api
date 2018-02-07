@@ -8,6 +8,7 @@ using Lykke.Service.Stellar.Api.Core.Domain.Transaction;
 using System.Collections.Generic;
 using Microsoft.WindowsAzure.Storage.Table;
 using System.Linq;
+using System.Collections.Concurrent;
 
 namespace Lykke.Service.Stellar.Api.AzureRepositories.Transaction
 {
@@ -20,17 +21,24 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Transaction
         private ILog _log;
         private IReloadingManager<string> _dataConnStringManager;
 
+        private ConcurrentDictionary<string, INoSQLTableStorage<TxHistoryEntity>> _tableCache;
+
         public TxHistoryRepository(IReloadingManager<string> dataConnStringManager, ILog log)
         {
             _dataConnStringManager = dataConnStringManager;
             _log = log;
+            _tableCache = new ConcurrentDictionary<string, INoSQLTableStorage<TxHistoryEntity>>();
         }
 
         private INoSQLTableStorage<TxHistoryEntity> GetTable(string address)
         {
-            // TODO: cache
             var tableName = $"Account{address}";
+            if(_tableCache.ContainsKey(tableName))
+            {
+                return _tableCache[tableName];
+            }
             var table = AzureTableStorage<TxHistoryEntity>.Create(_dataConnStringManager, tableName, _log);
+            _tableCache[tableName] = table;
             return table;
         }
 
@@ -127,8 +135,13 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Transaction
 
         public async Task DeleteAsync(string address)
         {
+            var tableName = $"Account{address}";
             var table = GetTable(address);
             await table.DeleteAsync();
+
+            // remove from cache
+            INoSQLTableStorage<TxHistoryEntity> ignored;
+            _tableCache.Remove(tableName, out ignored);
         }
     }
 }
