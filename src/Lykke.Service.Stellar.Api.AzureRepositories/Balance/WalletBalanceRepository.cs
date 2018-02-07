@@ -20,7 +20,7 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Balance
 
         public WalletBalanceRepository(IReloadingManager<string> dataConnStringManager, ILog log)
         {
-            _table = AzureTableStorage<WalletBalanceEntity>.Create(dataConnStringManager, "StellarApiWalletBalance", log);
+            _table = AzureTableStorage<WalletBalanceEntity>.Create(dataConnStringManager, "WalletBalance", log);
         }
 
         public async Task<(List<WalletBalance> Entities, string ContinuationToken)> GetAllAsync(int take, string continuationToken)

@@ -17,7 +17,7 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Transaction
 
         public TxBroadcastRepository(IReloadingManager<string> dataConnStringManager, ILog log)
         {
-            _table = AzureTableStorage<TxBroadcastEntity>.Create(dataConnStringManager, "StellarApiTransaction", log);
+            _table = AzureTableStorage<TxBroadcastEntity>.Create(dataConnStringManager, "Transaction", log);
         }
 
         public async Task<TxBroadcast> GetAsync(Guid operationId)

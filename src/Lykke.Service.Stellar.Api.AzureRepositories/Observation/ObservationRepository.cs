@@ -17,10 +17,10 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Observation
 
         public ObservationRepository(IReloadingManager<string> dataConnStringManager, ILog log)
         {
-            _table = AzureTableStorage<T>.Create(dataConnStringManager, "StellarApiObservation", log);
+            _table = AzureTableStorage<T>.Create(dataConnStringManager, "Observation", log);
         }
 
-        public async Task<(List<U> Entities, string ContinuationToken)> GetAllAsync(int take, string continuationToken)
+        public async Task<(List<U> Items, string ContinuationToken)> GetAllAsync(int take, string continuationToken)
         {
             var query = new TableQuery<T>().Where(TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, typeof(U).Name))
                                            .Take(take);

@@ -125,7 +125,7 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
             do
             {
                 var observations = await _observationRepository.GetAllAsync(BatchSize, continuationToken);
-                foreach (var item in observations.Entities)
+                foreach (var item in observations.Items)
                 {
                     await ProcessTransactionObservation(item);
                 }

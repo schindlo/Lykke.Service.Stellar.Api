@@ -90,36 +90,41 @@ namespace Lykke.Service.Stellar.Api.Services
             return await _walletBalanceRepository.GetAllAsync(take, continuationToken);
         }
 
+        private async Task ProcessWallet(string address)
+        {
+            var addressBalance = await GetAddressBalanceAsync(address);
+            if (addressBalance.Balance > 0)
+            {
+                var walletEntry = await _walletBalanceRepository.GetAsync(address);
+                if (walletEntry == null)
+                {
+                    walletEntry = new WalletBalance
+                    {
+                        Address = address
+                    };
+                }
+                if (walletEntry.Balance != addressBalance.Balance)
+                {
+                    walletEntry.Balance = addressBalance.Balance;
+                    // TODO: find ledger of last payment
+                    await _walletBalanceRepository.InsertOrReplaceAsync(walletEntry);
+                }
+            }
+            else
+            {
+                await _walletBalanceRepository.DeleteIfExistAsync(address);
+            }
+        }
+
         public async Task UpdateWalletBalances()
         {
             string continuationToken = null;
             do
             {
                 var observations = await _observationRepository.GetAllAsync(BatchSize, continuationToken);
-                foreach (var entry in observations.Entities)
+                foreach (var item in observations.Items)
                 {
-                    var addressBalance = await GetAddressBalanceAsync(entry.Address);
-                    if (addressBalance.Balance > 0)
-                    {
-                        var walletEntry = await _walletBalanceRepository.GetAsync(entry.Address);
-                        if (walletEntry == null)
-                        {
-                            walletEntry = new WalletBalance
-                            {
-                                Address = entry.Address
-                            };
-                        }
-                        if (walletEntry.Balance != addressBalance.Balance)
-                        {
-                            walletEntry.Balance = addressBalance.Balance;
-                            // TODO: find ledger of last payment
-                            await _walletBalanceRepository.InsertOrReplaceAsync(walletEntry);
-                        }
-                    }
-                    else
-                    {
-                        await _walletBalanceRepository.DeleteIfExistAsync(entry.Address);
-                    }
+                    await ProcessWallet(item.Address);
                 }
                 continuationToken = observations.ContinuationToken;
             } while (continuationToken != null);
