@@ -1,10 +1,7 @@
 ﻿using System;
-using System.Linq;
-using System.Collections.Generic;
 using System.Threading.Tasks;
 using StellarBase = Stellar;
 using StellarGenerated = Stellar.Generated;
-using StellarSdk;
 using StellarSdk.Model;
 using Lykke.Service.Stellar.Api.Core.Domain.Transaction;
 using Lykke.Service.Stellar.Api.Core.Domain.Balance;
@@ -17,16 +14,15 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
 {
     public class TransactionService: ITransactionService
     {
-        private readonly string _horizonUrl;
-
+        private readonly IHorizonService _horizonService;
         private readonly ITxBroadcastRepository _broadcastRepository;
         private readonly ITxBuildRepository _buildRepository;
 
-        public TransactionService(ITxBroadcastRepository broadcastRepository, ITxBuildRepository buildRepository, string horizonUrl)
+        public TransactionService(IHorizonService horizonService, ITxBroadcastRepository broadcastRepository, ITxBuildRepository buildRepository)
         {
+            _horizonService = horizonService;
             _broadcastRepository = broadcastRepository;
             _buildRepository = buildRepository;
-            _horizonUrl = horizonUrl;
         }
 
         public async Task<TxBroadcast> GetTxBroadcastAsync(Guid operationId)
@@ -96,29 +92,14 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
 
         private async Task<TransactionDetails> SubmitTransactionAsync(string signedTx)
         {
-            // submit a tx
-            var builder = new TransactionCallBuilder(_horizonUrl);
-            builder.submitTransaction(signedTx);
-            var tx = await builder.Call();
-            if (tx == null || string.IsNullOrEmpty(tx.Hash))
-            {
-                throw new HorizonApiException($"Submitting transaction failed. No valid transaction was returned.");
-            }
-
-            // read details of this tx
-            builder = new TransactionCallBuilder(_horizonUrl);
-            builder.transaction(tx.Hash);
-            var txDetails = await builder.Call();
+            var txHash = await _horizonService.SubmitTransactionAsync(signedTx);
+            var txDetails = await _horizonService.GetTransactionDetails(txHash);
             return txDetails;
         }
 
         public async Task<Fees> GetFeesAsync()
         {
-            LedgerCallBuilder builder = new LedgerCallBuilder(_horizonUrl);
-            builder.order("desc").limit(1);
-            var ledgers = await builder.Call();
-
-            var latest = ledgers.Embedded.Records[0];
+            var latest = await _horizonService.GetLatestLedger();
             var fees = new Fees
             {
                 BaseFee = latest.BaseFee,
@@ -158,7 +139,6 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
             var build = new TxBuild
             {
                 OperationId = operationId,
-                Timestamp = DateTimeOffset.UtcNow,
                 XdrBase64 = xdrBase64
             };
             await _buildRepository.AddAsync(build);

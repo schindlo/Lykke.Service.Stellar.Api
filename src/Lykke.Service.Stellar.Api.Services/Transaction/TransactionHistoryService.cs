@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
 using StellarBase = Stellar;
-using StellarSdk;
 using Common.Log;
 using Lykke.Service.Stellar.Api.Core.Domain;
 using Lykke.Service.Stellar.Api.Core.Domain.Observation;
@@ -17,17 +16,16 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
     {
         private const int BatchSize = 100;
 
-        private readonly string _horizonUrl;
-
+        private readonly IHorizonService _horizonService;
         private readonly IObservationRepository<TransactionObservation> _observationRepository;
         private readonly ITxHistoryRepository _txHistoryRepository;
         private readonly ILog _log;
 
-        public TransactionHistoryService(IObservationRepository<TransactionObservation> observationRepository, ITxHistoryRepository txHistoryRepository, string horizonUrl, ILog log)
+        public TransactionHistoryService(IHorizonService horizonService, IObservationRepository<TransactionObservation> observationRepository, ITxHistoryRepository txHistoryRepository, ILog log)
         {
+            _horizonService = horizonService;
             _observationRepository = observationRepository;
             _txHistoryRepository = txHistoryRepository;
-            _horizonUrl = horizonUrl;
             _log = log;
         }
 
@@ -133,14 +131,6 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
             } while (continuationToken != null);
         }
 
-        private async Task<TransactionDetails> GetTransactionDetails(string transactionHash)
-        {
-            var builder = new TransactionCallBuilder(_horizonUrl);
-            builder.transaction(transactionHash);
-            var tx = await builder.Call();
-            return tx;
-        }
-
         private string GetMemo(TransactionDetails tx)
         {
             if (("text".Equals(tx.MemoType, StringComparison.OrdinalIgnoreCase) ||
@@ -155,10 +145,7 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
 
         private async Task QueryAndProcessPayments(string address, PaymentCursor cursor)
         {
-            var builder = new PaymentCallBuilder(_horizonUrl);
-            builder.accountId(address);
-            builder.order("asc").cursor(cursor.Cursor);
-            var payments = await builder.Call();
+            var payments = await _horizonService.GetPayments(address, "asc", cursor.Cursor);
 
             cursor.Cursor = null;
             foreach (var payment in payments.Embedded.Records)
@@ -171,7 +158,7 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
                     payment.TypeI == 8)
                 {
                     // TODO: cash latest tx details
-                    var tx = await GetTransactionDetails(payment.TransactionHash);
+                    var tx = await _horizonService.GetTransactionDetails(payment.TransactionHash);
 
                     var history = new TxHistory
                     {

@@ -14,6 +14,7 @@ using Lykke.Service.Stellar.Api.Jobs;
 using Lykke.Service.Stellar.Api.AzureRepositories.Observation;
 using Lykke.Service.Stellar.Api.Core.Domain.Observation;
 using Lykke.Service.Stellar.Api.Services.Transaction;
+using Lykke.Service.Stellar.Api.Services.Horizon;
 
 namespace Lykke.Service.Stellar.Api.Modules
 {
@@ -41,72 +42,73 @@ namespace Lykke.Service.Stellar.Api.Modules
             //      .WithParameter(TypedParameter.From(_settings.CurrentValue.QuotesPublication))
 
             builder.RegisterInstance(_log)
-                .As<ILog>()
-                .SingleInstance();
+                   .As<ILog>()
+                   .SingleInstance();
 
             builder.RegisterType<HealthService>()
-                .As<IHealthService>()
-                .SingleInstance();
+                   .As<IHealthService>()
+                   .SingleInstance();
 
             builder.RegisterType<StartupManager>()
-                .As<IStartupManager>();
+                   .As<IStartupManager>();
 
             builder.RegisterType<ShutdownManager>()
-                .As<IShutdownManager>();
+                   .As<IShutdownManager>();
 
             var dataConnStringManager = _settings.ConnectionString(x => x.Db.DataConnString);
             builder.RegisterType<TxBroadcastRepository>()
-                .As<ITxBroadcastRepository>()
-                .WithParameter(TypedParameter.From(dataConnStringManager));
+                   .As<ITxBroadcastRepository>()
+                   .WithParameter(TypedParameter.From(dataConnStringManager));
 
             builder.RegisterType<TxBuildRepository>()
-                .As<ITxBuildRepository>()
-                .WithParameter(TypedParameter.From(dataConnStringManager));
+                   .As<ITxBuildRepository>()
+                   .WithParameter(TypedParameter.From(dataConnStringManager));
             
             builder.RegisterType<TxHistoryRepository>()
-                .As<ITxHistoryRepository>()
-                .WithParameter(TypedParameter.From(dataConnStringManager));
+                   .As<ITxHistoryRepository>()
+                   .WithParameter(TypedParameter.From(dataConnStringManager));
 
             builder.RegisterType<ObservationRepository<BalanceObservationEntity, BalanceObservation>>()
-                .As<IObservationRepository<BalanceObservation>>()
-                .WithParameter(TypedParameter.From(dataConnStringManager));
-                               
+                   .As<IObservationRepository<BalanceObservation>>()
+                   .WithParameter(TypedParameter.From(dataConnStringManager));                             
 
             builder.RegisterType<ObservationRepository<TransactionObservationEntity, TransactionObservation>>()
-                .As<IObservationRepository<TransactionObservation>>()
-                .WithParameter(TypedParameter.From(dataConnStringManager));
+                   .As<IObservationRepository<TransactionObservation>>()
+                   .WithParameter(TypedParameter.From(dataConnStringManager));
 
             builder.RegisterType<WalletBalanceRepository>()
-                .As<IWalletBalanceRepository>()
-                .WithParameter(TypedParameter.From(dataConnStringManager));
+                   .As<IWalletBalanceRepository>()
+                   .WithParameter(TypedParameter.From(dataConnStringManager));
 
-            builder.RegisterType<TransactionService>()
-                    .As<ITransactionService>()
-                    .WithParameter("horizonUrl", _settings.CurrentValue.HorizonUrl)
-                    .SingleInstance();
+            builder.RegisterType<HorizonService>()
+                   .As<IHorizonService>()
+                   .WithParameter("horizonUrl", _settings.CurrentValue.HorizonUrl)
+                   .SingleInstance();
 
             builder.RegisterType<BalanceService>()
                    .As<IBalanceService>()
-                   .WithParameter("horizonUrl",_settings.CurrentValue.HorizonUrl)
+                   .SingleInstance();
+
+            builder.RegisterType<TransactionService>()
+                   .As<ITransactionService>()
                    .SingleInstance();
 
             builder.RegisterType<TransactionHistoryService>()
                    .As<ITransactionHistoryService>()
-                   .WithParameter("horizonUrl", _settings.CurrentValue.HorizonUrl)
                    .SingleInstance();
 
             builder.RegisterType<WalletBalanceJob>()
-                    .As<IStartable>()
-                    .AutoActivate()
-                    .WithParameter("period", _settings.CurrentValue.WalletBalanceJobPeriodSeconds * 1000)
-                    .SingleInstance();
+                   .As<IStartable>()
+                   .AutoActivate()
+                   .WithParameter("period", _settings.CurrentValue.WalletBalanceJobPeriodSeconds * 1000)
+                   .SingleInstance();
 
             builder.RegisterType<TransactionHistoryJob>()
-                    .As<IStartable>()
-                    .AutoActivate()
-                    .WithParameter("period", _settings.CurrentValue.TransactionHistoryJobPeriodSeconds * 1000)
-                    .SingleInstance();
-            
+                   .As<IStartable>()
+                   .AutoActivate()
+                   .WithParameter("period", _settings.CurrentValue.TransactionHistoryJobPeriodSeconds * 1000)
+                   .SingleInstance();
+                
             builder.Populate(_services);
         }
     }

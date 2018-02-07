@@ -3,7 +3,6 @@ using System.Linq;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using StellarBase = Stellar;
-using StellarSdk;
 using Lykke.Service.Stellar.Api.Core.Domain.Balance;
 using Lykke.Service.Stellar.Api.Core.Services;
 using Lykke.Service.Stellar.Api.Core.Domain;
@@ -15,17 +14,15 @@ namespace Lykke.Service.Stellar.Api.Services
     {
         private const int BatchSize = 100;
 
-        private readonly string _horizonUrl;
-
+        private readonly IHorizonService _horizonService;
         private readonly IObservationRepository<BalanceObservation> _observationRepository;
-
         private readonly IWalletBalanceRepository _walletBalanceRepository;
 
-        public BalanceService(IObservationRepository<BalanceObservation> observationRepository, IWalletBalanceRepository walletBalanceRepository, string horizonUrl)
+        public BalanceService(IHorizonService horizonService, IObservationRepository<BalanceObservation> observationRepository, IWalletBalanceRepository walletBalanceRepository)
         {
+            _horizonService = horizonService;
             _observationRepository = observationRepository;
             _walletBalanceRepository = walletBalanceRepository;
-            _horizonUrl = horizonUrl;
         }
 
         public bool IsAddressValid(string address)
@@ -48,9 +45,7 @@ namespace Lykke.Service.Stellar.Api.Services
                 Address = address
             };
 
-            var builder = new AccountCallBuilder(_horizonUrl);
-            builder.accountId(address);
-            var accountDetails = await builder.Call();
+            var accountDetails = await _horizonService.GetAccountDetails(address);
             result.Sequence = Int64.Parse(accountDetails.Sequence);
 
             var nativeBalance = accountDetails.Balances.Single(b => "native".Equals(b.AssetType, StringComparison.OrdinalIgnoreCase));
