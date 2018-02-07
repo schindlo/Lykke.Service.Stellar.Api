@@ -15,13 +15,12 @@ namespace Lykke.Service.Stellar.Api.Controllers
     [Route("api/balances")]
     public class BalancesController : Controller
     {
-        private readonly IStellarService _stellarService;
-
+        private readonly ITransactionService _transactionService;
         private readonly IBalanceService _balanceService;
 
-        public BalancesController(IStellarService stellarService, IBalanceService balanceService)
+        public BalancesController(ITransactionService transactionService, IBalanceService balanceService)
         {
-            _stellarService = stellarService;
+            _transactionService = transactionService;
             _balanceService = balanceService;
         }
 
@@ -51,7 +50,7 @@ namespace Lykke.Service.Stellar.Api.Controllers
         [SwaggerOperation("balances/")]
         public async Task<IActionResult> AddObservation([Required] string address)
         {
-            if (!_stellarService.IsAddressValid(address))
+            if (!_balanceService.IsAddressValid(address))
             {
                 return BadRequest(ErrorResponse.Create("Invalid address").AddModelError("address", "invalid address"));
             }

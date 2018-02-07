@@ -80,8 +80,8 @@ namespace Lykke.Service.Stellar.Api.Modules
                 .As<IWalletBalanceRepository>()
                 .WithParameter(TypedParameter.From(dataConnStringManager));
 
-            builder.RegisterType<StellarService>()
-                    .As<IStellarService>()
+            builder.RegisterType<TransactionService>()
+                    .As<ITransactionService>()
                     .WithParameter("horizonUrl", _settings.CurrentValue.HorizonUrl)
                     .SingleInstance();
 

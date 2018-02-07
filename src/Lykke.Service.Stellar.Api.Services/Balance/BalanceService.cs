@@ -28,6 +28,19 @@ namespace Lykke.Service.Stellar.Api.Services
             _horizonUrl = horizonUrl;
         }
 
+        public bool IsAddressValid(string address)
+        {
+            try
+            {
+                StellarBase.StrKey.DecodeCheck(StellarBase.VersionByte.ed25519Publickey, address);
+                return true;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+        }
+
         public async Task<AddressBalance> GetAddressBalanceAsync(string address, Fees fees = null)
         {
             var result = new AddressBalance

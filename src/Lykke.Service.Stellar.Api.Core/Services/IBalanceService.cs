@@ -9,6 +9,8 @@ namespace Lykke.Service.Stellar.Api.Core.Services
 {
     public interface IBalanceService
     {
+        bool IsAddressValid(string address);
+
         Task<AddressBalance> GetAddressBalanceAsync(string address, Fees fees = null);
 
         Task<bool> IsBalanceObservedAsync(string address);

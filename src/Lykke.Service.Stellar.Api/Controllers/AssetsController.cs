@@ -13,10 +13,6 @@ namespace Lykke.Service.Stellar.Api.Controllers
     [Route("api/assets")]
     public class AssetsController : Controller
     {
-        public AssetsController()
-        {
-        }
-
         [HttpGet]
         [SwaggerOperation("assets")]
         public PaginationResponse<AssetResponse> Get([Required, FromQuery] int take, [FromQuery] string continuation)

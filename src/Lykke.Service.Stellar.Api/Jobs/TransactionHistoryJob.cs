@@ -9,20 +9,20 @@ namespace Lykke.Service.Stellar.Api.Jobs
     public class TransactionHistoryJob : TimerPeriod
     {
         private ILog _log;
-        private ITransactionHistoryService _transactionService;
+        private ITransactionHistoryService _txHistoryService;
 
-        public TransactionHistoryJob(ITransactionHistoryService transactionService, int period, ILog log)
+        public TransactionHistoryJob(ITransactionHistoryService txHistoryService, int period, ILog log)
             : base(nameof(TransactionHistoryJob), period, log)
         {
             _log = log;
-            _transactionService = transactionService;
+            _txHistoryService = txHistoryService;
         }
 
         public override async Task Execute()
         {
             try
             {
-                await _transactionService.UpdateTransactionHistory();
+                await _txHistoryService.UpdateTransactionHistory();
             }
             catch (Exception ex)
             {

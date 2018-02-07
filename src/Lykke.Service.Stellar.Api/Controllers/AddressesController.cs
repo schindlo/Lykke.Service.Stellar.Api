@@ -10,11 +10,11 @@ namespace Lykke.Service.Stellar.Api.Controllers
     [Route("api/addresses")]
     public class AddressesController : Controller
     {
-        private readonly IStellarService _stellarService;
+        private readonly IBalanceService _balanceService;
 
-        public AddressesController(IStellarService stellarService)
+        public AddressesController(IBalanceService balanceService)
         {
-            _stellarService = stellarService;
+            _balanceService = balanceService;
         }
 
         /// <summary>
@@ -27,7 +27,7 @@ namespace Lykke.Service.Stellar.Api.Controllers
         {
             return Ok(new AddressValidationResponse
             {
-                IsValid = _stellarService.IsAddressValid(address)
+                IsValid = _balanceService.IsAddressValid(address)
             });
         }
 

@@ -13,33 +13,20 @@ using Lykke.Service.Stellar.Api.Core.Services;
 using Lykke.Service.Stellar.Api.Core.Domain;
 using StellarSdk.Exceptions;
 
-namespace Lykke.Service.Stellar.Api.Services
+namespace Lykke.Service.Stellar.Api.Services.Transaction
 {
-    public class StellarService: IStellarService
+    public class TransactionService: ITransactionService
     {
         private readonly string _horizonUrl;
 
         private readonly ITxBroadcastRepository _broadcastRepository;
         private readonly ITxBuildRepository _buildRepository;
 
-        public StellarService(ITxBroadcastRepository broadcastRepository, ITxBuildRepository buildRepository, string horizonUrl)
+        public TransactionService(ITxBroadcastRepository broadcastRepository, ITxBuildRepository buildRepository, string horizonUrl)
         {
             _broadcastRepository = broadcastRepository;
             _buildRepository = buildRepository;
             _horizonUrl = horizonUrl;
-        }
-
-        public Boolean IsAddressValid(string address)
-        {
-            try
-            {
-                StellarBase.StrKey.DecodeCheck(StellarBase.VersionByte.ed25519Publickey, address);
-                return true;
-            }
-            catch (Exception)
-            {
-                return false;
-            }
         }
 
         public async Task<TxBroadcast> GetTxBroadcastAsync(Guid operationId)

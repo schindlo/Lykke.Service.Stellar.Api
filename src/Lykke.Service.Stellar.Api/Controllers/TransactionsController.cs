@@ -15,12 +15,12 @@ namespace Lykke.Service.Stellar.Api.Controllers
     [Route("api/transactions")]
     public class TransactionsController : Controller
     {
-        private readonly IStellarService _stellarService;
+        private readonly ITransactionService _transactionService;
         private readonly IBalanceService _balanceService;
 
-        public TransactionsController(IStellarService stellarService, IBalanceService balanceService)
+        public TransactionsController(ITransactionService transactionService, IBalanceService balanceService)
         {
-            _stellarService = stellarService;
+            _transactionService = transactionService;
             _balanceService = balanceService;
         }
 
@@ -34,19 +34,19 @@ namespace Lykke.Service.Stellar.Api.Controllers
             }
 
             string xdrBase64;
-            var build = await _stellarService.GetTxBuildAsync(request.OperationId);
+            var build = await _transactionService.GetTxBuildAsync(request.OperationId);
             if (build != null)
             {
                 xdrBase64 = build.XdrBase64;
             }
             else
             {
-                if (!_stellarService.IsAddressValid(request.FromAddress))
+                if (!_balanceService.IsAddressValid(request.FromAddress))
                 {
                     return BadRequest(ErrorResponse.Create($"{nameof(request.FromAddress)} is not a valid"));
                 }
 
-                if (!_stellarService.IsAddressValid(request.ToAddress))
+                if (!_balanceService.IsAddressValid(request.ToAddress))
                 {
                     return BadRequest(ErrorResponse.Create($"{nameof(request.ToAddress)} is not a valid"));
                 }
@@ -69,9 +69,8 @@ namespace Lykke.Service.Stellar.Api.Controllers
                         ErrorCode = TransactionExecutionError.AmountIsTooSmall
                     });
                 }
-                var fees = await _stellarService.GetFeesAsync();
+                var fees = await _transactionService.GetFeesAsync();
                 var fromAddressBalance = await _balanceService.GetAddressBalanceAsync(request.FromAddress, fees);
-
                 var requiredBalance = request.IncludeFee ? amount : amount + fees.BaseFee;
                 var availableBalance = fromAddressBalance.Balance - fromAddressBalance.MinBalance;
                 if (requiredBalance >= availableBalance)
@@ -82,7 +81,7 @@ namespace Lykke.Service.Stellar.Api.Controllers
                     });
                 }
 
-                xdrBase64 = await _stellarService.BuildTransactionAsync(request.OperationId, fromAddressBalance, request.ToAddress, amount);
+                xdrBase64 = await _transactionService.BuildTransactionAsync(request.OperationId, fromAddressBalance, request.ToAddress, amount);
             }
 
             return Ok(new BuildTransactionResponse
@@ -99,15 +98,14 @@ namespace Lykke.Service.Stellar.Api.Controllers
                 return BadRequest();
             }
 
-            var broadcast = await _stellarService.GetTxBroadcastAsync(request.OperationId);
+            var broadcast = await _transactionService.GetTxBroadcastAsync(request.OperationId);
             if (broadcast != null)
             {
                 return new StatusCodeResult(StatusCodes.Status409Conflict);
             }
-
             try
             {
-                await _stellarService.BroadcastTxAsync(request.OperationId, request.SignedTransaction);
+                await _transactionService.BroadcastTxAsync(request.OperationId, request.SignedTransaction);
             }
             catch(BusinessException ex)
             {
@@ -131,13 +129,13 @@ namespace Lykke.Service.Stellar.Api.Controllers
         [HttpDelete("broadcast/{operationId}")]
         public async Task<IActionResult> DeleteBroadcast([Required] Guid operationId)
         {
-            var broadcast = await _stellarService.GetTxBroadcastAsync(operationId);
+            var broadcast = await _transactionService.GetTxBroadcastAsync(operationId);
             if (broadcast == null)
             {
                 return new StatusCodeResult(StatusCodes.Status204NoContent);
             }
 
-            await _stellarService.DeleteTxBroadcastAsync(operationId);
+            await _transactionService.DeleteTxBroadcastAsync(operationId);
 
             return Ok();
         }
@@ -146,7 +144,7 @@ namespace Lykke.Service.Stellar.Api.Controllers
         [ProducesResponseType(typeof(BroadcastedSingleTransactionResponse), StatusCodes.Status200OK)]
         public async Task<IActionResult> GetBroadcastSingle([Required] Guid operationId)
         {
-            var broadcast = await _stellarService.GetTxBroadcastAsync(operationId);
+            var broadcast = await _transactionService.GetTxBroadcastAsync(operationId);
             if (broadcast == null)
             {
                 return new StatusCodeResult(StatusCodes.Status204NoContent);

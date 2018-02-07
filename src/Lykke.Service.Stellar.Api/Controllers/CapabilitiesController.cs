@@ -8,7 +8,6 @@ namespace Lykke.Service.Stellar.Api.Controllers
     [Route("api/capabilities")]
     public class CapabilitiesController : Controller
     {
-        
         /// <summary>
         /// Indicate if optional operations are supported
         /// </summary>
