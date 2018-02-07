@@ -8,16 +8,20 @@ using Lykke.Service.BlockchainApi.Contract;
 using Lykke.Service.BlockchainApi.Contract.Balances;
 using Lykke.Service.Stellar.Api.Core.Services;
 using Lykke.Service.Stellar.Api.Core.Domain.Balance;
+using Lykke.Common.Api.Contract.Responses;
 
 namespace Lykke.Service.Stellar.Api.Controllers
 {
     [Route("api/balances")]
     public class BalancesController : Controller
     {
+        private readonly IStellarService _stellarService;
+
         private readonly IBalanceService _balanceService;
 
-        public BalancesController(IBalanceService balanceService)
+        public BalancesController(IStellarService stellarService, IBalanceService balanceService)
         {
+            _stellarService = stellarService;
             _balanceService = balanceService;
         }
 
@@ -47,6 +51,10 @@ namespace Lykke.Service.Stellar.Api.Controllers
         [SwaggerOperation("balances/")]
         public async Task<IActionResult> AddObservation([Required] string address)
         {
+            if (!_stellarService.IsAddressValid(address))
+            {
+                return BadRequest(ErrorResponse.Create("Invalid address").AddModelError("address", "invalid address"));
+            }
             var exists = await _balanceService.IsBalanceObservedAsync(address);
             if (exists)
             {
