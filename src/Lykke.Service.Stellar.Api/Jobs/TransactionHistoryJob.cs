@@ -18,7 +18,7 @@ namespace Lykke.Service.Stellar.Api.Jobs
 
         public override async Task Execute()
         {
-            //await _txHistoryService.UpdateTransactionHistory();
+            await _txHistoryService.UpdateTransactionHistory();
         }
     }
 }
