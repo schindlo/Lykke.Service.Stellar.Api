@@ -13,6 +13,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Lykke.Service.Stellar.Api.Jobs;
 using Lykke.Service.Stellar.Api.AzureRepositories.Observation;
 using Lykke.Service.Stellar.Api.Core.Domain.Observation;
+using Lykke.Service.Stellar.Api.Services.Transaction;
 
 namespace Lykke.Service.Stellar.Api.Modules
 {
@@ -89,8 +90,8 @@ namespace Lykke.Service.Stellar.Api.Modules
                    .WithParameter("horizonUrl",_settings.CurrentValue.HorizonUrl)
                    .SingleInstance();
 
-            builder.RegisterType<TransactionObservationService>()
-                   .As<ITransactionObservationService>()
+            builder.RegisterType<TransactionHistoryService>()
+                   .As<ITransactionHistoryService>()
                    .WithParameter("horizonUrl", _settings.CurrentValue.HorizonUrl)
                    .SingleInstance();
 

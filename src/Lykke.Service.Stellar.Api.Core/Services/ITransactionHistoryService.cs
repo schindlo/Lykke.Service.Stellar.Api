@@ -5,7 +5,7 @@ using Lykke.Service.Stellar.Api.Core.Domain.Transaction;
 
 namespace Lykke.Service.Stellar.Api.Core.Services
 {
-    public interface ITransactionObservationService
+    public interface ITransactionHistoryService
     {
         Task<bool> IsIncomingTransactionObservedAsync(string address);
 

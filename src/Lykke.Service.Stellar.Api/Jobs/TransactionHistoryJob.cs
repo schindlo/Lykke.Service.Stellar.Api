@@ -9,9 +9,9 @@ namespace Lykke.Service.Stellar.Api.Jobs
     public class TransactionHistoryJob : TimerPeriod
     {
         private ILog _log;
-        private ITransactionObservationService _transactionService;
+        private ITransactionHistoryService _transactionService;
 
-        public TransactionHistoryJob(ITransactionObservationService transactionService, int period, ILog log)
+        public TransactionHistoryJob(ITransactionHistoryService transactionService, int period, ILog log)
             : base(nameof(TransactionHistoryJob), period, log)
         {
             _log = log;

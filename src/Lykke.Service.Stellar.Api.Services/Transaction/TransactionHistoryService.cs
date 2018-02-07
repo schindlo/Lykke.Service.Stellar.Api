@@ -10,11 +10,10 @@ using Lykke.Service.Stellar.Api.Core.Services;
 using Lykke.Service.Stellar.Api.Core.Exceptions;
 using StellarSdk.Model;
 using System.Collections.Generic;
-using Lykke.Service.Stellar.Api.Services.Transaction;
 
-namespace Lykke.Service.Stellar.Api.Services
+namespace Lykke.Service.Stellar.Api.Services.Transaction
 {
-    public class TransactionObservationService : ITransactionObservationService
+    public class TransactionHistoryService : ITransactionHistoryService
     {
         private const int BatchSize = 100;
 
@@ -24,7 +23,7 @@ namespace Lykke.Service.Stellar.Api.Services
         private readonly ITxHistoryRepository _txHistoryRepository;
         private readonly ILog _log;
 
-        public TransactionObservationService(IObservationRepository<TransactionObservation> observationRepository, ITxHistoryRepository txHistoryRepository, string horizonUrl, ILog log)
+        public TransactionHistoryService(IObservationRepository<TransactionObservation> observationRepository, ITxHistoryRepository txHistoryRepository, string horizonUrl, ILog log)
         {
             _observationRepository = observationRepository;
             _txHistoryRepository = txHistoryRepository;
@@ -253,7 +252,7 @@ namespace Lykke.Service.Stellar.Api.Services
             }
             catch (Exception ex)
             {
-                await _log.WriteErrorAsync(nameof(TransactionObservationService), nameof(ProcessTransactionObservation),
+                await _log.WriteErrorAsync(nameof(TransactionHistoryService), nameof(ProcessTransactionObservation),
                     $"Failed to process transaction observation for address: {observation.Address}", ex);
             }
         }

@@ -14,9 +14,9 @@ namespace Lykke.Service.Stellar.Api.Controllers
     {
         private readonly IStellarService _stellarService;
 
-        private readonly ITransactionObservationService _txObservationService;
+        private readonly ITransactionHistoryService _txObservationService;
 
-        public TransactionsHistoryController(IStellarService stellarService, ITransactionObservationService txObservationService)
+        public TransactionsHistoryController(IStellarService stellarService, ITransactionHistoryService txObservationService)
         {
             _stellarService = stellarService;
             _txObservationService = txObservationService;
