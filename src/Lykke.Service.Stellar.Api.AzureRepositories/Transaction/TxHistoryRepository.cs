@@ -13,10 +13,10 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Transaction
     public class TxHistoryRepository : ITxHistoryRepository
     {
         private static string GetPartitionKey(TxDirectionType direction) => direction.ToString();
-
-        private IReloadingManager<string> _dataConnStringManager;
+        private static string GetPartitionKeyHashIndex() => "HashIndex";
 
         private ILog _log;
+        private IReloadingManager<string> _dataConnStringManager;
 
         public TxHistoryRepository(IReloadingManager<string> dataConnStringManager, ILog log)
         {
@@ -68,8 +68,17 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Transaction
             var address = direction == TxDirectionType.Outgoing ? history.FromAddress : history.ToAddress;
             var table = GetTable(address);
 
+            // history entry
             var entity = history.ToEntity(GetPartitionKey(direction));
             await table.InsertOrReplaceAsync(entity);
+            // hash index
+            var index = new TxHistoryEntity
+            {
+                PartitionKey = GetPartitionKeyHashIndex(),
+                RowKey = history.Hash,
+                IndexedValue = history.InverseSequence.ToString()
+            };
+            await table.InsertOrReplaceAsync(index);
         }
 
         public async Task DeleteAsync(string address)

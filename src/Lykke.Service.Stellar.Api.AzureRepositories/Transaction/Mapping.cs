@@ -13,11 +13,11 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Transaction
                 FromAddress = entity.FromAddress,
                 ToAddress = entity.ToAddress,
                 AssetId = entity.AssetId,
-                Amount = entity.Amount,
+                Amount = entity.Amount.Value,
                 Hash = entity.Hash,
                 PaymentOperationId = entity.PaymentOperationId,
-                CreatedAt = entity.CreatedAt,
-                PaymentType = entity.PaymentType,
+                CreatedAt = entity.CreatedAt.Value,
+                PaymentType = entity.PaymentType.Value,
                 Memo = entity.Memo,
                 LastModified = entity.Timestamp
             };
