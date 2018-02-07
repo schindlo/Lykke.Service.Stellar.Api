@@ -82,7 +82,7 @@ namespace Lykke.Service.Stellar.Api.Services
                 };
                 await _broadcastRepository.AddAsync(broadcast);
 
-                throw new ServiceException($"Broadcasting transaction failed (operationId: {operationId}).", ex);
+                throw new BusinessException($"Broadcasting transaction failed (operationId: {operationId}).", ex);
             }
         }
 

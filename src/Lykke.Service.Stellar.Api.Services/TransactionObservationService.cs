@@ -212,7 +212,7 @@ namespace Lykke.Service.Stellar.Api.Services
                     }
                     else
                     {
-                        throw new ServiceException($"Invalid payment type: ${payment.TypeI}");
+                        throw new BusinessException($"Invalid payment type: ${payment.TypeI}");
                     }
                     history.Amount = Convert.ToInt64(amount * StellarBase.One.Value);
 
