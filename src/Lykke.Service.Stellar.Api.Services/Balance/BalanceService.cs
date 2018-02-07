@@ -15,7 +15,7 @@ namespace Lykke.Service.Stellar.Api.Services
     {
         private const int BatchSize = 100;
 
-        public string _LastJobError { get; private set; }
+        private string _lastJobError;
 
         private readonly IHorizonService _horizonService;
         private readonly IObservationRepository<BalanceObservation> _observationRepository;
@@ -118,7 +118,7 @@ namespace Lykke.Service.Stellar.Api.Services
 
         public string GetLastJobError()
         {
-            return _LastJobError;
+            return _lastJobError;
         }
 
         public async Task UpdateWalletBalances()
@@ -136,12 +136,11 @@ namespace Lykke.Service.Stellar.Api.Services
                     continuationToken = observations.ContinuationToken;
                 } while (continuationToken != null);
 
-                _LastJobError = null;
+                _lastJobError = null;
             }
             catch (Exception ex)
             {
-                _LastJobError = "Error in job " + nameof(BalanceService) + "." + nameof(UpdateWalletBalances) +
-                    ": " + ex.Message;
+                _lastJobError = $"Error in job {nameof(BalanceService)}.{nameof(UpdateWalletBalances)}: {ex.Message}";
                 await _log.WriteErrorAsync(nameof(BalanceService), nameof(UpdateWalletBalances),
                     "Failed to execute balances update", ex);
             }

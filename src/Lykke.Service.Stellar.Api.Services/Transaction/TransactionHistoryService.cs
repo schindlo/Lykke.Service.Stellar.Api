@@ -16,7 +16,7 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
     {
         private const int BatchSize = 100;
 
-        public string _LastJobError { get; private set; }
+        private string _lastJobError;
 
         private readonly IHorizonService _horizonService;
         private readonly IObservationRepository<TransactionObservation> _observationRepository;
@@ -121,7 +121,7 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
 
         public string GetLastJobError()
         {
-            return _LastJobError;
+            return _lastJobError;
         }
 
         public async Task UpdateTransactionHistory()
@@ -139,12 +139,11 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
                     continuationToken = observations.ContinuationToken;
                 } while (continuationToken != null);
 
-                _LastJobError = null;
+                _lastJobError = null;
             }
             catch (Exception ex)
             {
-                _LastJobError = "Error in job " + nameof(TransactionHistoryService) + "." + nameof(UpdateTransactionHistory) +
-                    ": " + ex.Message;
+                _lastJobError = _lastJobError = $"Error in job {nameof(TransactionHistoryService)}.{nameof(UpdateTransactionHistory)}: {ex.Message}";
                 await _log.WriteErrorAsync(nameof(TransactionHistoryService), nameof(UpdateTransactionHistory),
                     "Failed to execute transaction history update", ex);
             }
@@ -162,105 +161,113 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
             return null;
         }
 
-        private async Task<TransactionDetails> QueryAndProcessPayments(string address, PaymentCursor cursor, TransactionDetails lastTx)
+        private async Task QueryAndProcessPayments(string address, PaymentContext context)
         {
-            var payments = await _horizonService.GetPayments(address, "asc", cursor.Cursor);
+            var payments = await _horizonService.GetPayments(address, "asc", context.Cursor);
 
-            TransactionDetails tx = lastTx;
-            cursor.Cursor = null;
+            context.Cursor = null;
             foreach (var payment in payments.Embedded.Records)
             {
-                cursor.Cursor = payment.PagingToken;
-
-                // create_account, payment or account_merge
-                if (payment.TypeI == 0 || 
-                    payment.TypeI == 1 && "native".Equals(payment.AssetType, StringComparison.OrdinalIgnoreCase) ||
-                    payment.TypeI == 8)
+                try
                 {
-                    if (tx == null || !tx.Hash.Equals(payment.TransactionHash, StringComparison.OrdinalIgnoreCase))
-                    {
-                        tx = await _horizonService.GetTransactionDetails(payment.TransactionHash);
-                    }
+                    context.Cursor = payment.PagingToken;
 
-                    var history = new TxHistory
+                    // create_account, payment or account_merge
+                    if (payment.TypeI == 0 ||
+                        payment.TypeI == 1 && "native".Equals(payment.AssetType, StringComparison.OrdinalIgnoreCase) ||
+                        payment.TypeI == 8)
                     {
-                        AssetId = Asset.Stellar.Id,
-                        Hash = payment.TransactionHash,
-                        PaymentOperationId = payment.Id,
-                        CreatedAt = payment.CreatedAt,
-                        Memo = GetMemo(tx)
-                    };
+                        if (context.Transaction == null || !context.Transaction.Hash.Equals(payment.TransactionHash, StringComparison.OrdinalIgnoreCase))
+                        {
+                            context.Transaction = await _horizonService.GetTransactionDetails(payment.TransactionHash);
+                            context.AccountMerge = 0;
+                        }
 
-                    decimal amount = 0;
-                    // create_account
-                    if (payment.TypeI == 0)
-                    {
-                        history.FromAddress = payment.Funder;
-                        history.ToAddress = payment.Account;
-                        history.PaymentType = PaymentType.CreateAccount;
-                        amount = Decimal.Parse(payment.StartingBalance);
-                    }
-                    // payment
-                    else if (payment.TypeI == 1)
-                    {
-                        history.FromAddress = payment.From;
-                        history.ToAddress = payment.To;
-                        history.PaymentType = PaymentType.Payment;
-                        amount = Decimal.Parse(payment.Amount);
-                    }
-                    // account_merge
-                    else if (payment.TypeI == 8)
-                    {
-                        history.FromAddress = payment.Account;
-                        history.ToAddress = payment.Into;
-                        history.PaymentType = PaymentType.AccountMerge;
-                        // TODO: find out via transaction result xdr
-                        amount = 0;
-                    }
-                    else
-                    {
-                        throw new BusinessException($"Invalid payment type: ${payment.TypeI}");
-                    }
-                    history.Amount = Convert.ToInt64(amount * StellarBase.One.Value);
+                        var history = new TxHistory
+                        {
+                            AssetId = Asset.Stellar.Id,
+                            Hash = payment.TransactionHash,
+                            PaymentOperationId = payment.Id,
+                            CreatedAt = payment.CreatedAt,
+                            Memo = GetMemo(context.Transaction)
+                        };
 
-                    // TODO: map operation id
-                    if (address.Equals(history.ToAddress, StringComparison.OrdinalIgnoreCase))
-                    {
-                        history.Sequence = cursor.Sequence;
-                        await _txHistoryRepository.InsertOrReplaceAsync(TxDirectionType.Incoming, history);
-                        cursor.Sequence++;
+                        // create_account
+                        if (payment.TypeI == 0)
+                        {
+                            history.FromAddress = payment.Funder;
+                            history.ToAddress = payment.Account;
+                            history.PaymentType = PaymentType.CreateAccount;
 
-                    }
-                    if (address.Equals(history.FromAddress, StringComparison.OrdinalIgnoreCase))
-                    {
-                        history.Sequence = cursor.Sequence;
-                        await _txHistoryRepository.InsertOrReplaceAsync(TxDirectionType.Outgoing, history);
-                        cursor.Sequence++;
+                            decimal amount = Decimal.Parse(payment.StartingBalance);
+                            history.Amount = Convert.ToInt64(amount * StellarBase.One.Value);
+                        }
+                        // payment
+                        else if (payment.TypeI == 1)
+                        {
+                            history.FromAddress = payment.From;
+                            history.ToAddress = payment.To;
+                            history.PaymentType = PaymentType.Payment;
+
+                            decimal amount = Decimal.Parse(payment.Amount);
+                            history.Amount = Convert.ToInt64(amount * StellarBase.One.Value);
+                        }
+                        // account_merge
+                        else if (payment.TypeI == 8)
+                        {
+                            history.FromAddress = payment.Account;
+                            history.ToAddress = payment.Into;
+                            history.PaymentType = PaymentType.AccountMerge;
+
+                            var resultXdrBase64 = context.Transaction.ResultXdr;
+                            history.Amount = _horizonService.GetAccountMergeAmount(resultXdrBase64, context.AccountMerge);
+                            context.AccountMerge++;
+                        }
+                        else
+                        {
+                            throw new BusinessException($"Invalid payment type: ${payment.TypeI}");
+                        }
+
+                        // TODO: map operation id
+                        if (address.Equals(history.ToAddress, StringComparison.OrdinalIgnoreCase))
+                        {
+                            history.Sequence = context.Sequence;
+                            await _txHistoryRepository.InsertOrReplaceAsync(TxDirectionType.Incoming, history);
+                            context.Sequence++;
+
+                        }
+                        if (address.Equals(history.FromAddress, StringComparison.OrdinalIgnoreCase))
+                        {
+                            history.Sequence = context.Sequence;
+                            await _txHistoryRepository.InsertOrReplaceAsync(TxDirectionType.Outgoing, history);
+                            context.Sequence++;
+                        }
                     }
                 }
+                catch (Exception ex)
+                {
+                    throw new BusinessException($"Failed to process payment {payment?.Id} of transaction {context?.Transaction?.Hash}.", ex);
+                }
             }
-
-            return tx;
         }
 
         private async Task ProcessTransactionObservation(TransactionObservation observation)
         {
             try
             {
-                var cursor = new PaymentCursor();
+                var context = new PaymentContext();
                 var top = await _txHistoryRepository.GetLastRecordAsync(observation.Address);
                 if (top != null)
                 {
-                    cursor.Cursor = top.PaymentOperationId;
-                    cursor.Sequence = top.Sequence + 1;
+                    context.Cursor = top.PaymentOperationId;
+                    context.Sequence = top.Sequence + 1;
                 }
 
-                TransactionDetails lastTx = null;
                 do
                 {
-                    lastTx = await QueryAndProcessPayments(observation.Address, cursor, lastTx);
+                    await QueryAndProcessPayments(observation.Address, context);
                 }
-                while (!string.IsNullOrEmpty(cursor.Cursor));
+                while (!string.IsNullOrEmpty(context.Cursor));
             }
             catch (Exception ex)
             {

@@ -1,4 +1,7 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Linq;
+using System.Threading.Tasks;
+using StellarGenerated = Stellar.Generated;
 using StellarSdk;
 using StellarSdk.Model;
 using Lykke.Service.Stellar.Api.Core.Exceptions;
@@ -77,6 +80,32 @@ namespace Lykke.Service.Stellar.Api.Services.Horizon
             }
             var tx = await GetTransactionDetails(payments.Embedded.Records[0].TransactionHash);
             return tx.Ledger;
+        }
+
+        public long GetAccountMergeAmount(string resultXdrBase64, int accountMergeInTx)
+        {
+            var xdr = Convert.FromBase64String(resultXdrBase64);
+            var reader = new StellarGenerated.ByteReader(xdr);
+            var txResult = StellarGenerated.TransactionResult.Decode(reader);
+
+            var merges = txResult.Result.Results.Where(x => x.Tr.AccountMergeResult != null).ToList();
+            if (merges.Count > accountMergeInTx)
+            {
+                var merge = merges[accountMergeInTx];
+                var result = merge?.Tr?.AccountMergeResult;
+                var resultCode = result?.Discriminant?.InnerValue;
+                if (resultCode != null && resultCode == StellarGenerated.AccountMergeResultCode.AccountMergeResultCodeEnum.ACCOUNT_MERGE_SUCCESS)
+                {
+                    long amount = result.SourceAccountBalance.InnerValue;
+                    return amount;
+                }
+            }
+            else
+            {
+                throw new HorizonApiException($"Account merge result missing from result XDR (account merge no: {accountMergeInTx}.");
+            }
+
+            return 0;
         }
     }
 }
