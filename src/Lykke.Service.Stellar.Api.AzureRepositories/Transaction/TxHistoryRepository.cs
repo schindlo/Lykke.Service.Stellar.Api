@@ -144,11 +144,11 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Transaction
 
         public async Task DeleteAsync(string tableId)
         {
-            var tableName = GetTableName(tableId);
-            var (table, tableIndex) = GetTable(tableName);
+            var (table, tableIndex) = GetTable(tableId);
             await table.DeleteAsync();
 
             // remove from cache
+            var tableName = GetTableName(tableId);
             (INoSQLTableStorage<TxHistoryEntity>, INoSQLTableStorage<IndexEntity>) ignored;
             _tableCache.TryRemove(tableName, out ignored);
         }
