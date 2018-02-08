@@ -3,13 +3,13 @@ using System.Threading.Tasks;
 using StellarBase = Stellar;
 using StellarGenerated = Stellar.Generated;
 using StellarSdk.Exceptions;
+using Common.Log;
 using Lykke.Service.Stellar.Api.Core.Domain.Transaction;
 using Lykke.Service.Stellar.Api.Core.Domain.Balance;
 using Lykke.Service.Stellar.Api.Core.Exceptions;
 using Lykke.Service.Stellar.Api.Core.Services;
 using Lykke.Service.Stellar.Api.Core.Domain;
 using Lykke.Service.Stellar.Api.Core.Domain.Observation;
-using Common.Log;
 
 namespace Lykke.Service.Stellar.Api.Services.Transaction
 {
