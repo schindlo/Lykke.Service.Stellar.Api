@@ -115,6 +115,8 @@ namespace Lykke.Service.Stellar.Api.Controllers
                     AssetId = tx.AssetId,
                     Amount = tx.Amount.ToString(),
                     Hash = tx.Hash,
+                    PaymentId = tx.PaymentId,
+                    PaymentType = tx.PaymentType.ToString(),
                     DestinationTag = tx.Memo
                 });
             }

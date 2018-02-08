@@ -72,8 +72,8 @@ namespace Lykke.Service.Stellar.Api.Modules
                    .As<IObservationRepository<BalanceObservation>>()
                    .WithParameter(TypedParameter.From(dataConnStringManager));                             
 
-            builder.RegisterType<ObservationRepository<TransactionObservationEntity, TransactionObservation>>()
-                   .As<IObservationRepository<TransactionObservation>>()
+            builder.RegisterType<ObservationRepository<TransactionHistoryObservationEntity, TransactionHistoryObservation>>()
+                   .As<IObservationRepository<TransactionHistoryObservation>>()
                    .WithParameter(TypedParameter.From(dataConnStringManager));
 
             builder.RegisterType<WalletBalanceRepository>()

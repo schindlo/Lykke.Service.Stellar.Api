@@ -1,13 +1,15 @@
-﻿using StellarSdk.Model;
+﻿using Lykke.Service.Stellar.Api.Core.Domain.Observation;
+using StellarSdk.Model;
 
 namespace Lykke.Service.Stellar.Api.Services.Transaction
 {
     internal class PaymentContext
     {
-        internal PaymentContext()
+        internal PaymentContext(string tableId)
         {
             Cursor = string.Empty;
             Sequence = 1;
+            TableId = tableId;
         }
 
         internal string Cursor { get; set; }
@@ -17,5 +19,7 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
         internal TransactionDetails Transaction { get; set; }
 
         internal int AccountMerge { get; set; }
+
+        internal string TableId { get; set; }
     }
 }

@@ -9,16 +9,11 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Transaction
     [ValueTypeMergingStrategy(ValueTypeMergingStrategy.UpdateAlways)]
     public class TxBroadcastEntity : AzureTableEntity
     {
-        public Guid OperationId
-        {
-            get => Guid.Parse(RowKey);
-        }
-
         public TxBroadcastState State { get; set; }
 
-        public long Amount { get; set; }
+        public long? Amount { get; set; }
 
-        public long Fee { get; set; }
+        public long? Fee { get; set; }
 
         public string Hash { get; set; }
 

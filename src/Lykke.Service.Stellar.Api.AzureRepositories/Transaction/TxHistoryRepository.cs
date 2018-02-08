@@ -15,36 +15,42 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Transaction
     public class TxHistoryRepository : ITxHistoryRepository
     {
         private static string GetPartitionKey(TxDirectionType direction) => direction.ToString();
-        private static string GetPartitionKeyHashIndex() => "HashIndex";
-        private static string GetPartitionKeySequence() => "Sequence";
+        private static string GetLastPaymentIdRowKey() => "Last";
 
         private ILog _log;
         private IReloadingManager<string> _dataConnStringManager;
 
-        private ConcurrentDictionary<string, INoSQLTableStorage<TxHistoryEntity>> _tableCache;
+        private ConcurrentDictionary<string, (INoSQLTableStorage<TxHistoryEntity>, INoSQLTableStorage<IndexEntity>)> _tableCache;
 
         public TxHistoryRepository(IReloadingManager<string> dataConnStringManager, ILog log)
         {
             _dataConnStringManager = dataConnStringManager;
             _log = log;
-            _tableCache = new ConcurrentDictionary<string, INoSQLTableStorage<TxHistoryEntity>>();
+            _tableCache = new ConcurrentDictionary<string, (INoSQLTableStorage<TxHistoryEntity>, INoSQLTableStorage<IndexEntity>)>();
         }
 
-        private INoSQLTableStorage<TxHistoryEntity> GetTable(string address)
+        private string GetTableName(string tableId)
         {
-            var tableName = $"Account{address}";
+            var tableName = $"TransactionHistory{tableId}";
+            return tableName;
+        }
+
+        private (INoSQLTableStorage<TxHistoryEntity>, INoSQLTableStorage<IndexEntity>) GetTable(string tableId)
+        {
+            var tableName = GetTableName(tableId);
             if(_tableCache.ContainsKey(tableName))
             {
                 return _tableCache[tableName];
             }
             var table = AzureTableStorage<TxHistoryEntity>.Create(_dataConnStringManager, tableName, _log);
-            _tableCache[tableName] = table;
-            return table;
+            var tableIndex = AzureTableStorage<IndexEntity>.Create(_dataConnStringManager, tableName, _log);
+            _tableCache.TryAdd(tableName, (table, tableIndex));
+            return (table, tableIndex);
         }
 
-        public async Task<(List<TxHistory> Items, string ContinuationToken)> GetAllAsync(TxDirectionType direction, string address, int take, string continuationToken)
+        public async Task<(List<TxHistory> Items, string ContinuationToken)> GetAllAsync(string tableId, TxDirectionType direction, int take, string continuationToken)
         {
-            var table = GetTable(address);
+            var (table, tableIndex) = GetTable(tableId);
             var filter = TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, direction.ToString());
             var query = new TableQuery<TxHistoryEntity>().Where(filter).Take(take);
             var data = await table.GetDataWithContinuationTokenAsync(query, continuationToken);
@@ -52,15 +58,15 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Transaction
             return (items, data.ContinuationToken);
         }
 
-        public async Task<List<TxHistory>> GetAllAfterHashAsync(TxDirectionType direction, string address, int take, string afterHash)
+        public async Task<List<TxHistory>> GetAllAfterHashAsync(string tableId, TxDirectionType direction, int take, string afterHash)
         {
-            var table = GetTable(address);
+            var (table, tableIndex) = GetTable(tableId);
 
             // build range query
             string filter = TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, direction.ToString());
             if (!string.IsNullOrEmpty(afterHash)) 
             {
-                var index = await table.GetDataAsync(GetPartitionKeyHashIndex(), afterHash);
+                var index = await tableIndex.GetDataAsync(IndexEntity.GetPartitionKeyHash(), afterHash);
                 if (index == null)
                 {
                     throw new ArgumentException($"Unknwon transaction hash: {afterHash}", "afterHash");
@@ -78,17 +84,17 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Transaction
             return items;
         }
 
-        public async Task<TxHistory> GetLastRecordAsync(string address)
+        public async Task<TxHistory> GetLastRecordAsync(string tableId)
         {
-            var table = GetTable(address);
+            var (table, tableIndex) = GetTable(tableId);
 
-            var seq = await table.GetDataAsync(GetPartitionKeySequence(), "Current");
-            if (seq != null)
+            var paymentId = await tableIndex.GetDataAsync(IndexEntity.GetPartitionKeyPaymentId(), GetLastPaymentIdRowKey());
+            if (paymentId != null)
             {
-                var entity = await table.GetDataAsync(GetPartitionKey(TxDirectionType.Incoming), seq.Value);
+                var entity = await table.GetDataAsync(GetPartitionKey(TxDirectionType.Incoming), paymentId.Value);
                 if (entity == null)
                 {
-                    entity = await table.GetDataAsync(GetPartitionKey(TxDirectionType.Outgoing), seq.Value);
+                    entity = await table.GetDataAsync(GetPartitionKey(TxDirectionType.Outgoing), paymentId.Value);
                 }
                 if (entity != null)
                 {
@@ -100,10 +106,9 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Transaction
             return null;
         }
 
-        public async Task InsertOrReplaceAsync(TxDirectionType direction, TxHistory history)
+        public async Task InsertOrReplaceAsync(string tableId, TxDirectionType direction, TxHistory history)
         {
-            var address = direction == TxDirectionType.Outgoing ? history.FromAddress : history.ToAddress;
-            var table = GetTable(address);
+            var (table, tableIndex) = GetTable(tableId);
 
             // history entry
             var entity = history.ToEntity(GetPartitionKey(direction));
@@ -111,12 +116,12 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Transaction
 
             // hash to payments index
             var value = entity.RowKey;
-            var index = await table.GetDataAsync(GetPartitionKeyHashIndex(), entity.Hash);
+            var index = await tableIndex.GetDataAsync(IndexEntity.GetPartitionKeyHash(), entity.Hash);
             if (index == null || string.IsNullOrEmpty(index.Value))
             {
-                index = new TxHistoryEntity
+                index = new IndexEntity
                 {
-                    PartitionKey = GetPartitionKeyHashIndex(),
+                    PartitionKey = IndexEntity.GetPartitionKeyHash(),
                     RowKey = history.Hash,
                     Value = value
                 };
@@ -125,27 +130,27 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Transaction
             {
                 index.Value += ";" + value;
             }
-            await table.InsertOrReplaceAsync(index);
+            await tableIndex.InsertOrReplaceAsync(index);
 
             // index to latest payment
-            var seq = new TxHistoryEntity
+            var paymentId = new IndexEntity
             {
-                PartitionKey = GetPartitionKeySequence(),
-                RowKey = "Current",
+                PartitionKey = IndexEntity.GetPartitionKeyPaymentId(),
+                RowKey = GetLastPaymentIdRowKey(),
                 Value = entity.RowKey
             };
-            await table.InsertOrReplaceAsync(seq);
+            await tableIndex.InsertOrReplaceAsync(paymentId);
         }
 
-        public async Task DeleteAsync(string address)
+        public async Task DeleteAsync(string tableId)
         {
-            var tableName = $"Account{address}";
-            var table = GetTable(address);
+            var tableName = GetTableName(tableId);
+            var (table, tableIndex) = GetTable(tableName);
             await table.DeleteAsync();
 
             // remove from cache
-            INoSQLTableStorage<TxHistoryEntity> ignored;
-            _tableCache.Remove(tableName, out ignored);
+            (INoSQLTableStorage<TxHistoryEntity>, INoSQLTableStorage<IndexEntity>) ignored;
+            _tableCache.TryRemove(tableName, out ignored);
         }
     }
 }

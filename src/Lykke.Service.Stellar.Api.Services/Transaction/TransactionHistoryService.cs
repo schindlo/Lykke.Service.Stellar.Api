@@ -19,15 +19,18 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
         private string _lastJobError;
 
         private readonly IHorizonService _horizonService;
-        private readonly IObservationRepository<TransactionObservation> _observationRepository;
+        private readonly IObservationRepository<TransactionHistoryObservation> _observationRepository;
         private readonly ITxHistoryRepository _txHistoryRepository;
+        private readonly ITxBroadcastRepository _txBroadcastRepository;
         private readonly ILog _log;
 
-        public TransactionHistoryService(IHorizonService horizonService, IObservationRepository<TransactionObservation> observationRepository, ITxHistoryRepository txHistoryRepository, ILog log)
+        public TransactionHistoryService(IHorizonService horizonService, IObservationRepository<TransactionHistoryObservation> observationRepository,
+                                         ITxHistoryRepository txHistoryRepository, ITxBroadcastRepository txBroadcastRepository, ILog log)
         {
             _horizonService = horizonService;
             _observationRepository = observationRepository;
             _txHistoryRepository = txHistoryRepository;
+            _txBroadcastRepository = txBroadcastRepository;
             _log = log;
         }
 
@@ -43,15 +46,22 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
             return observation != null && observation.IsOutgoingObserved;
         }
 
+        private TransactionHistoryObservation CreateTransactionObservation(string address) 
+        {
+            var observation = new TransactionHistoryObservation
+            {
+                Address = address,
+                TableId = Guid.NewGuid().ToString("N").ToUpper()
+            };
+            return observation;
+        }
+
         public async Task AddIncomingTransactionObservationAsync(string address)
         {
             var observation = await _observationRepository.GetAsync(address);
             if (observation == null)
             {
-                observation = new TransactionObservation
-                {
-                    Address = address,
-                };
+                observation = CreateTransactionObservation(address);
             }
             observation.IsIncomingObserved = true;
             
@@ -63,10 +73,7 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
             var observation = await _observationRepository.GetAsync(address);
             if (observation == null)
             {
-                observation = new TransactionObservation
-                {
-                    Address = address,
-                };
+                observation = CreateTransactionObservation(address);
             }
             observation.IsOutgoingObserved = true;
 
@@ -84,7 +91,7 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
             observation.IsIncomingObserved = false;
             if (observation.IsIncomingObserved == false && observation.IsOutgoingObserved == false)
             {
-                await _txHistoryRepository.DeleteAsync(address);
+                await _txHistoryRepository.DeleteAsync(observation.TableId);
                 await _observationRepository.DeleteAsync(address);
             }
             else
@@ -104,7 +111,7 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
             observation.IsOutgoingObserved = false;
             if (observation.IsIncomingObserved == false && observation.IsOutgoingObserved == false)
             {
-                await _txHistoryRepository.DeleteAsync(address);
+                await _txHistoryRepository.DeleteAsync(observation.TableId);
                 await _observationRepository.DeleteAsync(address);
             }
             else
@@ -115,8 +122,14 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
 
         public async Task<List<TxHistory>> GetHistory(TxDirectionType direction, string address, int take, string afterHash)
         {
-            var result = await _txHistoryRepository.GetAllAfterHashAsync(direction, address, take, afterHash);
-            return result;
+            var observation = await _observationRepository.GetAsync(address);
+            if (observation != null)
+            {
+                var result = await _txHistoryRepository.GetAllAfterHashAsync(observation.TableId, direction, take, afterHash);
+                return result;
+            }
+
+            return new List<TxHistory>();
         }
 
         public string GetLastJobError()
@@ -194,7 +207,7 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
                         {
                             AssetId = Asset.Stellar.Id,
                             Hash = payment.TransactionHash,
-                            PaymentOperationId = payment.Id,
+                            PaymentId = payment.Id,
                             CreatedAt = payment.CreatedAt,
                             Memo = GetMemo(context.Transaction)
                         };
@@ -235,18 +248,17 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
                             throw new BusinessException($"Invalid payment type: ${payment.TypeI}");
                         }
 
-                        // TODO: map operation id
+                        history.OperationId = await _txBroadcastRepository.GetOperationId(payment.TransactionHash);
+
                         if (address.Equals(history.ToAddress, StringComparison.OrdinalIgnoreCase))
                         {
-                            history.Sequence = context.Sequence;
-                            await _txHistoryRepository.InsertOrReplaceAsync(TxDirectionType.Incoming, history);
+                            await _txHistoryRepository.InsertOrReplaceAsync(context.TableId, TxDirectionType.Incoming, history);
                             context.Sequence++;
 
                         }
                         if (address.Equals(history.FromAddress, StringComparison.OrdinalIgnoreCase))
                         {
-                            history.Sequence = context.Sequence;
-                            await _txHistoryRepository.InsertOrReplaceAsync(TxDirectionType.Outgoing, history);
+                            await _txHistoryRepository.InsertOrReplaceAsync(context.TableId, TxDirectionType.Outgoing, history);
                             context.Sequence++;
                         }
                     }
@@ -258,16 +270,15 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
             }
         }
 
-        private async Task ProcessTransactionObservation(TransactionObservation observation)
+        private async Task ProcessTransactionObservation(TransactionHistoryObservation observation)
         {
             try
             {
-                var context = new PaymentContext();
-                var top = await _txHistoryRepository.GetLastRecordAsync(observation.Address);
-                if (top != null)
+                var context = new PaymentContext(observation.TableId);
+                var last = await _txHistoryRepository.GetLastRecordAsync(context.TableId);
+                if (last != null)
                 {
-                    context.Cursor = top.PaymentOperationId;
-                    context.Sequence = top.Sequence + 1;
+                    context.Cursor = last.PaymentId;
                 }
 
                 do

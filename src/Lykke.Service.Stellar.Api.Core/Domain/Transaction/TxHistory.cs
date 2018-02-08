@@ -4,8 +4,6 @@ namespace Lykke.Service.Stellar.Api.Core.Domain.Transaction
 {
     public class TxHistory
     {
-        public ulong Sequence { get; set; }
-
         public Guid? OperationId { get; set; }
 
         public string FromAddress { get; set; }
@@ -18,7 +16,7 @@ namespace Lykke.Service.Stellar.Api.Core.Domain.Transaction
 
         public string Hash { get; set; }
 
-        public string PaymentOperationId { get; set; }
+        public string PaymentId { get; set; }
 
         public DateTime CreatedAt { get; set; }
 

@@ -1,19 +1,18 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace Lykke.Service.Stellar.Api.Core.Domain.Transaction
 {
     public interface ITxHistoryRepository
     {
-        Task<(List<TxHistory> Items, string ContinuationToken)> GetAllAsync(TxDirectionType direction, string address, int take, string continuationToken);
+        Task<(List<TxHistory> Items, string ContinuationToken)> GetAllAsync(string tableId, TxDirectionType direction, int take, string continuationToken);
 
-        Task<List<TxHistory>> GetAllAfterHashAsync(TxDirectionType direction, string address, int take, string afterHash);
+        Task<List<TxHistory>> GetAllAfterHashAsync(string tableId, TxDirectionType direction, int take, string afterHash);
 
-        Task<TxHistory> GetLastRecordAsync(string address);
+        Task<TxHistory> GetLastRecordAsync(string tableId);
 
-        Task InsertOrReplaceAsync(TxDirectionType direction, TxHistory history);
+        Task InsertOrReplaceAsync(string tableId, TxDirectionType direction, TxHistory history);
 
-        Task DeleteAsync(string address);
+        Task DeleteAsync(string tableId);
     }
 }
