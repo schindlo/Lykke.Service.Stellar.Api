@@ -164,6 +164,12 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
         private async Task QueryAndProcessPayments(string address, PaymentContext context)
         {
             var payments = await _horizonService.GetPayments(address, "asc", context.Cursor);
+            if(payments == null)
+            {
+                await _log.WriteWarningAsync(nameof(TransactionHistoryService), nameof(QueryAndProcessPayments),
+                    $"Address not found: {address}");
+                return;
+            }
 
             context.Cursor = null;
             foreach (var payment in payments.Embedded.Records)

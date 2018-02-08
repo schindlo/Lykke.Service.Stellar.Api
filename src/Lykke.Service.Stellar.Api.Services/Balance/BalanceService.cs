@@ -45,12 +45,17 @@ namespace Lykke.Service.Stellar.Api.Services
 
         public async Task<AddressBalance> GetAddressBalanceAsync(string address, Fees fees = null)
         {
+            var accountDetails = await _horizonService.GetAccountDetails(address);
+            if(accountDetails == null)
+            {
+                // address not found
+                return null;
+            }
+
             var result = new AddressBalance
             {
                 Address = address
             };
-
-            var accountDetails = await _horizonService.GetAccountDetails(address);
             result.Sequence = Int64.Parse(accountDetails.Sequence);
 
             var nativeBalance = accountDetails.Balances.Single(b => "native".Equals(b.AssetType, StringComparison.OrdinalIgnoreCase));
@@ -93,6 +98,13 @@ namespace Lykke.Service.Stellar.Api.Services
         private async Task ProcessWallet(string address)
         {
             var addressBalance = await GetAddressBalanceAsync(address);
+            if(addressBalance == null)
+            {
+                await _log.WriteWarningAsync(nameof(BalanceService), nameof(ProcessWallet),
+                    $"Address not found: {address}");
+                return;
+            }
+
             if (addressBalance.Balance > 0)
             {
                 var walletEntry = await _walletBalanceRepository.GetAsync(address);

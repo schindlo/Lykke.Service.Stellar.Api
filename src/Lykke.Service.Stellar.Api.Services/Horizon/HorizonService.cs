@@ -6,6 +6,7 @@ using StellarSdk;
 using StellarSdk.Model;
 using Lykke.Service.Stellar.Api.Core.Exceptions;
 using Lykke.Service.Stellar.Api.Core.Services;
+using StellarSdk.Exceptions;
 
 namespace Lykke.Service.Stellar.Api.Services.Horizon
 {
@@ -41,11 +42,19 @@ namespace Lykke.Service.Stellar.Api.Services.Horizon
 
         public async Task<Payments> GetPayments(string address, string order = "asc", string cursor = "")
         {
-            var builder = new PaymentCallBuilder(_horizonUrl);
-            builder.accountId(address);
-            builder.order(order).cursor(cursor);
-            var payments = await builder.Call();
-            return payments;
+            try
+            {
+                var builder = new PaymentCallBuilder(_horizonUrl);
+                builder.accountId(address);
+                builder.order(order).cursor(cursor);
+                var payments = await builder.Call();
+                return payments;
+            }
+            catch(ResourceNotFoundException)
+            {
+                // address not found
+                return null;
+            }
         }
 
         public async Task<LedgerDetails> GetLatestLedger()
@@ -62,10 +71,18 @@ namespace Lykke.Service.Stellar.Api.Services.Horizon
 
         public async Task<AccountDetails> GetAccountDetails(string address)
         {
-            var builder = new AccountCallBuilder(_horizonUrl);
-            builder.accountId(address);
-            var accountDetails = await builder.Call();
-            return accountDetails;
+            try
+            {
+                var builder = new AccountCallBuilder(_horizonUrl);
+                builder.accountId(address);
+                var accountDetails = await builder.Call();
+                return accountDetails;
+            }
+            catch (ResourceNotFoundException)
+            {
+                // address not found
+                return null;
+            }
         }
 
         public async Task<long> GetLedgerNoOfLastPayment(string address)
