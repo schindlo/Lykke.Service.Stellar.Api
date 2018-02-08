@@ -59,9 +59,9 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Observation
             await _table.InsertOrReplaceAsync(entity);
         }
 
-        public async Task DeleteAsync(string key)
+        public async Task DeleteIfExistAsync(string key)
         {
-            await _table.DeleteAsync(typeof(U).Name, key);
+            await _table.DeleteIfExistAsync(typeof(U).Name, key);
         }
     }
 }

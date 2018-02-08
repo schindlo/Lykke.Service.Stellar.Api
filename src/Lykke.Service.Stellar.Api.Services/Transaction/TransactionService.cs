@@ -2,27 +2,37 @@
 using System.Threading.Tasks;
 using StellarBase = Stellar;
 using StellarGenerated = Stellar.Generated;
-using StellarSdk.Model;
 using StellarSdk.Exceptions;
 using Lykke.Service.Stellar.Api.Core.Domain.Transaction;
 using Lykke.Service.Stellar.Api.Core.Domain.Balance;
 using Lykke.Service.Stellar.Api.Core.Exceptions;
 using Lykke.Service.Stellar.Api.Core.Services;
 using Lykke.Service.Stellar.Api.Core.Domain;
+using Lykke.Service.Stellar.Api.Core.Domain.Observation;
+using Common.Log;
 
 namespace Lykke.Service.Stellar.Api.Services.Transaction
 {
-    public class TransactionService: ITransactionService
+    public class TransactionService : ITransactionService
     {
+        private const int BatchSize = 100;
+
+        private string _lastJobError;
+
         private readonly IHorizonService _horizonService;
+        private readonly IObservationRepository<BroadcastObservation> _observationRepository;
         private readonly ITxBroadcastRepository _broadcastRepository;
         private readonly ITxBuildRepository _buildRepository;
+        private readonly ILog _log;
 
-        public TransactionService(IHorizonService horizonService, ITxBroadcastRepository broadcastRepository, ITxBuildRepository buildRepository)
+        public TransactionService(IHorizonService horizonService, IObservationRepository<BroadcastObservation> observationRepository,
+                                  ITxBroadcastRepository broadcastRepository, ITxBuildRepository buildRepository, ILog log)
         {
             _horizonService = horizonService;
+            _observationRepository = observationRepository;
             _broadcastRepository = broadcastRepository;
             _buildRepository = buildRepository;
+            _log = log;
         }
 
         public async Task<TxBroadcast> GetTxBroadcastAsync(Guid operationId)
@@ -34,19 +44,19 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
         {
             try
             {
-                var tx = await SubmitTransactionAsync(xdrBase64);
-                var paymentOp = _horizonService.GetFirstPaymentFromTransaction(tx);
+                var hash = await _horizonService.SubmitTransactionAsync(xdrBase64);
                 var broadcast = new TxBroadcast
                 {
                     OperationId = operationId,
-                    State = TxBroadcastState.Completed,
-                    Amount = paymentOp.Amount.InnerValue,
-                    Fee = tx.FeePaid,
-                    Hash = tx.Hash,
-                    CreatedAt = tx.CreatedAt,
-                    Ledger = tx.Ledger
+                    State = TxBroadcastState.InProgress,
+                    Hash = hash
                 };
-                await _broadcastRepository.AddAsync(broadcast);
+                await _broadcastRepository.InsertOrReplaceAsync(broadcast);
+                var observation = new BroadcastObservation
+                {
+                    OperationId = operationId
+                };
+                await _observationRepository.InsertOrReplaceAsync(observation);
             }
             catch (Exception ex)
             {
@@ -57,7 +67,7 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
                     Error = ex.Message,
                     ErrorCode = GetErrorCode(ex)
                 };
-                await _broadcastRepository.AddAsync(broadcast);
+                await _broadcastRepository.InsertOrReplaceAsync(broadcast);
 
                 var be = new BusinessException($"Broadcasting transaction failed (operationId: {operationId}).", ex);
                 be.Data.Add("ErrorCode", broadcast.ErrorCode);
@@ -67,11 +77,11 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
 
         private TxExecutionError GetErrorCode(Exception ex)
         {
-            if(ex.GetType() == typeof(BadRequestException))
+            if (ex.GetType() == typeof(BadRequestException))
             {
                 var bre = (BadRequestException)ex;
                 var ops = bre.ErrorDetails?.Extras?.ResultCodes?.Operations;
-                if(bre.ErrorDetails.Status == 400 && ops != null && ops.Length > 0 && ops[0].Equals("op_underfunded"))
+                if (bre.ErrorDetails.Status == 400 && ops != null && ops.Length > 0 && ops[0].Equals("op_underfunded"))
                 {
                     return TxExecutionError.NotEnoughtBalance;
                 }
@@ -82,13 +92,6 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
         public async Task DeleteTxBroadcastAsync(Guid operationId)
         {
             await _broadcastRepository.DeleteAsync(operationId);
-        }
-
-        private async Task<TransactionDetails> SubmitTransactionAsync(string signedTx)
-        {
-            var txHash = await _horizonService.SubmitTransactionAsync(signedTx);
-            var txDetails = await _horizonService.GetTransactionDetails(txHash);
-            return txDetails;
         }
 
         public async Task<Fees> GetFeesAsync()
@@ -139,5 +142,78 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
 
             return xdrBase64;
         }
+
+        public string GetLastJobError()
+        {
+            return _lastJobError;
+        }
+
+        public async Task UpdateBroadcastsInProgress()
+        {
+            try
+            {
+                string continuationToken = null;
+                do
+                {
+                    var observations = await _observationRepository.GetAllAsync(BatchSize, continuationToken);
+                    foreach (var item in observations.Items)
+                    {
+                        await ProcessBroadcastInProgress(item.OperationId);
+                    }
+                    continuationToken = observations.ContinuationToken;
+                } while (continuationToken != null);
+
+                _lastJobError = null;
+            }
+            catch (Exception ex)
+            {
+                _lastJobError = $"Error in job {nameof(TransactionService)}.{nameof(UpdateBroadcastsInProgress)}: {ex.Message}";
+                await _log.WriteErrorAsync(nameof(TransactionService), nameof(UpdateBroadcastsInProgress),
+                    "Failed to execute broadcast in progress update", ex);
+            }
+        }
+
+        private async Task ProcessBroadcastInProgress(Guid operationId)
+        {
+            try
+            {
+                var broadcast = await _broadcastRepository.GetAsync(operationId);
+                if (broadcast == null)
+                {
+                    throw new BusinessException($"Broadcast for observed operation not found (operation id: {operationId}).");
+                }
+
+                var tx = await _horizonService.GetTransactionDetails(broadcast.Hash);
+                if (tx == null)
+                {
+                    // transaction still in progress
+                    return;
+                }
+
+                var paymentOp = _horizonService.GetFirstPaymentFromTransaction(tx);
+                broadcast.State = TxBroadcastState.Completed;
+                broadcast.Amount = paymentOp.Amount.InnerValue;
+                broadcast.Fee = tx.FeePaid;
+                broadcast.CreatedAt = tx.CreatedAt;
+                broadcast.Ledger = tx.Ledger;
+                await _broadcastRepository.InsertOrReplaceAsync(broadcast);
+                await _observationRepository.DeleteIfExistAsync(operationId.ToString());
+            }
+            catch (Exception ex)
+            {
+                var broadcast = new TxBroadcast
+                {
+                    OperationId = operationId,
+                    State = TxBroadcastState.Failed,
+                    Error = ex.Message,
+                    ErrorCode = TxExecutionError.Unknown
+                };
+                await _broadcastRepository.InsertOrReplaceAsync(broadcast);
+                await _observationRepository.DeleteIfExistAsync(operationId.ToString());
+
+                await _log.WriteErrorAsync(nameof(TransactionService), nameof(ProcessBroadcastInProgress),
+                                           $"Failed to process in progress broadcast (operation id: {operationId}).", ex);
+            }
+       }
     }
 }

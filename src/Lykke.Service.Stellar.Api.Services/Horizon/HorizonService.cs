@@ -32,12 +32,20 @@ namespace Lykke.Service.Stellar.Api.Services.Horizon
             return tx.Hash;
         }
 
-        public async Task<TransactionDetails> GetTransactionDetails(string transactionHash)
+        public async Task<TransactionDetails> GetTransactionDetails(string hash)
         {
-            var builder = new TransactionCallBuilder(_horizonUrl);
-            builder.transaction(transactionHash);
-            var tx = await builder.Call();
-            return tx;
+            try
+            {
+                var builder = new TransactionCallBuilder(_horizonUrl);
+                builder.transaction(hash);
+                var tx = await builder.Call();
+                return tx;
+            }
+            catch (ResourceNotFoundException)
+            {
+                // transaction not found
+                return null;
+            }
         }
 
         public async Task<Payments> GetPayments(string address, string order = "asc", string cursor = "")
@@ -95,7 +103,12 @@ namespace Lykke.Service.Stellar.Api.Services.Horizon
             {
                 throw new HorizonApiException($"Latest ledger missing from query result.");
             }
-            var tx = await GetTransactionDetails(payments.Embedded.Records[0].TransactionHash);
+            var hash = payments.Embedded.Records[0].TransactionHash;
+            var tx = await GetTransactionDetails(hash);
+            if (tx == null)
+            {
+                throw new HorizonApiException($"Transaction not found (hash: {hash}).");
+            }
             return tx.Ledger;
         }
 

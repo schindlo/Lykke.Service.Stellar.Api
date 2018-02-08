@@ -92,7 +92,7 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
             if (observation.IsIncomingObserved == false && observation.IsOutgoingObserved == false)
             {
                 await _txHistoryRepository.DeleteAsync(observation.TableId);
-                await _observationRepository.DeleteAsync(address);
+                await _observationRepository.DeleteIfExistAsync(address);
             }
             else
             {
@@ -112,7 +112,7 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
             if (observation.IsIncomingObserved == false && observation.IsOutgoingObserved == false)
             {
                 await _txHistoryRepository.DeleteAsync(observation.TableId);
-                await _observationRepository.DeleteAsync(address);
+                await _observationRepository.DeleteIfExistAsync(address);
             }
             else
             {
@@ -130,11 +130,6 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
             }
 
             return new List<TxHistory>();
-        }
-
-        public string GetLastJobError()
-        {
-            return _lastJobError;
         }
 
         public async Task UpdateTransactionHistory()
@@ -160,6 +155,11 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
                 await _log.WriteErrorAsync(nameof(TransactionHistoryService), nameof(UpdateTransactionHistory),
                     "Failed to execute transaction history update", ex);
             }
+        }
+
+        public string GetLastJobError()
+        {
+            return _lastJobError;
         }
 
         private string GetMemo(TransactionDetails tx)
@@ -199,7 +199,8 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
                     {
                         if (context.Transaction == null || !context.Transaction.Hash.Equals(payment.TransactionHash, StringComparison.OrdinalIgnoreCase))
                         {
-                            context.Transaction = await _horizonService.GetTransactionDetails(payment.TransactionHash);
+                            var tx = await _horizonService.GetTransactionDetails(payment.TransactionHash);
+                            context.Transaction = tx ?? throw new BusinessException($"Transaction not found (hash: {payment.TransactionHash}).");
                             context.AccountMerge = 0;
                         }
 

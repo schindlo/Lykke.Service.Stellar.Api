@@ -6,5 +6,6 @@
         public string HorizonUrl { get; set; }
         public int WalletBalanceJobPeriodSeconds { get; set; }
         public int TransactionHistoryJobPeriodSeconds { get; set; }
+        public int BroadcastInProgressJobPeriodSeconds { get; set; }
     }
 }

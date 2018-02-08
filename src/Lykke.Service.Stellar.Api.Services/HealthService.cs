@@ -9,11 +9,13 @@ namespace Lykke.Service.Stellar.Api.Services
     {
         private IBalanceService _balanceService;
         private ITransactionHistoryService _txHistoryService;
+        private ITransactionService _transactionService;
 
-        public HealthService(IBalanceService balanceService, ITransactionHistoryService txHistoryService)
+        public HealthService(IBalanceService balanceService, ITransactionHistoryService txHistoryService, ITransactionService transactionService)
         {
             _balanceService = balanceService;
             _txHistoryService = txHistoryService;
+            _transactionService = transactionService;
         }
                                 
         public string GetHealthViolationMessage()
@@ -26,6 +28,10 @@ namespace Lykke.Service.Stellar.Api.Services
             if(_txHistoryService.GetLastJobError() != null)
             {
                 issues.Add(_txHistoryService.GetLastJobError());
+            }
+            if (_transactionService.GetLastJobError() != null)
+            {
+                issues.Add(_transactionService.GetLastJobError());
             }
             if(issues.Count > 0)
             {

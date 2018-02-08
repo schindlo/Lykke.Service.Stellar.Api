@@ -76,6 +76,10 @@ namespace Lykke.Service.Stellar.Api.Modules
                    .As<IObservationRepository<TransactionHistoryObservation>>()
                    .WithParameter(TypedParameter.From(dataConnStringManager));
 
+            builder.RegisterType<ObservationRepository<BroadcastObservationEntity, BroadcastObservation>>()
+                    .As<IObservationRepository<BroadcastObservation>>()
+                    .WithParameter(TypedParameter.From(dataConnStringManager));
+
             builder.RegisterType<WalletBalanceRepository>()
                    .As<IWalletBalanceRepository>()
                    .WithParameter(TypedParameter.From(dataConnStringManager));
@@ -109,6 +113,12 @@ namespace Lykke.Service.Stellar.Api.Modules
                    .WithParameter("period", _settings.CurrentValue.TransactionHistoryJobPeriodSeconds * 1000)
                    .SingleInstance();
                 
+            builder.RegisterType<BroadcastInProgressJob>()
+                   .As<IStartable>()
+                   .AutoActivate()
+                   .WithParameter("period", _settings.CurrentValue.BroadcastInProgressJobPeriodSeconds * 1000)
+                   .SingleInstance();
+
             builder.Populate(_services);
         }
     }

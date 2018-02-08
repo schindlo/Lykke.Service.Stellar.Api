@@ -11,6 +11,6 @@ namespace Lykke.Service.Stellar.Api.Core.Domain.Observation
 
         Task InsertOrReplaceAsync(T observation);
 
-        Task DeleteAsync(string key);
+        Task DeleteIfExistAsync(string key);
     }
 }

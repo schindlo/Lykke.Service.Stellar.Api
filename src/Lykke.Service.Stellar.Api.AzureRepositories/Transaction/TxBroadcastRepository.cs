@@ -46,10 +46,10 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Transaction
             return null;
         }
 
-        public async Task AddAsync(TxBroadcast broadcast)
+        public async Task InsertOrReplaceAsync(TxBroadcast broadcast)
         {
             var entity = broadcast.ToEntity(GetPartitionKey(), GetRowKey(broadcast.OperationId));
-            await _table.InsertAsync(entity);
+            await _table.InsertOrReplaceAsync(entity);
             // add index
             if (!string.IsNullOrEmpty(broadcast.Hash))
             {
@@ -59,7 +59,7 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Transaction
                     RowKey = broadcast.Hash,
                     Value = entity.RowKey
                 };
-                await _tableIndex.InsertAsync(index);
+                await _tableIndex.InsertOrReplaceAsync(index);
             }
         }
 

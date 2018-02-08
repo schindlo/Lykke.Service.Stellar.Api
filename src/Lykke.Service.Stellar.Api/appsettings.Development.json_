@@ -6,7 +6,8 @@
     },
     "HorizonUrl": "",
     "WalletBalanceJobPeriodSeconds": 60,
-    "TransactionHistoryJobPeriodSeconds": 60
+    "TransactionHistoryJobPeriodSeconds": 60,
+    "BroadcastInProgressJobPeriodSeconds": 60
   },
   "SlackNotifications": {
     "AzureQueue": {

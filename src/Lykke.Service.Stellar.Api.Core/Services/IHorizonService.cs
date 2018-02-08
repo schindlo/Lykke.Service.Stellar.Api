@@ -8,7 +8,7 @@ namespace Lykke.Service.Stellar.Api.Core.Services
     {
         Task<string> SubmitTransactionAsync(string signedTx);
 
-        Task<TransactionDetails> GetTransactionDetails(string transactionHash);
+        Task<TransactionDetails> GetTransactionDetails(string hash);
 
         Task<Payments> GetPayments(string address, string order = "asc", string cursor = "");
 

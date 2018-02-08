@@ -86,7 +86,7 @@ namespace Lykke.Service.Stellar.Api.Services
 
         public async Task DeleteBalanceObservationAsync(string address)
         {
-            await _observationRepository.DeleteAsync(address);
+            await _observationRepository.DeleteIfExistAsync(address);
             await _walletBalanceRepository.DeleteIfExistAsync(address);
         }
 
@@ -95,10 +95,40 @@ namespace Lykke.Service.Stellar.Api.Services
             return await _walletBalanceRepository.GetAllAsync(take, continuationToken);
         }
 
+        public async Task UpdateWalletBalances()
+        {
+            try
+            {
+                string continuationToken = null;
+                do
+                {
+                    var observations = await _observationRepository.GetAllAsync(BatchSize, continuationToken);
+                    foreach (var item in observations.Items)
+                    {
+                        await ProcessWallet(item.Address);
+                    }
+                    continuationToken = observations.ContinuationToken;
+                } while (continuationToken != null);
+
+                _lastJobError = null;
+            }
+            catch (Exception ex)
+            {
+                _lastJobError = $"Error in job {nameof(BalanceService)}.{nameof(UpdateWalletBalances)}: {ex.Message}";
+                await _log.WriteErrorAsync(nameof(BalanceService), nameof(UpdateWalletBalances),
+                    "Failed to execute balances update", ex);
+            }
+        }
+
+        public string GetLastJobError()
+        {
+            return _lastJobError;
+        }
+
         private async Task ProcessWallet(string address)
         {
             var addressBalance = await GetAddressBalanceAsync(address);
-            if(addressBalance == null)
+            if (addressBalance == null)
             {
                 await _log.WriteWarningAsync(nameof(BalanceService), nameof(ProcessWallet),
                     $"Address not found: {address}");
@@ -125,36 +155,6 @@ namespace Lykke.Service.Stellar.Api.Services
             else
             {
                 await _walletBalanceRepository.DeleteIfExistAsync(address);
-            }
-        }
-
-        public string GetLastJobError()
-        {
-            return _lastJobError;
-        }
-
-        public async Task UpdateWalletBalances()
-        {
-            try
-            {
-                string continuationToken = null;
-                do
-                {
-                    var observations = await _observationRepository.GetAllAsync(BatchSize, continuationToken);
-                    foreach (var item in observations.Items)
-                    {
-                        await ProcessWallet(item.Address);
-                    }
-                    continuationToken = observations.ContinuationToken;
-                } while (continuationToken != null);
-
-                _lastJobError = null;
-            }
-            catch (Exception ex)
-            {
-                _lastJobError = $"Error in job {nameof(BalanceService)}.{nameof(UpdateWalletBalances)}: {ex.Message}";
-                await _log.WriteErrorAsync(nameof(BalanceService), nameof(UpdateWalletBalances),
-                    "Failed to execute balances update", ex);
             }
         }
     }
