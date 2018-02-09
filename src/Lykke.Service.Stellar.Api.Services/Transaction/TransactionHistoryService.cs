@@ -133,8 +133,9 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
             return new List<TxHistory>();
         }
 
-        public async Task UpdateTransactionHistory()
+        public async Task<int> UpdateTransactionHistory()
         {
+            int count = 0;
             try
             {
                 string continuationToken = null;
@@ -143,7 +144,7 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
                     var observations = await _observationRepository.GetAllAsync(_batchSize, continuationToken);
                     foreach (var item in observations.Items)
                     {
-                        await ProcessTransactionObservation(item);
+                        count += await ProcessTransactionObservation(item);
                     }
                     continuationToken = observations.ContinuationToken;
                 } while (continuationToken != null);
@@ -156,6 +157,7 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
                 await _log.WriteErrorAsync(nameof(TransactionHistoryService), nameof(UpdateTransactionHistory),
                     "Failed to execute transaction history update", ex);
             }
+            return count;
         }
 
         public string GetLastJobError()
@@ -175,15 +177,16 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
             return null;
         }
 
-        private async Task QueryAndProcessPayments(string address, PaymentContext context)
+        private async Task<int> QueryAndProcessPayments(string address, PaymentContext context)
         {
+            int count = 0;
             var payments = await _horizonService.GetPayments(address, "asc", context.Cursor);
             if (payments == null)
             {
                 await _log.WriteWarningAsync(nameof(TransactionHistoryService), nameof(QueryAndProcessPayments),
                     $"Address not found: {address}");
                 context.Cursor = null;
-                return;
+                return count;
             }
 
             context.Cursor = null;
@@ -192,6 +195,7 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
                 try
                 {
                     context.Cursor = payment.PagingToken;
+                    count++;
 
                     // create_account, payment or account_merge
                     if (payment.TypeI == 0 ||
@@ -270,10 +274,12 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
                     throw new BusinessException($"Failed to process payment {payment?.Id} of transaction {context?.Transaction?.Hash}.", ex);
                 }
             }
+            return count;
         }
 
-        private async Task ProcessTransactionObservation(TransactionHistoryObservation observation)
+        private async Task<int> ProcessTransactionObservation(TransactionHistoryObservation observation)
         {
+            int count = 0;
             try
             {
                 var context = new PaymentContext(observation.TableId);
@@ -285,7 +291,7 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
 
                 do
                 {
-                    await QueryAndProcessPayments(observation.Address, context);
+                    count += await QueryAndProcessPayments(observation.Address, context);
                 }
                 while (!string.IsNullOrEmpty(context.Cursor));
             }
@@ -294,6 +300,7 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
                 await _log.WriteErrorAsync(nameof(TransactionHistoryService), nameof(ProcessTransactionObservation),
                     $"Failed to process transaction observation for address: {observation.Address}", ex);
             }
+            return count;
         }
     }
 }

@@ -149,8 +149,9 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
             return _lastJobError;
         }
 
-        public async Task UpdateBroadcastsInProgress()
+        public async Task<int> UpdateBroadcastsInProgress()
         {
+            int count = 0;
             try
             {
                 string continuationToken = null;
@@ -160,6 +161,7 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
                     foreach (var item in observations.Items)
                     {
                         await ProcessBroadcastInProgress(item.OperationId);
+                        count++;
                     }
                     continuationToken = observations.ContinuationToken;
                 } while (continuationToken != null);
@@ -172,6 +174,7 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
                 await _log.WriteErrorAsync(nameof(TransactionService), nameof(UpdateBroadcastsInProgress),
                     "Failed to execute broadcast in progress update", ex);
             }
+            return count;
         }
 
         private async Task ProcessBroadcastInProgress(Guid operationId)

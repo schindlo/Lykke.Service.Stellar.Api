@@ -96,8 +96,9 @@ namespace Lykke.Service.Stellar.Api.Services
             return await _walletBalanceRepository.GetAllAsync(take, continuationToken);
         }
 
-        public async Task UpdateWalletBalances()
+        public async Task<int> UpdateWalletBalances()
         {
+            int count = 0;
             try
             {
                 string continuationToken = null;
@@ -107,6 +108,7 @@ namespace Lykke.Service.Stellar.Api.Services
                     foreach (var item in observations.Items)
                     {
                         await ProcessWallet(item.Address);
+                        count++;
                     }
                     continuationToken = observations.ContinuationToken;
                 } while (continuationToken != null);
@@ -119,6 +121,7 @@ namespace Lykke.Service.Stellar.Api.Services
                 await _log.WriteErrorAsync(nameof(BalanceService), nameof(UpdateWalletBalances),
                     "Failed to execute balances update", ex);
             }
+            return count;
         }
 
         public string GetLastJobError()

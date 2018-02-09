@@ -21,7 +21,7 @@ namespace Lykke.Service.Stellar.Api.Core.Services
 
         Task<List<TxHistory>> GetHistory(TxDirectionType direction, string address, int take, string afterHash);
 
-        Task UpdateTransactionHistory();
+        Task<int> UpdateTransactionHistory();
 
         string GetLastJobError();
     }
