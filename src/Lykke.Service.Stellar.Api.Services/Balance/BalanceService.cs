@@ -13,7 +13,7 @@ namespace Lykke.Service.Stellar.Api.Services
 {
     public class BalanceService : IBalanceService
     {
-        private const int BatchSize = 100;
+        private int _batchSize;
 
         private string _lastJobError;
 
@@ -22,12 +22,13 @@ namespace Lykke.Service.Stellar.Api.Services
         private readonly IWalletBalanceRepository _walletBalanceRepository;
         private readonly ILog _log;
 
-        public BalanceService(IHorizonService horizonService, IObservationRepository<BalanceObservation> observationRepository, IWalletBalanceRepository walletBalanceRepository, ILog log)
+        public BalanceService(IHorizonService horizonService, IObservationRepository<BalanceObservation> observationRepository, IWalletBalanceRepository walletBalanceRepository, ILog log, int batchSize)
         {
             _horizonService = horizonService;
             _observationRepository = observationRepository;
             _walletBalanceRepository = walletBalanceRepository;
             _log = log;
+            _batchSize = batchSize;
         }
 
         public bool IsAddressValid(string address)
@@ -102,7 +103,7 @@ namespace Lykke.Service.Stellar.Api.Services
                 string continuationToken = null;
                 do
                 {
-                    var observations = await _observationRepository.GetAllAsync(BatchSize, continuationToken);
+                    var observations = await _observationRepository.GetAllAsync(_batchSize, continuationToken);
                     foreach (var item in observations.Items)
                     {
                         await ProcessWallet(item.Address);

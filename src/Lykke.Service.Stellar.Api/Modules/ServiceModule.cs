@@ -91,14 +91,17 @@ namespace Lykke.Service.Stellar.Api.Modules
 
             builder.RegisterType<BalanceService>()
                    .As<IBalanceService>()
+                   .WithParameter("batchSize", _settings.CurrentValue.WalletBalanceJobBatchSize)
                    .SingleInstance();
 
             builder.RegisterType<TransactionService>()
                    .As<ITransactionService>()
+                   .WithParameter("batchSize", _settings.CurrentValue.BroadcastInProgressJobBatchSize)
                    .SingleInstance();
 
             builder.RegisterType<TransactionHistoryService>()
                    .As<ITransactionHistoryService>()
+                   .WithParameter("batchSize", _settings.CurrentValue.TransactionHistoryJobBatchSize)
                    .SingleInstance();
 
             builder.RegisterType<WalletBalanceJob>()

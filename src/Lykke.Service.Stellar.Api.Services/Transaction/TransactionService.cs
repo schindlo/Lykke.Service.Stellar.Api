@@ -15,7 +15,7 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
 {
     public class TransactionService : ITransactionService
     {
-        private const int BatchSize = 100;
+        private int _batchSize;
 
         private string _lastJobError;
 
@@ -26,13 +26,14 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
         private readonly ILog _log;
 
         public TransactionService(IHorizonService horizonService, IObservationRepository<BroadcastObservation> observationRepository,
-                                  ITxBroadcastRepository broadcastRepository, ITxBuildRepository buildRepository, ILog log)
+                                  ITxBroadcastRepository broadcastRepository, ITxBuildRepository buildRepository, ILog log, int batchSize)
         {
             _horizonService = horizonService;
             _observationRepository = observationRepository;
             _broadcastRepository = broadcastRepository;
             _buildRepository = buildRepository;
             _log = log;
+            _batchSize = batchSize;
         }
 
         public async Task<TxBroadcast> GetTxBroadcastAsync(Guid operationId)
@@ -155,7 +156,7 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
                 string continuationToken = null;
                 do
                 {
-                    var observations = await _observationRepository.GetAllAsync(BatchSize, continuationToken);
+                    var observations = await _observationRepository.GetAllAsync(_batchSize, continuationToken);
                     foreach (var item in observations.Items)
                     {
                         await ProcessBroadcastInProgress(item.OperationId);

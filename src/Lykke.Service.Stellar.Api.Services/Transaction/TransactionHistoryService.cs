@@ -14,7 +14,7 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
 {
     public class TransactionHistoryService : ITransactionHistoryService
     {
-        private const int BatchSize = 100;
+        private int _batchSize;
 
         private string _lastJobError;
 
@@ -25,13 +25,14 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
         private readonly ILog _log;
 
         public TransactionHistoryService(IHorizonService horizonService, IObservationRepository<TransactionHistoryObservation> observationRepository,
-                                         ITxHistoryRepository txHistoryRepository, ITxBroadcastRepository txBroadcastRepository, ILog log)
+                                         ITxHistoryRepository txHistoryRepository, ITxBroadcastRepository txBroadcastRepository, ILog log, int batchSize)
         {
             _horizonService = horizonService;
             _observationRepository = observationRepository;
             _txHistoryRepository = txHistoryRepository;
             _txBroadcastRepository = txBroadcastRepository;
             _log = log;
+            _batchSize = batchSize;
         }
 
         public async Task<bool> IsIncomingTransactionObservedAsync(string address)
@@ -139,7 +140,7 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
                 string continuationToken = null;
                 do
                 {
-                    var observations = await _observationRepository.GetAllAsync(BatchSize, continuationToken);
+                    var observations = await _observationRepository.GetAllAsync(_batchSize, continuationToken);
                     foreach (var item in observations.Items)
                     {
                         await ProcessTransactionObservation(item);
