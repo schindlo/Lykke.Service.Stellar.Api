@@ -164,6 +164,12 @@ namespace Lykke.Service.Stellar.Api.Controllers
             });
         }
 
+        [HttpPut]
+        public IActionResult RebuildTransactions([Required, FromBody] RebuildTransactionRequest request)
+        {
+            return new StatusCodeResult(StatusCodes.Status501NotImplemented);
+        }
+
         [HttpPost("many-inputs")]
         public IActionResult BuildWithManyInputs([Required, FromBody] BuildTransactionWithManyInputsRequest request)
         {
