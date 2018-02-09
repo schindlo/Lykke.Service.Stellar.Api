@@ -17,4 +17,7 @@
   </ItemGroup>
 
 
+  <ItemGroup>
+    <Folder Include="postman\" />
+  </ItemGroup>
 </Project>
