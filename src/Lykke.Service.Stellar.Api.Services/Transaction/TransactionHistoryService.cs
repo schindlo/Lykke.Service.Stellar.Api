@@ -1,11 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using StellarBase = Stellar;
-using StellarGenerated = Stellar.Generated;
+using StellarBase;
+using StellarBase.Generated;
 using StellarSdk.Model;
 using Common.Log;
-using Lykke.Service.Stellar.Api.Core.Domain;
 using Lykke.Service.Stellar.Api.Core.Domain.Observation;
 using Lykke.Service.Stellar.Api.Core.Domain.Transaction;
 using Lykke.Service.Stellar.Api.Core.Services;
@@ -200,9 +199,9 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
                     count++;
 
                     // create_account, payment or account_merge
-                    if (payment.TypeI == (int)StellarGenerated.OperationType.OperationTypeEnum.CREATE_ACCOUNT ||
-                        payment.TypeI == (int)StellarGenerated.OperationType.OperationTypeEnum.PAYMENT && Asset.Stellar.TypeName.Equals(payment.AssetType, StringComparison.OrdinalIgnoreCase) ||
-                        payment.TypeI == (int)StellarGenerated.OperationType.OperationTypeEnum.ACCOUNT_MERGE)
+                    if (payment.TypeI == (int)OperationType.OperationTypeEnum.CREATE_ACCOUNT ||
+                        payment.TypeI == (int)OperationType.OperationTypeEnum.PAYMENT && Core.Domain.Asset.Stellar.TypeName.Equals(payment.AssetType, StringComparison.OrdinalIgnoreCase) ||
+                        payment.TypeI == (int)OperationType.OperationTypeEnum.ACCOUNT_MERGE)
                     {
                         if (context.Transaction == null || !context.Transaction.Hash.Equals(payment.TransactionHash, StringComparison.OrdinalIgnoreCase))
                         {
@@ -213,7 +212,7 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
 
                         var history = new TxHistory
                         {
-                            AssetId = Asset.Stellar.Id,
+                            AssetId = Core.Domain.Asset.Stellar.Id,
                             Hash = payment.TransactionHash,
                             PaymentId = payment.Id,
                             CreatedAt = payment.CreatedAt,
@@ -221,27 +220,27 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
                         };
 
                         // create_account
-                        if (payment.TypeI == (int)StellarGenerated.OperationType.OperationTypeEnum.CREATE_ACCOUNT)
+                        if (payment.TypeI == (int)OperationType.OperationTypeEnum.CREATE_ACCOUNT)
                         {
                             history.FromAddress = payment.Funder;
                             history.ToAddress = payment.Account;
                             history.PaymentType = PaymentType.CreateAccount;
 
                             decimal amount = Decimal.Parse(payment.StartingBalance);
-                            history.Amount = Convert.ToInt64(amount * StellarBase.One.Value);
+                            history.Amount = Convert.ToInt64(amount * One.Value);
                         }
                         // payment
-                        else if (payment.TypeI == (int)StellarGenerated.OperationType.OperationTypeEnum.PAYMENT)
+                        else if (payment.TypeI == (int)OperationType.OperationTypeEnum.PAYMENT)
                         {
                             history.FromAddress = payment.From;
                             history.ToAddress = payment.To;
                             history.PaymentType = PaymentType.Payment;
 
                             decimal amount = Decimal.Parse(payment.Amount);
-                            history.Amount = Convert.ToInt64(amount * StellarBase.One.Value);
+                            history.Amount = Convert.ToInt64(amount * One.Value);
                         }
                         // account_merge
-                        else if (payment.TypeI == (int)StellarGenerated.OperationType.OperationTypeEnum.ACCOUNT_MERGE)
+                        else if (payment.TypeI == (int)OperationType.OperationTypeEnum.ACCOUNT_MERGE)
                         {
                             history.FromAddress = payment.Account;
                             history.ToAddress = payment.Into;

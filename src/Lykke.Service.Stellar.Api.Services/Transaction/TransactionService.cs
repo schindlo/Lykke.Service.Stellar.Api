@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
-using StellarBase = Stellar;
-using StellarGenerated = Stellar.Generated;
+using StellarBase;
+using StellarBase.Generated;
 using StellarSdk.Exceptions;
 using Common.Log;
 using Lykke.Service.Stellar.Api.Core.Domain.Transaction;
@@ -113,13 +113,13 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
 
         public async Task<string> BuildTransactionAsync(Guid operationId, AddressBalance from, string toAddress, long amount)
         {
-            var fromKeyPair = StellarBase.KeyPair.FromAddress(from.Address);
-            var fromAccount = new StellarBase.Account(fromKeyPair, from.Sequence);
+            var fromKeyPair = KeyPair.FromAddress(from.Address);
+            var fromAccount = new Account(fromKeyPair, from.Sequence);
 
-            var toKeyPair = StellarBase.KeyPair.FromAddress(toAddress);
+            var toKeyPair = KeyPair.FromAddress(toAddress);
 
             var asset = new StellarBase.Asset();
-            var operation = new StellarBase.PaymentOperation.Builder(toKeyPair, asset, amount)
+            var operation = new PaymentOperation.Builder(toKeyPair, asset, amount)
                                            .SetSourceAccount(fromKeyPair)
                                            .Build();
 
@@ -130,8 +130,8 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
                                     .Build();
 
             var xdr = tx.ToXDR();
-            var writer = new StellarGenerated.ByteWriter();
-            StellarGenerated.Transaction.Encode(writer, xdr);
+            var writer = new ByteWriter();
+            StellarBase.Generated.Transaction.Encode(writer, xdr);
             var xdrBase64 = Convert.ToBase64String(writer.ToArray());
 
             var build = new TxBuild

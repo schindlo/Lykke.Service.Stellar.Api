@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Threading.Tasks;
-using StellarGenerated = Stellar.Generated;
+using StellarBase.Generated;
 using StellarSdk;
 using StellarSdk.Model;
 using StellarSdk.Exceptions;
@@ -116,8 +116,8 @@ namespace Lykke.Service.Stellar.Api.Services.Horizon
         public long GetAccountMergeAmount(string resultXdrBase64, int accountMergeInTx)
         {
             var xdr = Convert.FromBase64String(resultXdrBase64);
-            var reader = new StellarGenerated.ByteReader(xdr);
-            var txResult = StellarGenerated.TransactionResult.Decode(reader);
+            var reader = new ByteReader(xdr);
+            var txResult = StellarBase.Generated.TransactionResult.Decode(reader);
 
             var merges = txResult.Result.Results.Where(x => x.Tr.AccountMergeResult != null).ToList();
             if (merges.Count > accountMergeInTx)
@@ -125,7 +125,7 @@ namespace Lykke.Service.Stellar.Api.Services.Horizon
                 var merge = merges[accountMergeInTx];
                 var result = merge?.Tr?.AccountMergeResult;
                 var resultCode = result?.Discriminant?.InnerValue;
-                if (resultCode != null && resultCode == StellarGenerated.AccountMergeResultCode.AccountMergeResultCodeEnum.ACCOUNT_MERGE_SUCCESS)
+                if (resultCode != null && resultCode == AccountMergeResultCode.AccountMergeResultCodeEnum.ACCOUNT_MERGE_SUCCESS)
                 {
                     long amount = result.SourceAccountBalance.InnerValue;
                     return amount;
@@ -139,11 +139,11 @@ namespace Lykke.Service.Stellar.Api.Services.Horizon
             return 0;
         }
 
-        public StellarGenerated.PaymentOp GetFirstPaymentFromTransaction(TransactionDetails tx)
+        public PaymentOp GetFirstPaymentFromTransaction(TransactionDetails tx)
         {
             var xdr = Convert.FromBase64String(tx.EnvelopeXdr);
-            var reader = new StellarGenerated.ByteReader(xdr);
-            var txEnvelope = StellarGenerated.TransactionEnvelope.Decode(reader);
+            var reader = new ByteReader(xdr);
+            var txEnvelope = TransactionEnvelope.Decode(reader);
             if (txEnvelope?.Tx?.Operations == null || txEnvelope.Tx.Operations.Length < 1 ||
                 txEnvelope.Tx.Operations[0].Body?.PaymentOp == null)
             {

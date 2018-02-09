@@ -2,7 +2,7 @@
 using System.Linq;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using StellarBase = Stellar;
+using StellarBase;
 using Common.Log;
 using Lykke.Service.Stellar.Api.Core.Domain.Balance;
 using Lykke.Service.Stellar.Api.Core.Services;
@@ -59,12 +59,12 @@ namespace Lykke.Service.Stellar.Api.Services
             };
             result.Sequence = Int64.Parse(accountDetails.Sequence);
 
-            var nativeBalance = accountDetails.Balances.Single(b => Asset.Stellar.TypeName.Equals(b.AssetType, StringComparison.OrdinalIgnoreCase));
-            result.Balance = Convert.ToInt64(Decimal.Parse(nativeBalance.Balance) * StellarBase.One.Value);
+            var nativeBalance = accountDetails.Balances.Single(b => Core.Domain.Asset.Stellar.TypeName.Equals(b.AssetType, StringComparison.OrdinalIgnoreCase));
+            result.Balance = Convert.ToInt64(Decimal.Parse(nativeBalance.Balance) * One.Value);
             if (fees != null)
             {
                 long entries = accountDetails.Signers.Length + accountDetails.SubentryCount;
-                var minBalance = (2 + entries) * fees.BaseReserve * StellarBase.One.Value;
+                var minBalance = (2 + entries) * fees.BaseReserve * One.Value;
                 result.MinBalance = Convert.ToInt64(minBalance);
             }
 

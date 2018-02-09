@@ -1,6 +1,6 @@
 ﻿using System.Threading.Tasks;
+using StellarBase.Generated;
 using StellarSdk.Model;
-using StellarGenerated = Stellar.Generated;
 
 namespace Lykke.Service.Stellar.Api.Core.Services
 {
@@ -20,6 +20,6 @@ namespace Lykke.Service.Stellar.Api.Core.Services
 
         long GetAccountMergeAmount(string resultXdrBase64, int accountMergeInTx);
 
-        StellarGenerated.PaymentOp GetFirstPaymentFromTransaction(TransactionDetails tx);
+        PaymentOp GetFirstPaymentFromTransaction(TransactionDetails tx);
     }
 }
