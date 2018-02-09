@@ -10,7 +10,7 @@ namespace Lykke.Service.Stellar.Api.Core.Services
 
         Task<TransactionDetails> GetTransactionDetails(string hash);
 
-        Task<Payments> GetPayments(string address, string order = "asc", string cursor = "");
+        Task<Payments> GetPayments(string address, string order = StellarSdkConstants.OrderAsc, string cursor = "");
 
         Task<LedgerDetails> GetLatestLedger();
 

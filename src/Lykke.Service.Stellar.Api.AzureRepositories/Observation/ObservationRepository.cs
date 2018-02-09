@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 using Common.Log;
 using AzureStorage;
 using AzureStorage.Tables;
@@ -6,23 +7,23 @@ using Lykke.SettingsReader;
 using System.Collections.Generic;
 using Microsoft.WindowsAzure.Storage.Table;
 using Lykke.Service.Stellar.Api.Core.Domain.Observation;
-using Lykke.AzureStorage.Tables;
-using System;
 
 namespace Lykke.Service.Stellar.Api.AzureRepositories.Observation
 {
     public class ObservationRepository<T, U> : IObservationRepository<U> where T : ObservationEntity<U>, new() where U : class
     {
+        private const string TableName = "Observation";
+
         private INoSQLTableStorage<T> _table;
 
         public ObservationRepository(IReloadingManager<string> dataConnStringManager, ILog log)
         {
-            _table = AzureTableStorage<T>.Create(dataConnStringManager, "Observation", log);
+            _table = AzureTableStorage<T>.Create(dataConnStringManager, TableName, log);
         }
 
         public async Task<(List<U> Items, string ContinuationToken)> GetAllAsync(int take, string continuationToken)
         {
-            var query = new TableQuery<T>().Where(TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, typeof(U).Name))
+            var query = new TableQuery<T>().Where(TableQuery.GenerateFilterCondition(nameof(ITableEntity.PartitionKey), QueryComparisons.Equal, typeof(U).Name))
                                            .Take(take);
             var data = await _table.GetDataWithContinuationTokenAsync(query, continuationToken);
 

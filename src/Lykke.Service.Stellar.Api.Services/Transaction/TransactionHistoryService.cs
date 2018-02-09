@@ -1,14 +1,16 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using StellarBase = Stellar;
+using StellarGenerated = Stellar.Generated;
+using StellarSdk.Model;
 using Common.Log;
 using Lykke.Service.Stellar.Api.Core.Domain;
 using Lykke.Service.Stellar.Api.Core.Domain.Observation;
 using Lykke.Service.Stellar.Api.Core.Domain.Transaction;
 using Lykke.Service.Stellar.Api.Core.Services;
 using Lykke.Service.Stellar.Api.Core.Exceptions;
-using StellarSdk.Model;
-using System.Collections.Generic;
+using Lykke.Service.Stellar.Api.Core;
 
 namespace Lykke.Service.Stellar.Api.Services.Transaction
 {
@@ -167,8 +169,8 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
 
         private string GetMemo(TransactionDetails tx)
         {
-            if (("text".Equals(tx.MemoType, StringComparison.OrdinalIgnoreCase) ||
-                "id".Equals(tx.MemoType, StringComparison.OrdinalIgnoreCase)) &&
+            if ((StellarSdkConstants.MemoTextTypeName.Equals(tx.MemoType, StringComparison.OrdinalIgnoreCase) ||
+                StellarSdkConstants.MemoIdTypeName.Equals(tx.MemoType, StringComparison.OrdinalIgnoreCase)) &&
                 !string.IsNullOrEmpty(tx.Memo))
             {
                 return tx.Memo;
@@ -180,7 +182,7 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
         private async Task<int> QueryAndProcessPayments(string address, PaymentContext context)
         {
             int count = 0;
-            var payments = await _horizonService.GetPayments(address, "asc", context.Cursor);
+            var payments = await _horizonService.GetPayments(address, StellarSdkConstants.OrderAsc, context.Cursor);
             if (payments == null)
             {
                 await _log.WriteWarningAsync(nameof(TransactionHistoryService), nameof(QueryAndProcessPayments),
@@ -198,9 +200,9 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
                     count++;
 
                     // create_account, payment or account_merge
-                    if (payment.TypeI == 0 ||
-                        payment.TypeI == 1 && "native".Equals(payment.AssetType, StringComparison.OrdinalIgnoreCase) ||
-                        payment.TypeI == 8)
+                    if (payment.TypeI == (int)StellarGenerated.OperationType.OperationTypeEnum.CREATE_ACCOUNT ||
+                        payment.TypeI == (int)StellarGenerated.OperationType.OperationTypeEnum.PAYMENT && Asset.Stellar.TypeName.Equals(payment.AssetType, StringComparison.OrdinalIgnoreCase) ||
+                        payment.TypeI == (int)StellarGenerated.OperationType.OperationTypeEnum.ACCOUNT_MERGE)
                     {
                         if (context.Transaction == null || !context.Transaction.Hash.Equals(payment.TransactionHash, StringComparison.OrdinalIgnoreCase))
                         {
@@ -219,7 +221,7 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
                         };
 
                         // create_account
-                        if (payment.TypeI == 0)
+                        if (payment.TypeI == (int)StellarGenerated.OperationType.OperationTypeEnum.CREATE_ACCOUNT)
                         {
                             history.FromAddress = payment.Funder;
                             history.ToAddress = payment.Account;
@@ -229,7 +231,7 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
                             history.Amount = Convert.ToInt64(amount * StellarBase.One.Value);
                         }
                         // payment
-                        else if (payment.TypeI == 1)
+                        else if (payment.TypeI == (int)StellarGenerated.OperationType.OperationTypeEnum.PAYMENT)
                         {
                             history.FromAddress = payment.From;
                             history.ToAddress = payment.To;
@@ -239,7 +241,7 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
                             history.Amount = Convert.ToInt64(amount * StellarBase.One.Value);
                         }
                         // account_merge
-                        else if (payment.TypeI == 8)
+                        else if (payment.TypeI == (int)StellarGenerated.OperationType.OperationTypeEnum.ACCOUNT_MERGE)
                         {
                             history.FromAddress = payment.Account;
                             history.ToAddress = payment.Into;

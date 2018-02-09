@@ -13,6 +13,8 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Balance
 {
     public class WalletBalanceRepository: IWalletBalanceRepository
     {
+        private const string TableName = "WalletBalance";
+
         private static string GetPartitionKey() => Asset.Stellar.Id;
         private static string GetRowKey(string address) => address;
 
@@ -20,7 +22,7 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Balance
 
         public WalletBalanceRepository(IReloadingManager<string> dataConnStringManager, ILog log)
         {
-            _table = AzureTableStorage<WalletBalanceEntity>.Create(dataConnStringManager, "WalletBalance", log);
+            _table = AzureTableStorage<WalletBalanceEntity>.Create(dataConnStringManager, TableName, log);
         }
 
         public async Task<(List<WalletBalance> Entities, string ContinuationToken)> GetAllAsync(int take, string continuationToken)

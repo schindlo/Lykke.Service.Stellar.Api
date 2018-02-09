@@ -1,5 +1,4 @@
-﻿using Lykke.Service.Stellar.Api.Core.Domain.Observation;
-using StellarSdk.Model;
+﻿using StellarSdk.Model;
 
 namespace Lykke.Service.Stellar.Api.Services.Transaction
 {

@@ -1,19 +1,22 @@
 ﻿using System;
+using System.Linq;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Threading.Tasks;
+using Microsoft.WindowsAzure.Storage.Table;
 using Common.Log;
 using AzureStorage;
 using AzureStorage.Tables;
 using Lykke.SettingsReader;
 using Lykke.Service.Stellar.Api.Core.Domain.Transaction;
-using System.Collections.Generic;
-using Microsoft.WindowsAzure.Storage.Table;
-using System.Linq;
-using System.Collections.Concurrent;
 
 namespace Lykke.Service.Stellar.Api.AzureRepositories.Transaction
 {
     public class TxHistoryRepository : ITxHistoryRepository
     {
+        private const string TableNamePrefix = "TransactionHistory";
+        private const string IndexSeparator = ";";
+
         private static string GetPartitionKey(TxDirectionType direction) => direction.ToString();
         private static string GetLastPaymentIdRowKey() => "Last";
 
@@ -31,7 +34,7 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Transaction
 
         private string GetTableName(string tableId)
         {
-            var tableName = $"TransactionHistory{tableId}";
+            var tableName = $"{TableNamePrefix}{tableId}";
             return tableName;
         }
 
@@ -51,7 +54,7 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Transaction
         public async Task<(List<TxHistory> Items, string ContinuationToken)> GetAllAsync(string tableId, TxDirectionType direction, int take, string continuationToken)
         {
             var (table, tableIndex) = GetTable(tableId);
-            var filter = TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, direction.ToString());
+            var filter = TableQuery.GenerateFilterCondition(nameof(ITableEntity.PartitionKey), QueryComparisons.Equal, direction.ToString());
             var query = new TableQuery<TxHistoryEntity>().Where(filter).Take(take);
             var data = await table.GetDataWithContinuationTokenAsync(query, continuationToken);
             var items = data.Entities.ToDomain();
@@ -63,18 +66,18 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Transaction
             var (table, tableIndex) = GetTable(tableId);
 
             // build range query
-            string filter = TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, direction.ToString());
+            string filter = TableQuery.GenerateFilterCondition(nameof(ITableEntity.PartitionKey), QueryComparisons.Equal, direction.ToString());
             if (!string.IsNullOrEmpty(afterHash)) 
             {
                 var index = await tableIndex.GetDataAsync(IndexEntity.GetPartitionKeyHash(), afterHash);
                 if (index == null)
                 {
-                    throw new ArgumentException($"Unknwon transaction hash: {afterHash}", "afterHash");
+                    throw new ArgumentException($"Unknwon transaction hash: {afterHash}", nameof(afterHash));
                 }
-                var rowKeys = index.Value.Split(";").ToList().OrderByDescending(x => UInt64.Parse(x));
+                var rowKeys = index.Value.Split(IndexSeparator).ToList().OrderByDescending(x => UInt64.Parse(x));
                 var rowKey = rowKeys.First();
 
-                var rkFilter = TableQuery.GenerateFilterCondition("RowKey", QueryComparisons.GreaterThan, rowKey);
+                var rkFilter = TableQuery.GenerateFilterCondition(nameof(ITableEntity.RowKey), QueryComparisons.GreaterThan, rowKey);
                 filter = TableQuery.CombineFilters(filter, TableOperators.And, rkFilter);
             }
 
@@ -128,7 +131,7 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Transaction
             }
             else if (!index.Value.Contains(value))
             {
-                index.Value += ";" + value;
+                index.Value += IndexSeparator + value;
             }
             await tableIndex.InsertOrReplaceAsync(index);
 

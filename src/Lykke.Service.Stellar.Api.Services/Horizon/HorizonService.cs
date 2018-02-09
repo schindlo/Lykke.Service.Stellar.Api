@@ -4,9 +4,10 @@ using System.Threading.Tasks;
 using StellarGenerated = Stellar.Generated;
 using StellarSdk;
 using StellarSdk.Model;
+using StellarSdk.Exceptions;
 using Lykke.Service.Stellar.Api.Core.Exceptions;
 using Lykke.Service.Stellar.Api.Core.Services;
-using StellarSdk.Exceptions;
+using Lykke.Service.Stellar.Api.Core;
 
 namespace Lykke.Service.Stellar.Api.Services.Horizon
 {
@@ -48,7 +49,7 @@ namespace Lykke.Service.Stellar.Api.Services.Horizon
             }
         }
 
-        public async Task<Payments> GetPayments(string address, string order = "asc", string cursor = "")
+        public async Task<Payments> GetPayments(string address, string order = StellarSdkConstants.OrderAsc, string cursor = "")
         {
             try
             {
@@ -68,7 +69,7 @@ namespace Lykke.Service.Stellar.Api.Services.Horizon
         public async Task<LedgerDetails> GetLatestLedger()
         {
             var builder = new LedgerCallBuilder(_horizonUrl);
-            builder.order("desc").limit(1);
+            builder.order(StellarSdkConstants.OrderDesc).limit(1);
             var ledgers = await builder.Call();
             if (ledgers?.Embedded?.Records == null || ledgers?.Embedded?.Records.Length < 1)
             {
@@ -97,7 +98,7 @@ namespace Lykke.Service.Stellar.Api.Services.Horizon
         {
             var builder = new PaymentCallBuilder(_horizonUrl);
             builder.accountId(address);
-            builder.order("desc").limit(1);
+            builder.order(StellarSdkConstants.OrderDesc).limit(1);
             var payments = await builder.Call();
             if (payments?.Embedded?.Records == null || payments?.Embedded?.Records.Length < 1)
             {

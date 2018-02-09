@@ -3,11 +3,11 @@ using System.Linq;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using StellarBase = Stellar;
+using Common.Log;
 using Lykke.Service.Stellar.Api.Core.Domain.Balance;
 using Lykke.Service.Stellar.Api.Core.Services;
 using Lykke.Service.Stellar.Api.Core.Domain;
 using Lykke.Service.Stellar.Api.Core.Domain.Observation;
-using Common.Log;
 
 namespace Lykke.Service.Stellar.Api.Services
 {
@@ -59,7 +59,7 @@ namespace Lykke.Service.Stellar.Api.Services
             };
             result.Sequence = Int64.Parse(accountDetails.Sequence);
 
-            var nativeBalance = accountDetails.Balances.Single(b => "native".Equals(b.AssetType, StringComparison.OrdinalIgnoreCase));
+            var nativeBalance = accountDetails.Balances.Single(b => Asset.Stellar.TypeName.Equals(b.AssetType, StringComparison.OrdinalIgnoreCase));
             result.Balance = Convert.ToInt64(Decimal.Parse(nativeBalance.Balance) * StellarBase.One.Value);
             if (fees != null)
             {
@@ -131,34 +131,42 @@ namespace Lykke.Service.Stellar.Api.Services
 
         private async Task ProcessWallet(string address)
         {
-            var addressBalance = await GetAddressBalanceAsync(address);
-            if (addressBalance == null)
+            try
             {
-                await _log.WriteWarningAsync(nameof(BalanceService), nameof(ProcessWallet),
-                    $"Address not found: {address}");
-                return;
-            }
+                var addressBalance = await GetAddressBalanceAsync(address);
+                if (addressBalance == null)
+                {
+                    await _log.WriteWarningAsync(nameof(BalanceService), nameof(ProcessWallet),
+                        $"Address not found: {address}");
+                    return;
+                }
 
-            if (addressBalance.Balance > 0)
-            {
-                var walletEntry = await _walletBalanceRepository.GetAsync(address);
-                if (walletEntry == null)
+                if (addressBalance.Balance > 0)
                 {
-                    walletEntry = new WalletBalance
+                    var walletEntry = await _walletBalanceRepository.GetAsync(address);
+                    if (walletEntry == null)
                     {
-                        Address = address
-                    };
+                        walletEntry = new WalletBalance
+                        {
+                            Address = address
+                        };
+                    }
+                    if (walletEntry.Balance != addressBalance.Balance)
+                    {
+                        walletEntry.Balance = addressBalance.Balance;
+                        walletEntry.Ledger = await _horizonService.GetLedgerNoOfLastPayment(address);
+                        await _walletBalanceRepository.InsertOrReplaceAsync(walletEntry);
+                    }
                 }
-                if (walletEntry.Balance != addressBalance.Balance)
+                else
                 {
-                    walletEntry.Balance = addressBalance.Balance;
-                    walletEntry.Ledger = await _horizonService.GetLedgerNoOfLastPayment(address);
-                    await _walletBalanceRepository.InsertOrReplaceAsync(walletEntry);
+                    await _walletBalanceRepository.DeleteIfExistAsync(address);
                 }
             }
-            else
+            catch (Exception ex)
             {
-                await _walletBalanceRepository.DeleteIfExistAsync(address);
+                await _log.WriteErrorAsync(nameof(BalanceService), nameof(ProcessWallet),
+                    $"Failed to process wallet {address} during balance update.", ex);
             }
         }
     }

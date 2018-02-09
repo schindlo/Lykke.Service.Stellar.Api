@@ -10,6 +10,8 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Transaction
 {
     public class TxBroadcastRepository: ITxBroadcastRepository
     {
+        private const string TableName = "Transaction";
+
         private static string GetPartitionKey() => "Broadcast";
         private static string GetRowKey(Guid operationId) => operationId.ToString();
 
@@ -18,9 +20,8 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Transaction
 
         public TxBroadcastRepository(IReloadingManager<string> dataConnStringManager, ILog log)
         {
-            string tableName = "Transaction";
-            _table = AzureTableStorage<TxBroadcastEntity>.Create(dataConnStringManager, tableName, log);
-            _tableIndex = AzureTableStorage<IndexEntity>.Create(dataConnStringManager, tableName, log);
+            _table = AzureTableStorage<TxBroadcastEntity>.Create(dataConnStringManager, TableName, log);
+            _tableIndex = AzureTableStorage<IndexEntity>.Create(dataConnStringManager, TableName, log);
         }
 
         public async Task<TxBroadcast> GetAsync(Guid operationId)
