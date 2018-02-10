@@ -73,6 +73,7 @@
 			"headers": "",
 			"headerData": [],
 			"url": "{{URL}}/api/capabilities",
+			"folder": "f1de4854-50b5-89ee-8687-7966b2dafd44",
 			"queryParams": [],
 			"events": [
 				{
@@ -189,7 +190,7 @@
 				{
 					"listen": "test",
 					"script": {
-						"id": "baba5861-27dc-4f27-8b41-c3bc9d79768d",
+						"id": "fb4623a2-2a6e-4648-a41f-efbcaed02e0f",
 						"type": "text/javascript",
 						"exec": [
 							"pm.test(\"Status code is 200\", function () {",
@@ -197,7 +198,7 @@
 							"    var jsonData = pm.response.json();",
 							"    ",
 							"    var context = jsonData.transactionContext;",
-							"    pm.expect(context !== null).to.be.true;",
+							"    pm.expect(context !== undefined).to.be.true;",
 							"    ",
 							"    pm.globals.set(\"transaction_context\", context);",
 							"});",
@@ -212,15 +213,13 @@
 			"data": [],
 			"dataMode": "raw",
 			"auth": null,
-			"time": 1518105464958,
+			"time": 1518260337839,
 			"name": "transaction single",
 			"description": "",
 			"collectionId": "ab1bfa35-24fc-94c6-34d2-995033547445",
 			"responses": [],
-			"isFromCollection": true,
-			"collectionRequestId": "4c4c6f34-efbd-f07b-2f60-c3ea538918b4",
 			"preRequestScript": "var helpers = eval(pm.globals.get(\"globalHelpers\"));\nvar uuid = helpers.guid();\n\npm.globals.set(\"operation_id\", uuid);",
-			"tests": "pm.test(\"Status code is 200\", function () {\n    pm.response.to.have.status(200);\n    var jsonData = pm.response.json();\n    \n    var context = jsonData.transactionContext;\n    pm.expect(context !== null).to.be.true;\n    \n    pm.globals.set(\"transaction_context\", context);\n});\n",
+			"tests": "pm.test(\"Status code is 200\", function () {\n    pm.response.to.have.status(200);\n    var jsonData = pm.response.json();\n    \n    var context = jsonData.transactionContext;\n    pm.expect(context !== undefined).to.be.true;\n    \n    pm.globals.set(\"transaction_context\", context);\n});\n",
 			"currentHelper": null,
 			"helperAttributes": null,
 			"rawModeData": "{\n  \"operationId\": \"{{operation_id}}\",\n  \"fromAddress\": \"{{my_address}}\",\n  \"toAddress\": \"{{destination_address}}\",\n  \"assetId\": \"XLM\",\n  \"amount\": \"1\",\n  \"includeFee\": true\n}"
@@ -260,8 +259,6 @@
 			"responses": [],
 			"folder": "674897f3-a0a5-85f0-71ab-89be342df7f4",
 			"isFromCollection": true,
-			"collectionRequestId": "74934af7-b379-28e9-1f5f-dbae064aa85e",
-			"folderId": "674897f3-a0a5-85f0-71ab-89be342df7f4",
 			"preRequestScript": null,
 			"tests": "pm.test(\"Status code is 200 or 204\", function () {\n    pm.expect(pm.response.code).to.be.oneOf([200,204]);\n});",
 			"currentHelper": null,
@@ -323,16 +320,16 @@
 				{
 					"listen": "test",
 					"script": {
-						"id": "a3f73080-163e-46a9-8d0c-db68a5c655c4",
+						"id": "e748385e-d856-4039-b1a7-8734d8540b4f",
 						"type": "text/javascript",
 						"exec": [
 							"pm.test(\"Status code is 200\", function () {",
 							"    pm.response.to.have.status(200);",
 							"    ",
 							"    var jsonData = pm.response.json();",
-							"    var tx = jsonData.SignedTransaction;",
-							"    pm.expect(tx !== null).to.be.true;",
-							"    ",
+							"    var tx = jsonData.signedTransaction;",
+							"    pm.expect(tx !== undefined).to.be.true;",
+							"",
 							"    pm.globals.set(\"signed_transaction\", tx);",
 							"});"
 						]
@@ -346,13 +343,13 @@
 			"dataMode": "raw",
 			"version": 2,
 			"auth": null,
-			"time": 1518123487683,
+			"time": 1518260894711,
 			"name": "transaction sign",
 			"description": "",
 			"collectionId": "ab1bfa35-24fc-94c6-34d2-995033547445",
 			"responses": [],
 			"preRequestScript": null,
-			"tests": "pm.test(\"Status code is 200\", function () {\n    pm.response.to.have.status(200);\n    \n    var jsonData = pm.response.json();\n    var tx = jsonData.SignedTransaction;\n    pm.expect(tx !== null).to.be.true;\n    \n    pm.globals.set(\"signed_transaction\", tx);\n});",
+			"tests": "pm.test(\"Status code is 200\", function () {\n    pm.response.to.have.status(200);\n    \n    var jsonData = pm.response.json();\n    var tx = jsonData.signedTransaction;\n    pm.expect(tx !== undefined).to.be.true;\n\n    pm.globals.set(\"signed_transaction\", tx);\n});",
 			"currentHelper": null,
 			"helperAttributes": null,
 			"rawModeData": "{\r\n  \"privateKeys\": [\r\n    \"{{my_private_key}}\"\r\n  ],\r\n  \"transactionContext\": '{{transaction_context}}'\r\n}"
@@ -362,6 +359,7 @@
 			"headers": "",
 			"headerData": [],
 			"url": "{{URL}}/api/balances/balances/{{my_address}}/observation",
+			"folder": "5be198de-eafe-867a-201a-f9ec19ee36a7",
 			"queryParams": [],
 			"events": [
 				{
@@ -399,6 +397,7 @@
 			"headers": "",
 			"headerData": [],
 			"url": "{{URL}}/api/assets",
+			"folder": "f1de4854-50b5-89ee-8687-7966b2dafd44",
 			"queryParams": [],
 			"events": [
 				{
@@ -443,6 +442,7 @@
 			"headers": "",
 			"headerData": [],
 			"url": "{{URL}}/api/isalive",
+			"folder": "f1de4854-50b5-89ee-8687-7966b2dafd44",
 			"queryParams": [],
 			"events": [
 				{
@@ -545,8 +545,6 @@
 			"collectionId": "ab1bfa35-24fc-94c6-34d2-995033547445",
 			"responses": [],
 			"isFromCollection": true,
-			"collectionRequestId": "c575b9ee-c778-3621-f910-b717ba85ed94",
-			"folderId": "674897f3-a0a5-85f0-71ab-89be342df7f4",
 			"preRequestScript": null,
 			"tests": "pm.test(\"Status code is 200\", function () {\n    pm.response.to.have.status(200);\n});\n",
 			"currentHelper": null,
@@ -558,6 +556,7 @@
 			"headers": "",
 			"headerData": [],
 			"url": "{{URL}}/api/balances?take=100",
+			"folder": "5be198de-eafe-867a-201a-f9ec19ee36a7",
 			"queryParams": [
 				{
 					"key": "take",
@@ -701,8 +700,6 @@
 			"responses": [],
 			"folder": "674897f3-a0a5-85f0-71ab-89be342df7f4",
 			"isFromCollection": true,
-			"collectionRequestId": "d8056bd2-4507-1814-a28f-99b45f17270d",
-			"folderId": "674897f3-a0a5-85f0-71ab-89be342df7f4",
 			"preRequestScript": null,
 			"tests": "pm.test(\"Status code is 200\", function () {\n    pm.response.to.have.status(200);\n});",
 			"currentHelper": null,
@@ -757,6 +754,7 @@
 			"headers": "",
 			"headerData": [],
 			"url": "{{URL}}/api/balances/{{my_address}}/observation",
+			"folder": "5be198de-eafe-867a-201a-f9ec19ee36a7",
 			"queryParams": [],
 			"events": [
 				{
@@ -794,6 +792,7 @@
 			"headers": "",
 			"headerData": [],
 			"url": "{{URL}}/api/transactions/history/from/{{my_address}}?take=1000",
+			"folder": "674897f3-a0a5-85f0-71ab-89be342df7f4",
 			"queryParams": [
 				{
 					"key": "take",
@@ -857,6 +856,7 @@
 			"headers": "",
 			"headerData": [],
 			"url": "{{URL}}/api/transactions/history/from/{{my_address}}?take=1000&afterHash={{last_hash}}",
+			"folder": "674897f3-a0a5-85f0-71ab-89be342df7f4",
 			"queryParams": [
 				{
 					"key": "take",
@@ -957,8 +957,6 @@
 			"responses": [],
 			"folder": "674897f3-a0a5-85f0-71ab-89be342df7f4",
 			"isFromCollection": true,
-			"collectionRequestId": "fe35cdac-bfc9-3a5e-1447-b6c5ed99e006",
-			"folderId": "674897f3-a0a5-85f0-71ab-89be342df7f4",
 			"preRequestScript": null,
 			"tests": "pm.test(\"Status code is 200\", function () {\n    pm.response.to.have.status(200);\n});",
 			"currentHelper": null,
