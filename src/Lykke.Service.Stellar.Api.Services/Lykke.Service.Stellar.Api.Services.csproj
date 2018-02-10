@@ -8,9 +8,9 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Lykke.Common" Version="4.4.1" />
     <PackageReference Include="csharp-stellar-sdk" Version="1.0.1" />
     <PackageReference Include="csharp-stellar-base" Version="1.0.0" />
+    <PackageReference Include="Lykke.Common" Version="4.4.2" />
   </ItemGroup>
 
   <ItemGroup>

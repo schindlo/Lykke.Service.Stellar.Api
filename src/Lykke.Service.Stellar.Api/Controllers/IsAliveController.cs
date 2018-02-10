@@ -25,7 +25,7 @@ namespace Lykke.Service.Stellar.Api.Controllers
         [HttpGet]
         [SwaggerOperation("isalive")]
         [ProducesResponseType(typeof(IsAliveResponse), (int)HttpStatusCode.OK)]
-        [ProducesResponseType(typeof(ErrorResponse), (int)HttpStatusCode.InternalServerError)]
+        [ProducesResponseType(typeof(StellarErrorResponse), (int)HttpStatusCode.InternalServerError)]
         public IActionResult Get()
         {
             var healthViloationMessage = _healthService.GetHealthViolationMessage();
@@ -33,7 +33,7 @@ namespace Lykke.Service.Stellar.Api.Controllers
             {
                 return StatusCode(
                     (int)HttpStatusCode.InternalServerError,
-                    ErrorResponse.Create($"Service is unhealthy: {healthViloationMessage}"));
+                    StellarErrorResponse.Create($"Service is unhealthy: {healthViloationMessage}"));
             }
 
             // NOTE: Feel free to extend IsAliveResponse, to display job-specific indicators

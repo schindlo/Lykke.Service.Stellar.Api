@@ -9,6 +9,8 @@ using Lykke.Service.Stellar.Api.Helpers;
 using Lykke.Common.Api.Contract.Responses;
 using Lykke.Service.Stellar.Api.Core.Domain;
 using Lykke.Service.Stellar.Api.Core.Exceptions;
+using Lykke.Service.BlockchainApi.Contract;
+using Lykke.Service.Stellar.Api.Models;
 
 namespace Lykke.Service.Stellar.Api.Controllers
 {
@@ -64,10 +66,7 @@ namespace Lykke.Service.Stellar.Api.Controllers
                 catch(FormatException)
                 {
                     // too small (e.g. 0.1)
-                    return BadRequest(new BuildTransactionResponse()
-                    {
-                        ErrorCode = TransactionExecutionError.AmountIsTooSmall
-                    });
+                    return BadRequest(StellarErrorResponse.Create($"Amount is too small. min=1, amount={request.Amount}", BlockchainErrorCode.AmountIsTooSmall));
                 }
                 var fees = await _transactionService.GetFeesAsync();
                 var fromAddressBalance = await _balanceService.GetAddressBalanceAsync(request.FromAddress, fees);
@@ -75,10 +74,8 @@ namespace Lykke.Service.Stellar.Api.Controllers
                 var availableBalance = fromAddressBalance.Balance - fromAddressBalance.MinBalance;
                 if (requiredBalance >= availableBalance)
                 {
-                    return BadRequest(new BuildTransactionResponse()
-                    {
-                        ErrorCode = TransactionExecutionError.NotEnoughtBalance
-                    });
+                    return BadRequest(StellarErrorResponse.Create($"Not enough balance to create transaction. required={requiredBalance}, available={availableBalance}"
+                                                                  , BlockchainErrorCode.NotEnoughtBalance));
                 }
 
                 xdrBase64 = await _transactionService.BuildTransactionAsync(request.OperationId, fromAddressBalance, request.ToAddress, amount);
@@ -109,18 +106,12 @@ namespace Lykke.Service.Stellar.Api.Controllers
             }
             catch(BusinessException ex)
             {
-                if(ex.Data.Contains("ErrorCode"))
+                if (ex.Data.Contains("ErrorCode"))
                 {
-                    return BadRequest(new BuildTransactionResponse()
-                    {
-                        ErrorCode = (TransactionExecutionError)ex.Data["ErrorCode"]
-                    });
+                    return BadRequest(StellarErrorResponse.Create(ex.Message, (BlockchainErrorCode)ex.Data["ErrorCode"]));
                 }
-                else
-                {
-                    // technical / unknown problem
-                    throw ex;
-                }
+                // technical / unknown problem
+                throw ex;
             }
 
             return Ok();

@@ -1,4 +1,5 @@
 ﻿using System;
+using Lykke.Service.BlockchainApi.Contract;
 using Lykke.Service.BlockchainApi.Contract.Assets;
 using Lykke.Service.BlockchainApi.Contract.Transactions;
 using Lykke.Service.Stellar.Api.Core.Domain;
@@ -36,20 +37,20 @@ namespace Lykke.Service.Stellar.Api.Helpers
             }
         }
 
-        public static TransactionExecutionError? ToTransactionExecutionError(this TxExecutionError self)
+        public static BlockchainErrorCode? ToTransactionExecutionError(this TxExecutionError self)
         {
             switch (self)
             {
                 case TxExecutionError.Unknown:
-                    return TransactionExecutionError.Unknown;
+                    return BlockchainErrorCode.Unknown;
                 case TxExecutionError.AmountIsTooSmall:
-                    return TransactionExecutionError.AmountIsTooSmall;
+                    return BlockchainErrorCode.AmountIsTooSmall;
                 case TxExecutionError.NotEnoughtBalance:
-                    return TransactionExecutionError.NotEnoughtBalance;
+                    return BlockchainErrorCode.NotEnoughtBalance;
                 default:
                     throw new ArgumentException($"Failed to convert " +
                                                 $"{nameof(TxExecutionError)}.{Enum.GetName(typeof(TxExecutionError), self)} " +
-                                                $"to {nameof(TransactionExecutionError)}");
+                                                $"to {nameof(BlockchainErrorCode)}");
             }
         }
     }

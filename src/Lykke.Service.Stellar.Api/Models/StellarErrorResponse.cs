@@ -2,28 +2,32 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using Lykke.Service.BlockchainApi.Contract;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 
 namespace Lykke.Service.Stellar.Api.Models
 {
-    public class ErrorResponse
+    public class StellarErrorResponse
     {
         public string ErrorMessage { get; }
 
+        public BlockchainErrorCode ErrorCode { get; }
+
         public Dictionary<string, List<string>> ModelErrors { get; }
 
-        private ErrorResponse() :
-            this(null)
+        private StellarErrorResponse() :
+        this(null, BlockchainErrorCode.Unknown)
         {
         }
 
-        private ErrorResponse(string errorMessage)
+        private StellarErrorResponse(string errorMessage, BlockchainErrorCode errorCode)
         {
             ErrorMessage = errorMessage;
+            ErrorCode = errorCode;
             ModelErrors = new Dictionary<string, List<string>>();
         }
 
-        public ErrorResponse AddModelError(string key, string message)
+        public StellarErrorResponse AddModelError(string key, string message)
         {
             if (!ModelErrors.TryGetValue(key, out List<string> errors))
             {
@@ -37,7 +41,7 @@ namespace Lykke.Service.Stellar.Api.Models
             return this;
         }
 
-        public ErrorResponse AddModelError(string key, Exception exception)
+        public StellarErrorResponse AddModelError(string key, Exception exception)
         {
             var ex = exception;
             var sb = new StringBuilder();
@@ -57,14 +61,14 @@ namespace Lykke.Service.Stellar.Api.Models
             }
         }
 
-        public static ErrorResponse Create()
+        public static StellarErrorResponse Create()
         {
-            return new ErrorResponse();
+            return new StellarErrorResponse();
         }
 
-        public static ErrorResponse Create(ModelStateDictionary modelState)
+        public static StellarErrorResponse Create(ModelStateDictionary modelState)
         {
-            var response = new ErrorResponse();
+            var response = new StellarErrorResponse();
 
             foreach (var state in modelState)
             {
@@ -82,9 +86,14 @@ namespace Lykke.Service.Stellar.Api.Models
             return response;
         }
 
-        public static ErrorResponse Create(string message)
+        public static StellarErrorResponse Create(string message)
         {
-            return new ErrorResponse(message);
+            return new StellarErrorResponse(message, BlockchainErrorCode.Unknown);
+        }
+
+        public static StellarErrorResponse Create(string message, BlockchainErrorCode errorCode)
+        {
+            return new StellarErrorResponse(message, errorCode);
         }
     }
 }
