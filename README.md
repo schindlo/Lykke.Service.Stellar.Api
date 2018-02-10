@@ -1,5 +1,43 @@
 # Lykke.Service.Stellar.Api
 
+# Configuration
+Available configuration variables are documented below. See [developing](https://github.com/LykkeCity/lykke.dotnettemplates/tree/master/Lykke.Service.LykkeService#developing) for more information on how to work with app and launch settings.
+```
+"Stellar.ApiService": {
+    "Db": {
+      // Connection string to the Azure storage account where the StellarApiLog table with logs is stored
+      "LogsConnString": "",
+      // Connection string to the Azure storage account where data tables for observations, transactions and balances are stored
+      "DataConnString": ""
+    },
+    // Address of Horizon REST Api endpoint. The following public endpoints are available:
+    // Test: https://horizon-testnet.stellar.org/
+    // Live: https://horizon.stellar.org/
+    "HorizonUrl": "",
+    // Period in seconds of the wallet balance update job
+    "WalletBalanceJobPeriodSeconds": 60,
+    // Period in seconds of the transaction history update job
+    "TransactionHistoryJobPeriodSeconds": 60,
+    // Period in seconds of the broadcasts in progress update job
+    "BroadcastInProgressJobPeriodSeconds": 60,
+    // Size of batches processed by the wallet balance update job 
+    "WalletBalanceJobBatchSize": 100,
+    // Size of batches processed by the transaction history update job
+    "TransactionHistoryJobBatchSize": 100,
+    // Size of batches processed by the broadcasts in progress update job
+    "BroadcastInProgressJobBatchSize": 100
+  },
+  "SlackNotifications": {
+    "AzureQueue": {
+      // Connection string to the Azure storage account where slack notifications are queued
+      "ConnectionString": "",
+      // The name of the queue for the slack notifications
+      "QueueName": ""
+    }
+  }
+}
+```
+
 # Tests
 End-to-end tests are available as postman collection. Can be run directly in [postman](https://www.getpostman.com/) or on the command line.
 * Install newman:
