@@ -11,7 +11,7 @@ using Lykke.Service.Stellar.Api.Core;
 
 namespace Lykke.Service.Stellar.Api.Services.Horizon
 {
-    public class HorizonService: IHorizonService
+    public class HorizonService : IHorizonService
     {
         private readonly string _horizonUrl;
 
@@ -20,7 +20,7 @@ namespace Lykke.Service.Stellar.Api.Services.Horizon
             _horizonUrl = horizonUrl;
         }
 
-        public async Task<string> SubmitTransactionAsync(string signedTx) 
+        public async Task<string> SubmitTransactionAsync(string signedTx)
         {
             // submit a tx
             var builder = new TransactionCallBuilder(_horizonUrl);
@@ -59,7 +59,7 @@ namespace Lykke.Service.Stellar.Api.Services.Horizon
                 var payments = await builder.Call();
                 return payments;
             }
-            catch(ResourceNotFoundException)
+            catch (ResourceNotFoundException)
             {
                 // address not found
                 return null;
@@ -108,7 +108,7 @@ namespace Lykke.Service.Stellar.Api.Services.Horizon
             var tx = await GetTransactionDetails(hash);
             if (tx == null)
             {
-                throw new HorizonApiException($"Transaction not found (hash: {hash}).");
+                throw new HorizonApiException($"Transaction not found. hash={hash}");
             }
             return tx.Ledger;
         }
@@ -133,7 +133,7 @@ namespace Lykke.Service.Stellar.Api.Services.Horizon
             }
             else
             {
-                throw new HorizonApiException($"Account merge result missing from result XDR (account merge no: {accountMergeInTx}.");
+                throw new HorizonApiException($"Account merge result missing from result XDR. accountMergeInTx={accountMergeInTx}");
             }
 
             return 0;
@@ -147,7 +147,7 @@ namespace Lykke.Service.Stellar.Api.Services.Horizon
             if (txEnvelope?.Tx?.Operations == null || txEnvelope.Tx.Operations.Length < 1 ||
                 txEnvelope.Tx.Operations[0].Body?.PaymentOp == null)
             {
-                throw new HorizonApiException($"Failed to extract first payment operation from transaction (hash: {tx.Hash}.");
+                throw new HorizonApiException($"Failed to extract first payment operation from transaction. hash={tx.Hash}");
             }
 
             var paymentOp = txEnvelope.Tx.Operations[0].Body.PaymentOp;

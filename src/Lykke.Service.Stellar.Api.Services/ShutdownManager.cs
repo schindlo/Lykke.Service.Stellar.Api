@@ -8,7 +8,7 @@ namespace Lykke.Service.Stellar.Api.Services
     // If this is your case, use this class to manage shutdown.
     // For example, sometimes some state should be saved only after all incoming message processing and 
     // all periodical handler was stopped, and so on.
-    
+
     public class ShutdownManager : IShutdownManager
     {
         private readonly ILog _log;

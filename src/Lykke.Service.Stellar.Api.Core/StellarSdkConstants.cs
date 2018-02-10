@@ -9,5 +9,7 @@
         public const string MemoTextTypeName = "text";
 
         public const string MemoIdTypeName = "id";
+
+        public const string OperationUnderfunded = "op_underfunded";
     }
 }

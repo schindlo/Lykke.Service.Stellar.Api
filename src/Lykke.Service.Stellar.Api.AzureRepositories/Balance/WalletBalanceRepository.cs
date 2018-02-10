@@ -11,7 +11,7 @@ using Microsoft.WindowsAzure.Storage.Table;
 
 namespace Lykke.Service.Stellar.Api.AzureRepositories.Balance
 {
-    public class WalletBalanceRepository: IWalletBalanceRepository
+    public class WalletBalanceRepository : IWalletBalanceRepository
     {
         private const string TableName = "WalletBalance";
 

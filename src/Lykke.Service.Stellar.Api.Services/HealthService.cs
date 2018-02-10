@@ -17,15 +17,15 @@ namespace Lykke.Service.Stellar.Api.Services
             _txHistoryService = txHistoryService;
             _transactionService = transactionService;
         }
-                                
+
         public string GetHealthViolationMessage()
         {
             List<string> issues = new List<string>();
-            if(_balanceService.GetLastJobError() != null)
+            if (_balanceService.GetLastJobError() != null)
             {
                 issues.Add(_balanceService.GetLastJobError());
             }
-            if(_txHistoryService.GetLastJobError() != null)
+            if (_txHistoryService.GetLastJobError() != null)
             {
                 issues.Add(_txHistoryService.GetLastJobError());
             }
@@ -33,7 +33,7 @@ namespace Lykke.Service.Stellar.Api.Services
             {
                 issues.Add(_transactionService.GetLastJobError());
             }
-            if(issues.Count > 0)
+            if (issues.Count > 0)
             {
                 return string.Join(",\n", issues.ToArray());
             }

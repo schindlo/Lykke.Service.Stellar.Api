@@ -31,7 +31,7 @@ namespace Lykke.Service.Stellar.Api.Controllers
             var balances = await _balanceService.GetBalancesAsync(take, continuation);
 
             var results = new List<WalletBalanceContract>();
-            foreach(WalletBalance b in balances.Wallets)
+            foreach (WalletBalance b in balances.Wallets)
             {
                 var result = new WalletBalanceContract
                 {

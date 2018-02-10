@@ -4,15 +4,20 @@ using System.Linq;
 using System.Text;
 using Lykke.Service.BlockchainApi.Contract;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
+using Newtonsoft.Json;
 
 namespace Lykke.Service.Stellar.Api.Models
 {
     public class StellarErrorResponse
     {
+        [JsonProperty("errorMessage")]
         public string ErrorMessage { get; }
 
+        [JsonProperty("errorCode")]
+        [JsonConverter(typeof(BlockchainErrorCode))]
         public BlockchainErrorCode ErrorCode { get; }
 
+        [JsonProperty("modelErrors")]
         public Dictionary<string, List<string>> ModelErrors { get; }
 
         private StellarErrorResponse() :

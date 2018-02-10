@@ -17,7 +17,7 @@ namespace Lykke.Service.Stellar.Api
             Console.WriteLine("Is DEBUG");
 #else
             Console.WriteLine("Is RELEASE");
-#endif           
+#endif
             Console.WriteLine($"ENV_INFO: {EnvInfo}");
 
             try

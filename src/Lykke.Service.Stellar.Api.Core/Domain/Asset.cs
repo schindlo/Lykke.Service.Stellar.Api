@@ -2,7 +2,7 @@
 {
     public class Asset
     {
-        public Asset(string id, string address, string name, string typeName, int accuracy) 
+        public Asset(string id, string address, string name, string typeName, int accuracy)
             => (Id, Address, Name, TypeName, Accuracy) = (id, address, name, typeName, accuracy);
 
         public string Id { get; }

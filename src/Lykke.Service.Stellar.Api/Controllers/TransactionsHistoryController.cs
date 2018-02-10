@@ -24,7 +24,7 @@ namespace Lykke.Service.Stellar.Api.Controllers
         [HttpPost("to/{address}/observation")]
         public async Task<IActionResult> AddAddressToIncomingObservationList(string address)
         {
-            if(!_balanceService.IsAddressValid(address))
+            if (!_balanceService.IsAddressValid(address))
             {
                 return BadRequest(StellarErrorResponse.Create("Invalid address").AddModelError("address", "invalid address"));
             }
@@ -81,7 +81,7 @@ namespace Lykke.Service.Stellar.Api.Controllers
         public async Task<IActionResult> GetIncomingHistory(string address, [FromQuery] int take, [FromQuery] string afterHash = "")
         {
             var exists = await _txHistoryService.IsIncomingTransactionObservedAsync(address);
-            if(!exists)
+            if (!exists)
             {
                 return BadRequest(StellarErrorResponse.Create("Address not observed").AddModelError("address", "not observed"));
             }

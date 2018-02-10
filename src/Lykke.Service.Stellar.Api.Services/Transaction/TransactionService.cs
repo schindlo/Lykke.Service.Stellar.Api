@@ -1,9 +1,11 @@
 ﻿using System;
+using System.Net;
 using System.Threading.Tasks;
 using StellarBase;
 using StellarBase.Generated;
 using StellarSdk.Exceptions;
 using Common.Log;
+using Lykke.Service.Stellar.Api.Core;
 using Lykke.Service.Stellar.Api.Core.Domain.Transaction;
 using Lykke.Service.Stellar.Api.Core.Domain.Balance;
 using Lykke.Service.Stellar.Api.Core.Exceptions;
@@ -70,7 +72,7 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
                 };
                 await _broadcastRepository.InsertOrReplaceAsync(broadcast);
 
-                var be = new BusinessException($"Broadcasting transaction failed (operationId: {operationId}).", ex);
+                var be = new BusinessException($"Broadcasting transaction failed. operationId={operationId}", ex);
                 be.Data.Add("ErrorCode", broadcast.ErrorCode);
                 throw be;
             }
@@ -82,7 +84,8 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
             {
                 var bre = (BadRequestException)ex;
                 var ops = bre.ErrorDetails?.Extras?.ResultCodes?.Operations;
-                if (bre.ErrorDetails.Status == 400 && ops != null && ops.Length > 0 && ops[0].Equals("op_underfunded"))
+                if (bre.ErrorDetails.Status == (int)HttpStatusCode.BadRequest &&
+                    ops != null && ops.Length > 0 && ops[0].Equals(StellarSdkConstants.OperationUnderfunded))
                 {
                     return TxExecutionError.NotEnoughtBalance;
                 }
@@ -184,7 +187,7 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
                 var broadcast = await _broadcastRepository.GetAsync(operationId);
                 if (broadcast == null)
                 {
-                    throw new BusinessException($"Broadcast for observed operation not found (operation id: {operationId}).");
+                    throw new BusinessException($"Broadcast for observed operation not found. operationId={operationId})");
                 }
 
                 var tx = await _horizonService.GetTransactionDetails(broadcast.Hash);
@@ -216,8 +219,8 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
                 await _observationRepository.DeleteIfExistAsync(operationId.ToString());
 
                 await _log.WriteErrorAsync(nameof(TransactionService), nameof(ProcessBroadcastInProgress),
-                                           $"Failed to process in progress broadcast (operation id: {operationId}).", ex);
+                                           $"Failed to process in progress broadcast. operationId={operationId})", ex);
             }
-       }
+        }
     }
 }

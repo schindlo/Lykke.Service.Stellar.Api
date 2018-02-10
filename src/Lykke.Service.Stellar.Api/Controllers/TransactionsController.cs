@@ -63,7 +63,7 @@ namespace Lykke.Service.Stellar.Api.Controllers
                 {
                     amount = Int64.Parse(request.Amount);
                 }
-                catch(FormatException)
+                catch (FormatException)
                 {
                     // too small (e.g. 0.1)
                     return BadRequest(StellarErrorResponse.Create($"Amount is too small. min=1, amount={request.Amount}", BlockchainErrorCode.AmountIsTooSmall));
@@ -104,7 +104,7 @@ namespace Lykke.Service.Stellar.Api.Controllers
             {
                 await _transactionService.BroadcastTxAsync(request.OperationId, request.SignedTransaction);
             }
-            catch(BusinessException ex)
+            catch (BusinessException ex)
             {
                 if (ex.Data.Contains("ErrorCode"))
                 {

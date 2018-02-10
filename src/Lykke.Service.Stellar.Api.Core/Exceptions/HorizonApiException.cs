@@ -2,7 +2,7 @@
 
 namespace Lykke.Service.Stellar.Api.Core.Exceptions
 {
-    public class HorizonApiException: Exception
+    public class HorizonApiException : Exception
     {
         public HorizonApiException()
         {

@@ -35,7 +35,7 @@ namespace Lykke.Service.Stellar.Api.Services
         {
             try
             {
-                StellarBase.StrKey.DecodeCheck(StellarBase.VersionByte.ed25519Publickey, address);
+                StrKey.DecodeCheck(VersionByte.ed25519Publickey, address);
                 return true;
             }
             catch (Exception)
@@ -47,7 +47,7 @@ namespace Lykke.Service.Stellar.Api.Services
         public async Task<AddressBalance> GetAddressBalanceAsync(string address, Fees fees = null)
         {
             var accountDetails = await _horizonService.GetAccountDetails(address);
-            if(accountDetails == null)
+            if (accountDetails == null)
             {
                 // address not found
                 return null;
@@ -137,7 +137,7 @@ namespace Lykke.Service.Stellar.Api.Services
                 if (addressBalance == null)
                 {
                     await _log.WriteWarningAsync(nameof(BalanceService), nameof(ProcessWallet),
-                        $"Address not found: {address}");
+                        $"Address not found. address={address}");
                     return;
                 }
 
@@ -166,7 +166,7 @@ namespace Lykke.Service.Stellar.Api.Services
             catch (Exception ex)
             {
                 await _log.WriteErrorAsync(nameof(BalanceService), nameof(ProcessWallet),
-                    $"Failed to process wallet {address} during balance update.", ex);
+                                           $"Failed to process wallet during balance update. address={address}", ex);
             }
         }
     }

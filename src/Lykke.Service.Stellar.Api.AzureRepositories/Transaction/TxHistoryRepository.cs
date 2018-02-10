@@ -41,7 +41,7 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Transaction
         private (INoSQLTableStorage<TxHistoryEntity>, INoSQLTableStorage<IndexEntity>) GetTable(string tableId)
         {
             var tableName = GetTableName(tableId);
-            if(_tableCache.ContainsKey(tableName))
+            if (_tableCache.ContainsKey(tableName))
             {
                 return _tableCache[tableName];
             }
@@ -67,7 +67,7 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Transaction
 
             // build range query
             string filter = TableQuery.GenerateFilterCondition(nameof(ITableEntity.PartitionKey), QueryComparisons.Equal, direction.ToString());
-            if (!string.IsNullOrEmpty(afterHash)) 
+            if (!string.IsNullOrEmpty(afterHash))
             {
                 var index = await tableIndex.GetDataAsync(IndexEntity.GetPartitionKeyHash(), afterHash);
                 if (index == null)

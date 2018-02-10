@@ -48,7 +48,7 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
             return observation != null && observation.IsOutgoingObserved;
         }
 
-        private TransactionHistoryObservation CreateTransactionObservation(string address) 
+        private TransactionHistoryObservation CreateTransactionObservation(string address)
         {
             var observation = new TransactionHistoryObservation
             {
@@ -66,7 +66,7 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
                 observation = CreateTransactionObservation(address);
             }
             observation.IsIncomingObserved = true;
-            
+
             await _observationRepository.InsertOrReplaceAsync(observation);
         }
 
@@ -85,7 +85,7 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
         public async Task DeleteIncomingTransactionObservationAsync(string address)
         {
             var observation = await _observationRepository.GetAsync(address);
-            if(observation == null)
+            if (observation == null)
             {
                 // nothing to do
                 return;
@@ -206,7 +206,7 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
                         if (context.Transaction == null || !context.Transaction.Hash.Equals(payment.TransactionHash, StringComparison.OrdinalIgnoreCase))
                         {
                             var tx = await _horizonService.GetTransactionDetails(payment.TransactionHash);
-                            context.Transaction = tx ?? throw new BusinessException($"Transaction not found (hash: {payment.TransactionHash}).");
+                            context.Transaction = tx ?? throw new BusinessException($"Transaction not found. hash={payment.TransactionHash}");
                             context.AccountMerge = 0;
                         }
 
@@ -252,7 +252,7 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
                         }
                         else
                         {
-                            throw new BusinessException($"Invalid payment type: ${payment.TypeI}");
+                            throw new BusinessException($"Invalid payment type. type=${payment.TypeI}");
                         }
 
                         history.OperationId = await _txBroadcastRepository.GetOperationId(payment.TransactionHash);
@@ -272,7 +272,7 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
                 }
                 catch (Exception ex)
                 {
-                    throw new BusinessException($"Failed to process payment {payment?.Id} of transaction {context?.Transaction?.Hash}.", ex);
+                    throw new BusinessException($"Failed to process payment of transaction. payment={payment?.Id}, hash={context?.Transaction?.Hash}", ex);
                 }
             }
             return count;
@@ -299,7 +299,7 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
             catch (Exception ex)
             {
                 await _log.WriteErrorAsync(nameof(TransactionHistoryService), nameof(ProcessTransactionObservation),
-                    $"Failed to process transaction observation for address: {observation.Address}", ex);
+                    $"Failed to process transaction observation for address. address={observation.Address}", ex);
             }
             return count;
         }

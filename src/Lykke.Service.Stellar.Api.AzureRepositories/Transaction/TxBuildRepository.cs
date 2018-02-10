@@ -8,7 +8,7 @@ using Lykke.Service.Stellar.Api.Core.Domain.Transaction;
 
 namespace Lykke.Service.Stellar.Api.AzureRepositories.Transaction
 {
-    public class TxBuildRepository: ITxBuildRepository
+    public class TxBuildRepository : ITxBuildRepository
     {
         private const string TableName = "Transaction";
 

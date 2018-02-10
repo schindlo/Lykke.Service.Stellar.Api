@@ -2,7 +2,7 @@
 
 namespace Lykke.Service.Stellar.Api.Core.Exceptions
 {
-    public class BusinessException: Exception
+    public class BusinessException : Exception
     {
         public BusinessException()
         {

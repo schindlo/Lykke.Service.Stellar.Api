@@ -7,7 +7,6 @@ using Lykke.Service.Stellar.Api.Helpers;
 using Lykke.Service.BlockchainApi.Contract;
 using Lykke.Service.BlockchainApi.Contract.Assets;
 
-
 namespace Lykke.Service.Stellar.Api.Controllers
 {
     [Route("api/assets")]

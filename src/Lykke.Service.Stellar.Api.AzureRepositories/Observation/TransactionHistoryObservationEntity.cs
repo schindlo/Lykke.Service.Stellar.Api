@@ -22,7 +22,7 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Observation
                 IsIncomingObserved = IsIncomingTxObserved,
                 IsOutgoingObserved = IsOutgoingTxObserved,
                 TableId = TableId
-                    
+
             };
             return observation;
         }

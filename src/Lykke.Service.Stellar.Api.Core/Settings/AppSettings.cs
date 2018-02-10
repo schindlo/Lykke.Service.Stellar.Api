@@ -6,6 +6,7 @@ namespace Lykke.Service.Stellar.Api.Core.Settings
     public class AppSettings
     {
         public StellarApiSettings StellarApiService { get; set; }
+
         public SlackNotificationsSettings SlackNotifications { get; set; }
     }
 }
