@@ -2,9 +2,10 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 using Lykke.Service.BlockchainApi.Contract;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
-using Newtonsoft.Json;
 
 namespace Lykke.Service.Stellar.Api.Models
 {
@@ -14,7 +15,7 @@ namespace Lykke.Service.Stellar.Api.Models
         public string ErrorMessage { get; }
 
         [JsonProperty("errorCode")]
-        [JsonConverter(typeof(BlockchainErrorCode))]
+        [JsonConverter(typeof(StringEnumConverter))]
         public BlockchainErrorCode ErrorCode { get; }
 
         [JsonProperty("modelErrors")]
