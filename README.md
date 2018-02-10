@@ -1,4 +1,7 @@
 # Lykke.Service.Stellar.Api
+Blockchain.Api implementation for the [Stellar](https://www.stellar.org/) ledger based on the [Lykke Blockchains integration](https://docs.google.com/document/d/1KVd-2tg-Ze5-b3kFYh1GUdGn9jvoo7HFO3wH_knpd3U/edit) guide. To integrate with the Stellar network the [csharp-stellar-framework](https://github.com/schindlo/csharp-stellar-framework) is used. The two framework components are referenced as nuget packages.
+
+Find the `Lykke.Service.Stellar.Sign` module [here](https://github.com/schindlo/Lykke.Service.Stellar.Sign).
 
 # Configuration
 Available configuration variables are documented below. See [developing](https://github.com/LykkeCity/lykke.dotnettemplates/tree/master/Lykke.Service.LykkeService#developing) for more information on how to work with app and launch settings.
