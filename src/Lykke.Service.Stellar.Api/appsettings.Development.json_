@@ -4,7 +4,7 @@
       "LogsConnString": "UseDevelopmentStorage=true",
       "DataConnString": "UseDevelopmentStorage=true"
     },
-    "HorizonUrl": "",
+    "HorizonUrl": "https://horizon-testnet.stellar.org/",
     "WalletBalanceJobPeriodSeconds": 60,
     "TransactionHistoryJobPeriodSeconds": 60,
     "BroadcastInProgressJobPeriodSeconds": 60,
