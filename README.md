@@ -11,7 +11,7 @@ Find the `Lykke.Service.Stellar.Sign` module [here](https://github.com/schindlo/
 # Configuration
 Available configuration variables are documented below. See [developing](https://github.com/LykkeCity/lykke.dotnettemplates/tree/master/Lykke.Service.LykkeService#developing) for more information on how to work with app and launch settings.
 ```
-"Stellar.ApiService": {
+"StellarApiService": {
     "Db": {
       // Connection string to the Azure storage account where the StellarApiLog table with logs is stored
       "LogsConnString": "",
