@@ -1,11 +1,13 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Collections.Generic;
+using System.Net;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Lykke.Service.Stellar.Api.Core.Services;
-using System.Collections.Generic;
-using System;
 using Lykke.Service.Stellar.Api.Models;
 using Lykke.Service.Stellar.Api.Core.Domain.Transaction;
+using Lykke.Common.Api.Contract.Responses;
 
 namespace Lykke.Service.Stellar.Api.Controllers
 {
@@ -22,11 +24,14 @@ namespace Lykke.Service.Stellar.Api.Controllers
         }
 
         [HttpPost("to/{address}/observation")]
+        [ProducesResponseType((int)HttpStatusCode.OK)]
+        [ProducesResponseType((int)HttpStatusCode.Conflict)]
+        [ProducesResponseType(typeof(ErrorResponse), (int)HttpStatusCode.BadRequest)]
         public async Task<IActionResult> AddAddressToIncomingObservationList(string address)
         {
             if (!_balanceService.IsAddressValid(address))
             {
-                return BadRequest(StellarErrorResponse.Create("Invalid address").AddModelError("address", "invalid address"));
+                return BadRequest(ErrorResponse.Create("Invalid parameter").AddModelError("address", "Address must be valid"));
             }
             var exists = await _txHistoryService.IsIncomingTransactionObservedAsync(address);
             if (exists)
@@ -38,11 +43,14 @@ namespace Lykke.Service.Stellar.Api.Controllers
         }
 
         [HttpPost("from/{address}/observation")]
+        [ProducesResponseType((int)HttpStatusCode.OK)]
+        [ProducesResponseType((int)HttpStatusCode.Conflict)]
+        [ProducesResponseType(typeof(ErrorResponse), (int)HttpStatusCode.BadRequest)]
         public async Task<IActionResult> AddAddressToOutgoingObservationList(string address)
         {
             if (!_balanceService.IsAddressValid(address))
             {
-                return BadRequest(StellarErrorResponse.Create("Invalid address").AddModelError("address", "invalid address"));
+                return BadRequest(ErrorResponse.Create("Invalid parameter").AddModelError("address", "Address must be valid"));
             }
             var exists = await _txHistoryService.IsOutgoingTransactionObservedAsync(address);
             if (exists)
@@ -54,32 +62,52 @@ namespace Lykke.Service.Stellar.Api.Controllers
         }
 
         [HttpDelete("to/{address}/observation")]
+        [ProducesResponseType((int)HttpStatusCode.OK)]
+        [ProducesResponseType((int)HttpStatusCode.NoContent)]
+        [ProducesResponseType(typeof(ErrorResponse), (int)HttpStatusCode.BadRequest)]
         public async Task<IActionResult> DeleteAddressFromIncomingObservationList(string address)
         {
+            if (!_balanceService.IsAddressValid(address))
+            {
+                return BadRequest(ErrorResponse.Create("Invalid parameter").AddModelError("address", "Address must be valid"));
+            }
             var exists = await _txHistoryService.IsIncomingTransactionObservedAsync(address);
             if (!exists)
             {
-                return new StatusCodeResult(StatusCodes.Status204NoContent);
+                return NoContent();
             }
             await _txHistoryService.DeleteIncomingTransactionObservationAsync(address);
             return Ok();
         }
 
         [HttpDelete("from/{address}/observation")]
+        [ProducesResponseType((int)HttpStatusCode.OK)]
+        [ProducesResponseType((int)HttpStatusCode.NoContent)]
+        [ProducesResponseType(typeof(ErrorResponse), (int)HttpStatusCode.BadRequest)]
         public async Task<IActionResult> DeleteAddressFromOutgoingObservationList(string address)
         {
+            if (!_balanceService.IsAddressValid(address))
+            {
+                return BadRequest(ErrorResponse.Create("Invalid parameter").AddModelError("address", "Address must be valid"));
+            }
             var exists = await _txHistoryService.IsOutgoingTransactionObservedAsync(address);
             if (!exists)
             {
-                return new StatusCodeResult(StatusCodes.Status204NoContent);
+                return NoContent();
             }
             await _txHistoryService.DeleteOutgoingTransactionObservationAsync(address);
             return Ok();
         }
 
         [HttpGet("to/{address}")]
+        [ProducesResponseType(typeof(List<StellarHistoricalTransactionContract>), (int)HttpStatusCode.OK)]
+        [ProducesResponseType(typeof(ErrorResponse), (int)HttpStatusCode.BadRequest)]
         public async Task<IActionResult> GetIncomingHistory(string address, [FromQuery] int take, [FromQuery] string afterHash = "")
         {
+            if (!_balanceService.IsAddressValid(address))
+            {
+                return BadRequest(ErrorResponse.Create("Invalid parameter").AddModelError("address", "Address must be valid"));
+            }
             var exists = await _txHistoryService.IsIncomingTransactionObservedAsync(address);
             if (!exists)
             {
@@ -90,8 +118,14 @@ namespace Lykke.Service.Stellar.Api.Controllers
         }
 
         [HttpGet("from/{address}")]
+        [ProducesResponseType(typeof(List<StellarHistoricalTransactionContract>), (int)HttpStatusCode.OK)]
+        [ProducesResponseType(typeof(ErrorResponse), (int)HttpStatusCode.BadRequest)]
         public async Task<IActionResult> GetOutgoingHistory(string address, [FromQuery] int take, [FromQuery] string afterHash = "")
         {
+            if (!_balanceService.IsAddressValid(address))
+            {
+                return BadRequest(ErrorResponse.Create("Invalid parameter").AddModelError("address", "Address must be valid"));
+            }
             var exists = await _txHistoryService.IsOutgoingTransactionObservedAsync(address);
             if (!exists)
             {
