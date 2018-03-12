@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
+using System.Net;
 using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Http;
@@ -26,8 +27,15 @@ namespace Lykke.Service.Stellar.Api.Controllers
 
         [HttpGet]
         [SwaggerOperation("balances")]
-        public async Task<PaginationResponse<WalletBalanceContract>> Get([Required, FromQuery] int take, [FromQuery] string continuation)
+        [ProducesResponseType(typeof(PaginationResponse<WalletBalanceContract>), (int)HttpStatusCode.OK)]
+        [ProducesResponseType(typeof(ErrorResponse), (int)HttpStatusCode.BadRequest)]
+        public async Task<IActionResult> Get([Required, FromQuery] int take, [FromQuery] string continuation)
         {
+            if (take < 1)
+            {
+                return BadRequest(ErrorResponse.Create("Invalid parameter").AddModelError("take", "Must be positive non zero integer"));
+            }
+
             var balances = await _balanceService.GetBalancesAsync(take, continuation);
 
             var results = new List<WalletBalanceContract>();
@@ -43,16 +51,19 @@ namespace Lykke.Service.Stellar.Api.Controllers
                 results.Add(result);
             }
 
-            return PaginationResponse.From(balances.ContinuationToken, results);
+            return Ok(PaginationResponse.From(balances.ContinuationToken, results));
         }
 
         [HttpPost("{address}/observation")]
         [SwaggerOperation("balances/")]
+        [ProducesResponseType((int)HttpStatusCode.OK)]
+        [ProducesResponseType((int)HttpStatusCode.Conflict)]
+        [ProducesResponseType(typeof(ErrorResponse), (int)HttpStatusCode.BadRequest)]
         public async Task<IActionResult> AddObservation([Required] string address)
         {
             if (!_balanceService.IsAddressValid(address))
             {
-                return BadRequest(ErrorResponse.Create("Invalid address").AddModelError("address", "invalid address"));
+                return BadRequest(ErrorResponse.Create("Invalid parameter").AddModelError("address", "Address must be valid"));
             }
             var exists = await _balanceService.IsBalanceObservedAsync(address);
             if (exists)
@@ -64,12 +75,19 @@ namespace Lykke.Service.Stellar.Api.Controllers
         }
 
         [HttpDelete("balances/{address}/observation")]
+        [ProducesResponseType((int)HttpStatusCode.OK)]
+        [ProducesResponseType((int)HttpStatusCode.NoContent)]
+        [ProducesResponseType(typeof(ErrorResponse), (int)HttpStatusCode.BadRequest)]
         public async Task<IActionResult> DeleteObservation([Required] string address)
         {
+            if (!_balanceService.IsAddressValid(address))
+            {
+                return BadRequest(ErrorResponse.Create("Invalid parameter").AddModelError("address", "Address must be valid"));
+            }
             var exists = await _balanceService.IsBalanceObservedAsync(address);
             if (!exists)
             {
-                return new StatusCodeResult(StatusCodes.Status204NoContent);
+                return NoContent();
             }
             await _balanceService.DeleteBalanceObservationAsync(address);
             return Ok();
