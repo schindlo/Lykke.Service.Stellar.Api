@@ -12,6 +12,7 @@ using Lykke.Service.Stellar.Api.Core.Exceptions;
 using Lykke.Service.Stellar.Api.Core.Services;
 using Lykke.Service.Stellar.Api.Core.Domain;
 using Lykke.Service.Stellar.Api.Core.Domain.Observation;
+using Newtonsoft.Json;
 
 namespace Lykke.Service.Stellar.Api.Services.Transaction
 {
@@ -67,15 +68,28 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
                 {
                     OperationId = operationId,
                     State = TxBroadcastState.Failed,
-                    Error = ex.Message,
+                    Error = GetErrorMessage(ex),
                     ErrorCode = GetErrorCode(ex)
                 };
                 await _broadcastRepository.InsertOrReplaceAsync(broadcast);
 
-                var be = new BusinessException($"Broadcasting transaction failed. operationId={operationId}", ex);
+                var be = new BusinessException($"Broadcasting transaction failed. operationId={operationId}, message={broadcast.Error}", ex);
                 be.Data.Add("ErrorCode", broadcast.ErrorCode);
                 throw be;
             }
+        }
+
+        private string GetErrorMessage(Exception ex)
+        {
+            var errorMessage = ex.Message;
+            // handle bad request
+            var badRequest = ex as BadRequestException;
+            if (badRequest != null)
+            {
+                var resultCodes = JsonConvert.SerializeObject(badRequest.ErrorDetails.Extras.ResultCodes);
+                errorMessage += $". ResultCodes={resultCodes}";
+            }
+            return errorMessage;
         }
 
         private TxExecutionError GetErrorCode(Exception ex)
