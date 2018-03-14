@@ -4,12 +4,15 @@ using System.Net;
 using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Http;
+using Microsoft.WindowsAzure.Storage.Table;
 using Swashbuckle.AspNetCore.SwaggerGen;
+using Common;
 using Lykke.Service.BlockchainApi.Contract;
 using Lykke.Service.BlockchainApi.Contract.Balances;
 using Lykke.Service.Stellar.Api.Core.Services;
 using Lykke.Service.Stellar.Api.Core.Domain.Balance;
 using Lykke.Common.Api.Contract.Responses;
+using Newtonsoft.Json;
 
 namespace Lykke.Service.Stellar.Api.Controllers
 {
@@ -34,6 +37,17 @@ namespace Lykke.Service.Stellar.Api.Controllers
             if (take < 1)
             {
                 return BadRequest(ErrorResponse.Create("Invalid parameter").AddModelError("take", "Must be positive non zero integer"));
+            }
+            if (!string.IsNullOrEmpty(continuation))
+            {
+                try
+                {
+                    JsonConvert.DeserializeObject<TableContinuationToken>(Utils.HexToString(continuation));
+                }
+                catch (JsonReaderException)
+                {
+                    return BadRequest(ErrorResponse.Create("Invalid parameter").AddModelError("continuation", "Must be valid continuation token"));
+                }
             }
 
             var balances = await _balanceService.GetBalancesAsync(take, continuation);
