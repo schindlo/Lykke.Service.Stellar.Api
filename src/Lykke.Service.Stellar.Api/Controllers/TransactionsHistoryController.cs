@@ -111,7 +111,7 @@ namespace Lykke.Service.Stellar.Api.Controllers
             var exists = await _txHistoryService.IsIncomingTransactionObservedAsync(address);
             if (!exists)
             {
-                return BadRequest(StellarErrorResponse.Create("Address not observed").AddModelError("address", "not observed"));
+                return Ok(new List<StellarHistoricalTransactionContract>());
             }
             var transactions = await _txHistoryService.GetHistory(TxDirectionType.Incoming, address, take, afterHash);
             return Ok(HistoryToModel(transactions));
@@ -129,7 +129,7 @@ namespace Lykke.Service.Stellar.Api.Controllers
             var exists = await _txHistoryService.IsOutgoingTransactionObservedAsync(address);
             if (!exists)
             {
-                return BadRequest(StellarErrorResponse.Create("Address not observed").AddModelError("address", "not observed"));
+                return Ok(new List<StellarHistoricalTransactionContract>());
             }
             var transactions = await _txHistoryService.GetHistory(TxDirectionType.Outgoing, address, take, afterHash);
             return Ok(HistoryToModel(transactions));
