@@ -135,6 +135,10 @@ namespace Lykke.Service.Stellar.Api.Controllers
         [ProducesResponseType(typeof(BroadcastedSingleTransactionResponse), StatusCodes.Status200OK)]
         public async Task<IActionResult> GetBroadcastSingle([Required] Guid operationId)
         {
+            if (Guid.Empty.Equals(operationId))
+            {
+                return BadRequest(ErrorResponse.Create("Invalid parameter").AddModelError("operationId", "OperationId must be valid guid"));
+            }
             var broadcast = await _transactionService.GetTxBroadcastAsync(operationId);
             if (broadcast == null)
             {
