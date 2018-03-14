@@ -74,7 +74,7 @@ namespace Lykke.Service.Stellar.Api.Controllers
             return Ok();
         }
 
-        [HttpDelete("balances/{address}/observation")]
+        [HttpDelete("{address}/observation")]
         [ProducesResponseType((int)HttpStatusCode.OK)]
         [ProducesResponseType((int)HttpStatusCode.NoContent)]
         [ProducesResponseType(typeof(ErrorResponse), (int)HttpStatusCode.BadRequest)]
