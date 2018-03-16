@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Swashbuckle.AspNetCore.SwaggerGen;
 using Lykke.Service.BlockchainApi.Contract.Common;
+using Lykke.Service.Stellar.Api.Models;
 
 namespace Lykke.Service.Stellar.Api.Controllers
 {
@@ -13,10 +14,10 @@ namespace Lykke.Service.Stellar.Api.Controllers
         /// </summary>
         [HttpGet]
         [SwaggerOperation("capabilities")]
-        [ProducesResponseType(typeof(CapabilitiesResponse), (int)HttpStatusCode.OK)]
+        [ProducesResponseType(typeof(StellarCapabilitiesResponse), (int)HttpStatusCode.OK)]
         public IActionResult Get()
         {
-            return Ok(new CapabilitiesResponse
+            return Ok(new StellarCapabilitiesResponse
             {
                 IsTransactionsRebuildingSupported = false,
                 AreManyInputsSupported = false,
