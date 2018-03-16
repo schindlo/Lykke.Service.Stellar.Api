@@ -58,7 +58,6 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Balance
             {
                 PartitionKey = GetPartitionKey(),
                 RowKey = GetRowKey(balance.Address),
-                Timestamp = DateTimeOffset.UtcNow,
                 Balance = balance.Balance,
                 Ledger = balance.Ledger
             };

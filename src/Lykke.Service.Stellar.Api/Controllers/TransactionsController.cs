@@ -70,7 +70,18 @@ namespace Lykke.Service.Stellar.Api.Controllers
                 }
                 var fees = await _transactionService.GetFeesAsync();
                 var fromAddressBalance = await _balanceService.GetAddressBalanceAsync(request.FromAddress, fees);
-                var requiredBalance = request.IncludeFee ? amount : amount + fees.BaseFee;
+
+                Int64 requiredBalance;
+                if (request.IncludeFee)
+                {
+                    requiredBalance = amount;
+                    amount -= fees.BaseFee; 
+                }
+                else
+                {
+                    requiredBalance = amount + fees.BaseFee;
+                };
+
                 var availableBalance = fromAddressBalance.Balance - fromAddressBalance.MinBalance;
                 if (requiredBalance >= availableBalance)
                 {

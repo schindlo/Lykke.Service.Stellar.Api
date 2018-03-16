@@ -1,10 +1,7 @@
-﻿using Lykke.AzureStorage.Tables.Entity.Annotation;
-using Lykke.AzureStorage.Tables.Entity.ValueTypesMerging;
-using Lykke.Service.Stellar.Api.Core.Domain.Observation;
+﻿using Lykke.Service.Stellar.Api.Core.Domain.Observation;
 
 namespace Lykke.Service.Stellar.Api.AzureRepositories.Observation
 {
-    [ValueTypeMergingStrategy(ValueTypeMergingStrategy.UpdateAlways)]
     public class BalanceObservationEntity : ObservationEntity<BalanceObservation>
     {
         public override BalanceObservation ToDomain()

@@ -1,4 +1,6 @@
-﻿namespace Lykke.Service.Stellar.Api.Core.Domain.Balance
+﻿using System;
+
+namespace Lykke.Service.Stellar.Api.Core.Domain.Balance
 {
     public class WalletBalance
     {

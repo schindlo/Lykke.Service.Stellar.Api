@@ -1,11 +1,7 @@
-﻿using System;
-using Lykke.AzureStorage.Tables;
-using Lykke.AzureStorage.Tables.Entity.Annotation;
-using Lykke.AzureStorage.Tables.Entity.ValueTypesMerging;
+﻿using Lykke.AzureStorage.Tables;
 
 namespace Lykke.Service.Stellar.Api.AzureRepositories.Balance
 {
-    [ValueTypeMergingStrategy(ValueTypeMergingStrategy.UpdateAlways)]
     public class WalletBalanceEntity : AzureTableEntity
     {
         public string AssetId

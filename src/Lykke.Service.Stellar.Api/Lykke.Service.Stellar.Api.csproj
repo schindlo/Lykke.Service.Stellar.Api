@@ -45,8 +45,8 @@
     <PackageReference Include="Autofac.Extensions.DependencyInjection" Version="4.2.1" />
     <PackageReference Include="Lykke.Common.ApiLibrary" Version="1.4.0" />
     <PackageReference Include="Lykke.SettingsReader" Version="2.1.0" />
-    <PackageReference Include="Lykke.Service.BlockchainApi.Contract" Version="11.0.0" />
     <PackageReference Include="Lykke.Common" Version="6.0.0" />
+    <PackageReference Include="Lykke.Service.BlockchainApi.Contract" Version="11.0.1" />
   </ItemGroup>
   
   <ItemGroup>
@@ -62,6 +62,9 @@
   <ItemGroup>
     <Folder Include="Helpers\" />
     <Folder Include="Jobs\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Remove="Models\StellarCapabilitiesResponse.cs" />
   </ItemGroup>
   <Target Name="PrepublishScript" BeforeTargets="PrepareForPublish">
     <ItemGroup>

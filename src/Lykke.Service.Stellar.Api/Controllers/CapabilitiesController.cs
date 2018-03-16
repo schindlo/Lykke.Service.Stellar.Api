@@ -14,10 +14,10 @@ namespace Lykke.Service.Stellar.Api.Controllers
         /// </summary>
         [HttpGet]
         [SwaggerOperation("capabilities")]
-        [ProducesResponseType(typeof(StellarCapabilitiesResponse), (int)HttpStatusCode.OK)]
+        [ProducesResponseType(typeof(CapabilitiesResponse), (int)HttpStatusCode.OK)]
         public IActionResult Get()
         {
-            return Ok(new StellarCapabilitiesResponse
+            return Ok(new CapabilitiesResponse
             {
                 IsTransactionsRebuildingSupported = false,
                 AreManyInputsSupported = false,

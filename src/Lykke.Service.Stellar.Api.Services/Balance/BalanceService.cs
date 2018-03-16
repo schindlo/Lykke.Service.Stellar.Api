@@ -64,7 +64,7 @@ namespace Lykke.Service.Stellar.Api.Services
             if (fees != null)
             {
                 long entries = accountDetails.Signers.Length + accountDetails.SubentryCount;
-                var minBalance = (2 + entries) * fees.BaseReserve * One.Value;
+                var minBalance = (2 + entries) * fees.BaseReserve;
                 result.MinBalance = Convert.ToInt64(minBalance);
             }
 

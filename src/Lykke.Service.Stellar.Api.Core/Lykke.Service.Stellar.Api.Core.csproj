@@ -16,8 +16,8 @@
 
   <ItemGroup>
     <PackageReference Include="csharp-stellar-base" Version="1.0.0" />
-    <PackageReference Include="csharp-stellar-sdk" Version="1.0.1" />
     <PackageReference Include="Lykke.Common" Version="6.0.0" />
+    <PackageReference Include="csharp-stellar-sdk" Version="1.0.2" />
   </ItemGroup>
 
 </Project>

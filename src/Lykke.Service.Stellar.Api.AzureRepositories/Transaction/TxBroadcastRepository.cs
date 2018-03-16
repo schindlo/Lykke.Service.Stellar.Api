@@ -47,10 +47,10 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Transaction
             return null;
         }
 
-        public async Task InsertOrReplaceAsync(TxBroadcast broadcast)
+        public async Task AddAsync(TxBroadcast broadcast)
         {
             var entity = broadcast.ToEntity(GetPartitionKey(), GetRowKey(broadcast.OperationId));
-            await _table.InsertOrReplaceAsync(entity);
+            await _table.InsertAsync(entity);
             // add index
             if (!string.IsNullOrEmpty(broadcast.Hash))
             {
@@ -60,8 +60,24 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Transaction
                     RowKey = broadcast.Hash,
                     Value = entity.RowKey
                 };
-                await _tableIndex.InsertOrReplaceAsync(index);
+                await _tableIndex.InsertAsync(index);
             }
+        }
+
+        public async Task UpdateAsync(TxBroadcast broadcast)
+        {
+            TxBroadcastEntity UpdateAction(TxBroadcastEntity entity)
+            {
+                entity.State = broadcast.State;
+                entity.Amount = broadcast.Amount;
+                entity.Fee = broadcast.Fee;
+                entity.Ledger = broadcast.Ledger;
+                entity.CreatedAt = broadcast.CreatedAt;
+
+                return entity;
+            }
+
+            await _table.MergeAsync(GetPartitionKey(), GetRowKey(broadcast.OperationId), UpdateAction);
         }
 
         public async Task DeleteAsync(Guid operationId)
