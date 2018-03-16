@@ -104,6 +104,10 @@ namespace Lykke.Service.Stellar.Api.Controllers
         [ProducesResponseType(typeof(ErrorResponse), (int)HttpStatusCode.BadRequest)]
         public async Task<IActionResult> GetIncomingHistory(string address, [FromQuery] int take, [FromQuery] string afterHash = "")
         {
+            if (take < 1)
+            {
+                return BadRequest(ErrorResponse.Create("Invalid parameter").AddModelError("take", "Must be positive non zero integer"));
+            }
             if (!_balanceService.IsAddressValid(address))
             {
                 return BadRequest(ErrorResponse.Create("Invalid parameter").AddModelError("address", "Address must be valid"));
@@ -122,6 +126,10 @@ namespace Lykke.Service.Stellar.Api.Controllers
         [ProducesResponseType(typeof(ErrorResponse), (int)HttpStatusCode.BadRequest)]
         public async Task<IActionResult> GetOutgoingHistory(string address, [FromQuery] int take, [FromQuery] string afterHash = "")
         {
+            if (take < 1)
+            {
+                return BadRequest(ErrorResponse.Create("Invalid parameter").AddModelError("take", "Must be positive non zero integer"));
+            }
             if (!_balanceService.IsAddressValid(address))
             {
                 return BadRequest(ErrorResponse.Create("Invalid parameter").AddModelError("address", "Address must be valid"));
