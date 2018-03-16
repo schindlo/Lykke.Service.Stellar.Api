@@ -135,10 +135,20 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
 
             var toKeyPair = KeyPair.FromAddress(toAddress);
 
-            var asset = new StellarBase.Asset();
-            var operation = new PaymentOperation.Builder(toKeyPair, asset, amount)
-                                           .SetSourceAccount(fromKeyPair)
-                                           .Build();
+            StellarBase.Operation operation;
+            if (await _horizonService.AccountExists(toAddress))
+            {
+                var asset = new StellarBase.Asset();
+                operation = new PaymentOperation.Builder(toKeyPair, asset, amount)
+                                                .SetSourceAccount(fromKeyPair)
+                                                .Build();
+            }
+            else
+            {
+                operation = new CreateAccountOperation.Builder(toKeyPair, amount)
+                                                      .SetSourceAccount(fromKeyPair)
+                                                      .Build();
+            }
 
             fromAccount.IncrementSequenceNumber();
 

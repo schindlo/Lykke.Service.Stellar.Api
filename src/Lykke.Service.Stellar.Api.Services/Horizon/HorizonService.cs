@@ -94,6 +94,12 @@ namespace Lykke.Service.Stellar.Api.Services.Horizon
             }
         }
 
+        public async Task<bool> AccountExists(string address)
+        {
+            var accountDetails = await GetAccountDetails(address);
+            return accountDetails != null;
+        }
+
         public async Task<long> GetLedgerNoOfLastPayment(string address)
         {
             var builder = new PaymentCallBuilder(_horizonUrl);
