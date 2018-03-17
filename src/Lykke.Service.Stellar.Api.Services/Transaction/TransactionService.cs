@@ -55,7 +55,7 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
                     State = TxBroadcastState.InProgress,
                     Hash = hash
                 };
-                await _broadcastRepository.AddAsync(broadcast);
+                await _broadcastRepository.InsertOrReplaceAsync(broadcast);
                 var observation = new BroadcastObservation
                 {
                     OperationId = operationId
@@ -71,7 +71,7 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
                     Error = GetErrorMessage(ex),
                     ErrorCode = GetErrorCode(ex)
                 };
-                await _broadcastRepository.AddAsync(broadcast);
+                await _broadcastRepository.InsertOrReplaceAsync(broadcast);
 
                 var be = new BusinessException($"Broadcasting transaction failed. operationId={operationId}, message={broadcast.Error}", ex);
                 be.Data.Add("ErrorCode", broadcast.ErrorCode);
@@ -229,7 +229,7 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
                 broadcast.Fee = tx.FeePaid;
                 broadcast.CreatedAt = tx.CreatedAt;
                 broadcast.Ledger = tx.Ledger;
-                await _broadcastRepository.UpdateAsync(broadcast);
+                await _broadcastRepository.MergeAsync(broadcast);
                 await _observationRepository.DeleteIfExistAsync(operationId.ToString());
             }
             catch (Exception ex)
@@ -240,7 +240,7 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
                     Error = ex.Message,
                     ErrorCode = TxExecutionError.Unknown
                 };
-                await _broadcastRepository.UpdateAsync(broadcast);
+                await _broadcastRepository.MergeAsync(broadcast);
                 await _observationRepository.DeleteIfExistAsync(operationId.ToString());
 
                 await _log.WriteErrorAsync(nameof(TransactionService), nameof(ProcessBroadcastInProgress),

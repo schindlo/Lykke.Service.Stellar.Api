@@ -9,9 +9,9 @@ namespace Lykke.Service.Stellar.Api.Core.Domain.Transaction
 
         Task<Guid?> GetOperationId(string hash);
 
-        Task AddAsync(TxBroadcast broadcast);
+        Task InsertOrReplaceAsync(TxBroadcast broadcast);
 
-        Task UpdateAsync(TxBroadcast broadcast);
+        Task MergeAsync(TxBroadcast broadcast);
 
         Task DeleteAsync(Guid operationId);
     }
