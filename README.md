@@ -23,11 +23,11 @@ Available configuration variables are documented below. See [developing](https:/
     // Live: https://horizon.stellar.org/
     "HorizonUrl": "",
     // Period in seconds of the wallet balance update job
-    "WalletBalanceJobPeriodSeconds": 60,
+    "WalletBalanceJobPeriodSeconds": 30,
     // Period in seconds of the transaction history update job
-    "TransactionHistoryJobPeriodSeconds": 60,
+    "TransactionHistoryJobPeriodSeconds": 120,
     // Period in seconds of the broadcasts in progress update job
-    "BroadcastInProgressJobPeriodSeconds": 60,
+    "BroadcastInProgressJobPeriodSeconds": 120,
     // Size of batches processed by the wallet balance update job 
     "WalletBalanceJobBatchSize": 100,
     // Size of batches processed by the transaction history update job
