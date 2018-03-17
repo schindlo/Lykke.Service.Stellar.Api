@@ -109,7 +109,9 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
 
         public async Task DeleteTxBroadcastAsync(Guid operationId)
         {
-            await _broadcastRepository.DeleteAsync(operationId);
+            var deleteObservationTask = _observationRepository.DeleteIfExistAsync(operationId.ToString());
+            var deleteBroadcastTask = _broadcastRepository.DeleteAsync(operationId);
+            await Task.WhenAll(deleteObservationTask, deleteBroadcastTask);
         }
 
         public async Task<Fees> GetFeesAsync()
