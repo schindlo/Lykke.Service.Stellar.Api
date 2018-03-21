@@ -178,103 +178,90 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
             return null;
         }
 
-        private async Task<int> QueryAndProcessPayments(string address, PaymentContext context)
+        private async Task<int> QueryAndProcessTransactions(string address, TransactionContext context)
         {
-            int count = 0;
-            var payments = await _horizonService.GetPayments(address, StellarSdkConstants.OrderAsc, context.Cursor);
-            if (payments == null)
-            {
-                await _log.WriteWarningAsync(nameof(TransactionHistoryService), nameof(QueryAndProcessPayments),
-                    $"Address not found: {address}");
-                context.Cursor = null;
-                return count;
-            }
+            var transactions = await _horizonService.GetTransactions(address, StellarSdkConstants.OrderAsc, context.Cursor);
 
+            int count = 0;
             context.Cursor = null;
-            foreach (var payment in payments.Embedded.Records)
+            foreach (var transaction in transactions)
             {
                 try
                 {
-                    context.Cursor = payment.PagingToken;
+                    context.Cursor = transaction.PagingToken;
                     count++;
 
-                    // create_account, payment or account_merge
-                    if (payment.TypeI == (int)OperationType.OperationTypeEnum.CREATE_ACCOUNT ||
-                        payment.TypeI == (int)OperationType.OperationTypeEnum.PAYMENT && Core.Domain.Asset.Stellar.TypeName.Equals(payment.AssetType, StringComparison.OrdinalIgnoreCase) ||
-                        payment.TypeI == (int)OperationType.OperationTypeEnum.ACCOUNT_MERGE)
+                    var xdr = Convert.FromBase64String(transaction.EnvelopeXdr);
+                    var reader = new ByteReader(xdr);
+                    var txEnvelope = TransactionEnvelope.Decode(reader);
+                    var tx = txEnvelope.Tx;
+
+                    for (short i = 0; i < tx.Operations.Length; i++)
                     {
-                        if (context.Transaction == null || !context.Transaction.Hash.Equals(payment.TransactionHash, StringComparison.OrdinalIgnoreCase))
-                        {
-                            var tx = await _horizonService.GetTransactionDetails(payment.TransactionHash);
-                            context.Transaction = tx ?? throw new BusinessException($"Transaction not found. hash={payment.TransactionHash}");
-                            context.AccountMerge = 0;
-                        }
+                        var operation = tx.Operations[i];
+                        var operationType = operation.Body.Discriminant.InnerValue;
 
                         var history = new TxHistory
                         {
+                            FromAddress = transaction.SourceAccount,
                             AssetId = Core.Domain.Asset.Stellar.Id,
-                            Hash = payment.TransactionHash,
-                            PaymentId = payment.Id,
-                            CreatedAt = payment.CreatedAt,
-                            Memo = GetMemo(context.Transaction)
+                            Hash = transaction.Hash,
+                            OperationIndex = i,
+                            PagingToken = transaction.PagingToken,
+                            CreatedAt = transaction.CreatedAt,
+                            Memo = GetMemo(transaction)
                         };
 
-                        // create_account
-                        if (payment.TypeI == (int)OperationType.OperationTypeEnum.CREATE_ACCOUNT)
+                        if (operationType == OperationType.OperationTypeEnum.CREATE_ACCOUNT)
                         {
-                            history.FromAddress = payment.Funder;
-                            history.ToAddress = payment.Account;
+                            var op = operation.Body.CreateAccountOp;
+                            var keyPair = KeyPair.FromXdrPublicKey(op.Destination.InnerValue);
+                            history.ToAddress = keyPair.Address;
+                            history.Amount = op.StartingBalance.InnerValue;
                             history.PaymentType = PaymentType.CreateAccount;
-
-                            decimal amount = Decimal.Parse(payment.StartingBalance);
-                            history.Amount = Convert.ToInt64(amount * One.Value);
                         }
-                        // payment
-                        else if (payment.TypeI == (int)OperationType.OperationTypeEnum.PAYMENT)
+                        else if (operationType == OperationType.OperationTypeEnum.PAYMENT)
                         {
-                            history.FromAddress = payment.From;
-                            history.ToAddress = payment.To;
-                            history.PaymentType = PaymentType.Payment;
-
-                            decimal amount = Decimal.Parse(payment.Amount);
-                            history.Amount = Convert.ToInt64(amount * One.Value);
+                            var op = operation.Body.PaymentOp;
+                            if (op.Asset.Discriminant.InnerValue == AssetType.AssetTypeEnum.ASSET_TYPE_NATIVE)
+                            {
+                                var keyPair = KeyPair.FromXdrPublicKey(op.Destination.InnerValue);
+                                history.ToAddress = keyPair.Address;
+                                history.Amount = op.Amount.InnerValue;
+                                history.PaymentType = PaymentType.Payment;
+                            }
                         }
-                        // account_merge
-                        else if (payment.TypeI == (int)OperationType.OperationTypeEnum.ACCOUNT_MERGE)
+                        else if (operationType == OperationType.OperationTypeEnum.ACCOUNT_MERGE)
                         {
-                            history.FromAddress = payment.Account;
-                            history.ToAddress = payment.Into;
+                            var op = operation.Body;
+                            var keyPair = KeyPair.FromXdrPublicKey(op.Destination.InnerValue);
+                            history.ToAddress = keyPair.Address;
+                            history.Amount = _horizonService.GetAccountMergeAmount(transaction.ResultXdr, i);
                             history.PaymentType = PaymentType.AccountMerge;
-
-                            var resultXdrBase64 = context.Transaction.ResultXdr;
-                            history.Amount = _horizonService.GetAccountMergeAmount(resultXdrBase64, context.AccountMerge);
-                            context.AccountMerge++;
                         }
-                        else
-                        {
-                            throw new BusinessException($"Invalid payment type. type=${payment.TypeI}");
-                        }
-
-                        history.OperationId = await _txBroadcastRepository.GetOperationId(payment.TransactionHash);
 
                         if (address.Equals(history.ToAddress, StringComparison.OrdinalIgnoreCase))
                         {
                             await _txHistoryRepository.InsertOrReplaceAsync(context.TableId, TxDirectionType.Incoming, history);
-                            context.Sequence++;
 
                         }
                         if (address.Equals(history.FromAddress, StringComparison.OrdinalIgnoreCase))
                         {
                             await _txHistoryRepository.InsertOrReplaceAsync(context.TableId, TxDirectionType.Outgoing, history);
-                            context.Sequence++;
                         }
                     }
                 }
                 catch (Exception ex)
                 {
-                    throw new BusinessException($"Failed to process payment of transaction. payment={payment?.Id}, hash={context?.Transaction?.Hash}", ex);
+                    throw new BusinessException($"Failed to process transaction. hash={transaction?.Hash}", ex);
                 }
             }
+
+            if (!string.IsNullOrEmpty(context.Cursor))
+            {
+                await _txHistoryRepository.SetCurrentPagingToken(context.TableId, context.Cursor);
+            }
+
             return count;
         }
 
@@ -283,16 +270,12 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
             int count = 0;
             try
             {
-                var context = new PaymentContext(observation.TableId);
-                var last = await _txHistoryRepository.GetLastRecordAsync(context.TableId);
-                if (last != null)
-                {
-                    context.Cursor = last.PaymentId;
-                }
+                var context = new TransactionContext(observation.TableId);
+                context.Cursor = await _txHistoryRepository.GetCurrentPagingToken(context.TableId);
 
                 do
                 {
-                    count += await QueryAndProcessPayments(observation.Address, context);
+                    count += await QueryAndProcessTransactions(observation.Address, context);
                 }
                 while (!string.IsNullOrEmpty(context.Cursor));
             }

@@ -9,7 +9,9 @@ namespace Lykke.Service.Stellar.Api.Core.Domain.Transaction
 
         Task<List<TxHistory>> GetAllAfterHashAsync(string tableId, TxDirectionType direction, int take, string afterHash);
 
-        Task<TxHistory> GetLastRecordAsync(string tableId);
+        Task<string> GetCurrentPagingToken(string tableId);
+
+        Task SetCurrentPagingToken(string tableId, string pagingToken);
 
         Task InsertOrReplaceAsync(string tableId, TxDirectionType direction, TxHistory history);
 

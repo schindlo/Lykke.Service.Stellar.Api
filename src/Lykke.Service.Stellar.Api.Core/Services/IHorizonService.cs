@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System.Collections.Generic;
+using System.Threading.Tasks;
 using StellarBase.Generated;
 using StellarSdk.Model;
 
@@ -10,6 +11,8 @@ namespace Lykke.Service.Stellar.Api.Core.Services
 
         Task<TransactionDetails> GetTransactionDetails(string hash);
 
+        Task<List<TransactionDetails>> GetTransactions(string address, string order = StellarSdkConstants.OrderAsc, string cursor = "");
+
         Task<Payments> GetPayments(string address, string order = StellarSdkConstants.OrderAsc, string cursor = "");
 
         Task<LedgerDetails> GetLatestLedger();
@@ -20,7 +23,7 @@ namespace Lykke.Service.Stellar.Api.Core.Services
 
         Task<long> GetLedgerNoOfLastPayment(string address);
 
-        long GetAccountMergeAmount(string resultXdrBase64, int accountMergeInTx);
+        long GetAccountMergeAmount(string resultXdrBase64, int operationIndex);
 
         PaymentOp GetFirstPaymentFromTransaction(TransactionDetails tx);
     }

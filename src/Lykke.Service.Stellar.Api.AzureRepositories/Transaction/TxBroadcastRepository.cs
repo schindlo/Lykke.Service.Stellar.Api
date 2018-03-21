@@ -16,12 +16,10 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Transaction
         private static string GetRowKey(Guid operationId) => operationId.ToString();
 
         private INoSQLTableStorage<TxBroadcastEntity> _table;
-        private INoSQLTableStorage<IndexEntity> _tableIndex;
 
         public TxBroadcastRepository(IReloadingManager<string> dataConnStringManager, ILog log)
         {
             _table = AzureTableStorage<TxBroadcastEntity>.Create(dataConnStringManager, TableName, log);
-            _tableIndex = AzureTableStorage<IndexEntity>.Create(dataConnStringManager, TableName, log);
         }
 
         public async Task<TxBroadcast> GetAsync(Guid operationId)
@@ -36,32 +34,10 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Transaction
             return null;
         }
 
-        public async Task<Guid?> GetOperationId(string hash)
-        {
-            var index = await _tableIndex.GetDataAsync(IndexEntity.GetPartitionKeyHash(), hash);
-            if (index != null)
-            {
-                return Guid.Parse(index.Value);
-            }
-
-            return null;
-        }
-
         public async Task InsertOrReplaceAsync(TxBroadcast broadcast)
         {
             var entity = broadcast.ToEntity(GetPartitionKey(), GetRowKey(broadcast.OperationId));
             await _table.InsertOrReplaceAsync(entity);
-            // add index
-            if (!string.IsNullOrEmpty(broadcast.Hash))
-            {
-                var index = new IndexEntity
-                {
-                    PartitionKey = IndexEntity.GetPartitionKeyHash(),
-                    RowKey = broadcast.Hash,
-                    Value = entity.RowKey
-                };
-                await _tableIndex.InsertOrReplaceAsync(index);
-            }
         }
 
         public async Task MergeAsync(TxBroadcast broadcast)
@@ -84,12 +60,7 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Transaction
 
         public async Task DeleteAsync(Guid operationId)
         {
-            var entity = await _table.DeleteAsync(GetPartitionKey(), GetRowKey(operationId));
-            // delete index
-            if (entity != null && !string.IsNullOrEmpty(entity.Hash))
-            {
-                await _tableIndex.DeleteIfExistAsync(IndexEntity.GetPartitionKeyHash(), entity.Hash);
-            }
+            await _table.DeleteAsync(GetPartitionKey(), GetRowKey(operationId));
         }
     }
 }

@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Linq;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using StellarBase.Generated;
 using StellarSdk;
@@ -47,6 +47,28 @@ namespace Lykke.Service.Stellar.Api.Services.Horizon
                 // transaction not found
                 return null;
             }
+        }
+
+        public async Task<List<TransactionDetails>> GetTransactions(string address, string order = StellarSdkConstants.OrderAsc, string cursor = "")
+        {
+            try
+            {
+                var builder = new AccountTransactionCallBuilder(_horizonUrl);
+                builder.accountId(address);
+                builder.order(order).cursor(cursor).limit(100);
+                var details = await builder.Call();
+                var transactions = details?.Embedded?.Records;
+                if (transactions != null)
+                {
+                    return new List<TransactionDetails>(transactions);
+                }
+            }
+            catch (ResourceNotFoundException)
+            {
+                // address not found
+            }
+
+            return new List<TransactionDetails>();
         }
 
         public async Task<Payments> GetPayments(string address, string order = StellarSdkConstants.OrderAsc, string cursor = "")
@@ -119,27 +141,19 @@ namespace Lykke.Service.Stellar.Api.Services.Horizon
             return tx.Ledger;
         }
 
-        public long GetAccountMergeAmount(string resultXdrBase64, int accountMergeInTx)
+        public long GetAccountMergeAmount(string resultXdrBase64, int operationIndex)
         {
             var xdr = Convert.FromBase64String(resultXdrBase64);
             var reader = new ByteReader(xdr);
             var txResult = StellarBase.Generated.TransactionResult.Decode(reader);
 
-            var merges = txResult.Result.Results.Where(x => x.Tr.AccountMergeResult != null).ToList();
-            if (merges.Count > accountMergeInTx)
+            var merge = txResult.Result.Results[operationIndex];
+            var result = merge?.Tr?.AccountMergeResult;
+            var resultCode = result?.Discriminant?.InnerValue;
+            if (resultCode != null && resultCode == AccountMergeResultCode.AccountMergeResultCodeEnum.ACCOUNT_MERGE_SUCCESS)
             {
-                var merge = merges[accountMergeInTx];
-                var result = merge?.Tr?.AccountMergeResult;
-                var resultCode = result?.Discriminant?.InnerValue;
-                if (resultCode != null && resultCode == AccountMergeResultCode.AccountMergeResultCodeEnum.ACCOUNT_MERGE_SUCCESS)
-                {
-                    long amount = result.SourceAccountBalance.InnerValue;
-                    return amount;
-                }
-            }
-            else
-            {
-                throw new HorizonApiException($"Account merge result missing from result XDR. accountMergeInTx={accountMergeInTx}");
+                long amount = result.SourceAccountBalance.InnerValue;
+                return amount;
             }
 
             return 0;

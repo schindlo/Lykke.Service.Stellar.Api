@@ -21,17 +21,14 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Transaction
         {
             var domain = new TxHistory
             {
-                OperationId = entity.OperationId,
                 FromAddress = entity.FromAddress,
                 ToAddress = entity.ToAddress,
                 AssetId = entity.AssetId,
                 Amount = entity.Amount,
                 Hash = entity.Hash,
-                PaymentId = entity.PaymentId,
                 CreatedAt = entity.CreatedAt,
                 PaymentType = entity.PaymentType,
                 Memo = entity.Memo,
-                LastModified = entity.Timestamp
             };
             return domain;
         }
@@ -41,14 +38,12 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Transaction
             var entity = new TxHistoryEntity
             {
                 PartitionKey = partitionKey,
-                RowKey = UInt64.Parse(domain.PaymentId).ToString("D20"),
-                OperationId = domain.OperationId,
+                RowKey = UInt64.Parse(domain.PagingToken).ToString("D20") + domain.OperationIndex.ToString("D3"),
                 FromAddress = domain.FromAddress,
                 ToAddress = domain.ToAddress,
                 AssetId = domain.AssetId,
                 Amount = domain.Amount,
                 Hash = domain.Hash,
-                PaymentId = domain.PaymentId,
                 CreatedAt = domain.CreatedAt,
                 PaymentType = domain.PaymentType,
                 Memo = domain.Memo

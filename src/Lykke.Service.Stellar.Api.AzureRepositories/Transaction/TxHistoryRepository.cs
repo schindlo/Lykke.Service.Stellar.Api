@@ -18,7 +18,7 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Transaction
         private const string IndexSeparator = ";";
 
         private static string GetPartitionKey(TxDirectionType direction) => direction.ToString();
-        private static string GetLastPaymentIdRowKey() => "Last";
+        private static string GetCurrentRowKey() => "Current";
 
         private ILog _log;
         private IReloadingManager<string> _dataConnStringManager;
@@ -74,7 +74,7 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Transaction
                 {
                     throw new ArgumentException($"Unknwon transaction hash: {afterHash}", nameof(afterHash));
                 }
-                var rowKeys = index.Value.Split(IndexSeparator).ToList().OrderByDescending(x => UInt64.Parse(x));
+                var rowKeys = index.Value.Split(IndexSeparator).ToList().OrderByDescending(x => x);
                 var rowKey = rowKeys.First();
 
                 var rkFilter = TableQuery.GenerateFilterCondition(nameof(ITableEntity.RowKey), QueryComparisons.GreaterThan, rowKey);
@@ -87,37 +87,44 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Transaction
             return items;
         }
 
-        public async Task<TxHistory> GetLastRecordAsync(string tableId)
+        public async Task<string> GetCurrentPagingToken(string tableId)
         {
             var (table, tableIndex) = GetTable(tableId);
 
-            var paymentId = await tableIndex.GetDataAsync(IndexEntity.GetPartitionKeyPaymentId(), GetLastPaymentIdRowKey());
-            if (paymentId != null)
+            var pagingTokenIndex = await tableIndex.GetDataAsync(IndexEntity.GetPartitionKeyPagingToken(), GetCurrentRowKey());
+            if (pagingTokenIndex != null)
             {
-                var entity = await table.GetDataAsync(GetPartitionKey(TxDirectionType.Incoming), paymentId.Value);
-                if (entity == null)
-                {
-                    entity = await table.GetDataAsync(GetPartitionKey(TxDirectionType.Outgoing), paymentId.Value);
-                }
-                if (entity != null)
-                {
-                    var history = entity.ToDomain();
-                    return history;
-                }
+                return pagingTokenIndex.Value;
             }
 
             return null;
+        }
+
+        public async Task SetCurrentPagingToken(string tableId, string pagingToken)
+        {
+            var (table, tableIndex) = GetTable(tableId);
+
+            // index to current paging token
+            var entity = new IndexEntity
+            {
+                PartitionKey = IndexEntity.GetPartitionKeyPagingToken(),
+                RowKey = GetCurrentRowKey(),
+                Value = pagingToken
+            };
+            await tableIndex.InsertOrReplaceAsync(entity);
         }
 
         public async Task InsertOrReplaceAsync(string tableId, TxDirectionType direction, TxHistory history)
         {
             var (table, tableIndex) = GetTable(tableId);
 
+            var tasks = new Task[2];
+                
             // history entry
             var entity = history.ToEntity(GetPartitionKey(direction));
-            await table.InsertOrReplaceAsync(entity);
+            tasks[0] = table.InsertOrReplaceAsync(entity);
 
-            // hash to payments index
+            // hash to row key(s)
             var value = entity.RowKey;
             var index = await tableIndex.GetDataAsync(IndexEntity.GetPartitionKeyHash(), entity.Hash);
             if (index == null || string.IsNullOrEmpty(index.Value))
@@ -133,16 +140,9 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Transaction
             {
                 index.Value += IndexSeparator + value;
             }
-            await tableIndex.InsertOrReplaceAsync(index);
+            tasks[1] = tableIndex.InsertOrReplaceAsync(index);
 
-            // index to latest payment
-            var paymentId = new IndexEntity
-            {
-                PartitionKey = IndexEntity.GetPartitionKeyPaymentId(),
-                RowKey = GetLastPaymentIdRowKey(),
-                Value = entity.RowKey
-            };
-            await tableIndex.InsertOrReplaceAsync(paymentId);
+            await Task.WhenAll(tasks);
         }
 
         public async Task DeleteAsync(string tableId)

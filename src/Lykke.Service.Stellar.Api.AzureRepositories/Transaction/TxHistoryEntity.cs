@@ -6,8 +6,6 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Transaction
 {
     public class TxHistoryEntity : AzureTableEntity
     {
-        public Guid? OperationId { get; set; }
-
         public string FromAddress { get; set; }
 
         public string ToAddress { get; set; }
@@ -17,8 +15,6 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Transaction
         public long Amount { get; set; }
 
         public string Hash { get; set; }
-
-        public string PaymentId { get; set; }
 
         public DateTime CreatedAt { get; set; }
 

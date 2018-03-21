@@ -150,14 +150,12 @@ namespace Lykke.Service.Stellar.Api.Controllers
             {
                 ret.Add(new StellarHistoricalTransactionContract
                 {
-                    OperationId = tx.OperationId.HasValue ? tx.OperationId.Value : Guid.Empty,
                     Timestamp = tx.CreatedAt,
                     FromAddress = tx.FromAddress,
                     ToAddress = tx.ToAddress,
                     AssetId = tx.AssetId,
                     Amount = tx.Amount.ToString(),
                     Hash = tx.Hash,
-                    PaymentId = tx.PaymentId,
                     PaymentType = tx.PaymentType.ToString(),
                     DestinationTag = tx.Memo
                 });
