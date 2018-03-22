@@ -1,276 +1,85 @@
 {
-	"id": "ab1bfa35-24fc-94c6-34d2-995033547445",
+	"id": "e65a83eb-8216-41d3-abdc-e5f68da7703c",
 	"name": "LykkeStellarApiTests",
 	"description": "",
-	"order": [],
-	"folders": [
-		{
-			"name": "Balance",
-			"description": "",
-			"collectionId": "ab1bfa35-24fc-94c6-34d2-995033547445",
-			"order": [
-				"88801973-bbe5-7887-35b1-79e3e7c2c687",
-				"e9fc1616-bf6a-2035-f76b-676f33f50508",
-				"c7be4a2e-364a-52ad-78b8-eaa5c6cbddc4"
-			],
-			"owner": 0,
-			"folders_order": [],
-			"auth": null,
-			"id": "5be198de-eafe-867a-201a-f9ec19ee36a7"
-		},
-		{
-			"name": "General",
-			"description": "",
-			"collectionId": "ab1bfa35-24fc-94c6-34d2-995033547445",
-			"order": [
-				"b90dba81-5af6-d4f1-1401-be2c0da40163",
-				"d6ee59fe-9029-70fa-fbf4-00985a8a4287",
-				"7a0a712e-d404-9560-9ab0-606a6f914164",
-				"b8127321-beb4-eb7a-0ba5-82844a89239d",
-				"dcf322d5-3834-30c4-9eea-0b7f59a52838",
-				"08d8aa5a-7169-05ae-c448-7a002c5961a0"
-			],
-			"owner": 0,
-			"folders_order": [],
-			"auth": null,
-			"id": "f1de4854-50b5-89ee-8687-7966b2dafd44"
-		},
-		{
-			"name": "Transaction",
-			"description": "",
-			"collectionId": "ab1bfa35-24fc-94c6-34d2-995033547445",
-			"order": [
-				"74934af7-b379-28e9-1f5f-dbae064aa85e",
-				"d8056bd2-4507-1814-a28f-99b45f17270d",
-				"ef9c4836-ee28-348b-3107-8f4e30eb1a14",
-				"4c4c6f34-efbd-f07b-2f60-c3ea538918b4",
-				"86f6131d-3f8d-0504-1463-2f6f5b7a2e37",
-				"c575b9ee-c778-3621-f910-b717ba85ed94",
-				"1da9806b-cbe8-de3d-6dce-1eb7fc7704b7",
-				"fe35cdac-bfc9-3a5e-1447-b6c5ed99e006",
-				"f0b6233a-000a-c29c-eacf-8cad3200905b"
-			],
-			"owner": 0,
-			"folders_order": [],
-			"auth": null,
-			"id": "674897f3-a0a5-85f0-71ab-89be342df7f4"
-		}
-	],
-	"folders_order": [
-		"f1de4854-50b5-89ee-8687-7966b2dafd44",
-		"5be198de-eafe-867a-201a-f9ec19ee36a7",
-		"674897f3-a0a5-85f0-71ab-89be342df7f4"
-	],
-	"timestamp": 1518026215818,
-	"owner": 0,
-	"public": false,
+	"auth": null,
 	"events": [],
 	"variables": [],
-	"auth": null,
+	"order": [],
+	"folders_order": [
+		"24f88f24-df97-4546-91cd-9fa6af0a79fa",
+		"d8f9abda-19fd-4966-b533-0b9315455813",
+		"5150b460-7261-46b4-abb4-f9883025c91b"
+	],
+	"folders": [
+		{
+			"id": "d8f9abda-19fd-4966-b533-0b9315455813",
+			"name": "Balance",
+			"description": "",
+			"auth": null,
+			"events": null,
+			"collection": "e65a83eb-8216-41d3-abdc-e5f68da7703c",
+			"folder": null,
+			"order": [
+				"8575aa25-211a-43ac-a11c-9af4c4ba150a",
+				"60237739-41f1-4688-a0f0-1f3b4c7054bf",
+				"0d25cdef-11e5-4a5a-93be-1c030d7509d1"
+			],
+			"folders_order": []
+		},
+		{
+			"id": "24f88f24-df97-4546-91cd-9fa6af0a79fa",
+			"name": "General",
+			"description": "",
+			"auth": null,
+			"events": null,
+			"collection": "e65a83eb-8216-41d3-abdc-e5f68da7703c",
+			"folder": null,
+			"order": [
+				"5b91c92f-5877-4c2e-bb6a-91d58147ac29",
+				"1f7975b9-c366-4098-bcd8-ca115c1b8924",
+				"0855af0e-f1c0-4c60-888d-e10ea32fc59e",
+				"6b62fbc6-3d35-40bd-ae30-cd9c09893d0d",
+				"b902b8be-95ad-4d5c-a4e8-cf917d46132e",
+				"b4c84f96-0478-4483-bb80-5abc765398a5"
+			],
+			"folders_order": []
+		},
+		{
+			"id": "5150b460-7261-46b4-abb4-f9883025c91b",
+			"name": "Transaction",
+			"description": "",
+			"auth": null,
+			"events": null,
+			"collection": "e65a83eb-8216-41d3-abdc-e5f68da7703c",
+			"folder": null,
+			"order": [
+				"db2c3b95-085e-4ff9-a828-be87982394de",
+				"ace5b19b-ba7f-47e7-9339-9aab509783c3",
+				"67f1d29e-b381-4b03-a079-e5ec9b085f61",
+				"90e4a3dd-920b-4f96-88e5-9a9fb079b09b",
+				"a7a7dbaa-d7ff-4f19-a187-46ace518d4a2",
+				"bd912e56-4455-4eb1-baf8-ed6675acbc2b",
+				"6afd43b4-3263-4a28-963c-5a6474ada81c",
+				"ccd24b91-6f5d-4ff6-9438-902ce0b396c4",
+				"697a9bbd-13f5-4f4a-b73a-dcb09234c101"
+			],
+			"folders_order": []
+		}
+	],
 	"requests": [
 		{
-			"id": "08d8aa5a-7169-05ae-c448-7a002c5961a0",
-			"headers": "",
-			"headerData": [],
-			"url": "{{URL}}/api/capabilities",
-			"folder": "f1de4854-50b5-89ee-8687-7966b2dafd44",
-			"queryParams": [],
-			"events": [
-				{
-					"listen": "test",
-					"script": {
-						"id": "f534a070-ee2a-4196-9b13-50c654775eba",
-						"type": "text/javascript",
-						"exec": [
-							"pm.test(\"Status code is 200\", function () {",
-							"    pm.response.to.have.status(200);",
-							"});"
-						]
-					}
-				}
-			],
-			"pathVariables": {},
-			"pathVariableData": [],
-			"method": "GET",
-			"data": null,
-			"dataMode": "params",
-			"auth": null,
-			"time": 1518099102590,
-			"name": "Capabilities",
-			"description": "",
-			"collectionId": "ab1bfa35-24fc-94c6-34d2-995033547445",
-			"responses": [],
-			"preRequestScript": null,
-			"tests": "pm.test(\"Status code is 200\", function () {\n    pm.response.to.have.status(200);\n});",
-			"currentHelper": null,
-			"helperAttributes": null
-		},
-		{
-			"id": "1da9806b-cbe8-de3d-6dce-1eb7fc7704b7",
-			"headers": "",
-			"headerData": [],
-			"url": "{{URL}}/api/transactions/broadcast/single/{{operation_id}}",
-			"folder": "674897f3-a0a5-85f0-71ab-89be342df7f4",
-			"queryParams": [],
-			"events": [
-				{
-					"listen": "test",
-					"script": {
-						"id": "69f59c0c-7bff-410d-84cf-eb0301792046",
-						"type": "text/javascript",
-						"exec": [
-							"pm.test(\"Status code is 200\", function () {",
-							"    pm.response.to.have.status(200);",
-							"});",
-							"",
-							"pm.test(\"Check amount\", function () {",
-							"    var jsonData = pm.response.json();",
-							"    pm.expect(jsonData.amount).to.eql(\"1\");",
-							"});"
-						]
-					}
-				},
-				{
-					"listen": "prerequest",
-					"script": {
-						"id": "586c73f5-e0cd-4886-9e36-f5b978c50641",
-						"type": "text/javascript",
-						"exec": [
-							"console.info(\"Waiting 60s for job to complete\");",
-							"setTimeout(function(){}, 60000);"
-						]
-					}
-				}
-			],
-			"pathVariables": {},
-			"pathVariableData": [],
-			"method": "GET",
-			"data": null,
-			"dataMode": "params",
-			"version": 2,
-			"auth": null,
-			"time": 1518128394220,
-			"name": "transaction get",
-			"description": "",
-			"collectionId": "ab1bfa35-24fc-94c6-34d2-995033547445",
-			"responses": [],
-			"preRequestScript": "console.info(\"Waiting 60s for job to complete\");\nsetTimeout(function(){}, 60000);",
-			"tests": "pm.test(\"Status code is 200\", function () {\n    pm.response.to.have.status(200);\n});\n\npm.test(\"Check amount\", function () {\n    var jsonData = pm.response.json();\n    pm.expect(jsonData.amount).to.eql(\"1\");\n});",
-			"currentHelper": null,
-			"helperAttributes": null
-		},
-		{
-			"id": "4c4c6f34-efbd-f07b-2f60-c3ea538918b4",
-			"headers": "Content-Type: application/json\n",
-			"headerData": [
-				{
-					"key": "Content-Type",
-					"value": "application/json",
-					"description": "",
-					"enabled": true
-				}
-			],
-			"url": "{{URL}}/api/transactions/single",
-			"folder": "674897f3-a0a5-85f0-71ab-89be342df7f4",
-			"queryParams": [],
-			"events": [
-				{
-					"listen": "prerequest",
-					"script": {
-						"id": "9dd0b9a2-2a45-4b22-9e44-2bf40fc45753",
-						"type": "text/javascript",
-						"exec": [
-							"var helpers = eval(pm.globals.get(\"globalHelpers\"));",
-							"var uuid = helpers.guid();",
-							"",
-							"pm.globals.set(\"operation_id\", uuid);"
-						]
-					}
-				},
-				{
-					"listen": "test",
-					"script": {
-						"id": "fb4623a2-2a6e-4648-a41f-efbcaed02e0f",
-						"type": "text/javascript",
-						"exec": [
-							"pm.test(\"Status code is 200\", function () {",
-							"    pm.response.to.have.status(200);",
-							"    var jsonData = pm.response.json();",
-							"    ",
-							"    var context = jsonData.transactionContext;",
-							"    pm.expect(context !== undefined).to.be.true;",
-							"    ",
-							"    pm.globals.set(\"transaction_context\", context);",
-							"});",
-							""
-						]
-					}
-				}
-			],
-			"pathVariables": {},
-			"pathVariableData": [],
-			"method": "POST",
-			"data": [],
-			"dataMode": "raw",
-			"auth": null,
-			"time": 1518260337839,
-			"name": "transaction single",
-			"description": "",
-			"collectionId": "ab1bfa35-24fc-94c6-34d2-995033547445",
-			"responses": [],
-			"preRequestScript": "var helpers = eval(pm.globals.get(\"globalHelpers\"));\nvar uuid = helpers.guid();\n\npm.globals.set(\"operation_id\", uuid);",
-			"tests": "pm.test(\"Status code is 200\", function () {\n    pm.response.to.have.status(200);\n    var jsonData = pm.response.json();\n    \n    var context = jsonData.transactionContext;\n    pm.expect(context !== undefined).to.be.true;\n    \n    pm.globals.set(\"transaction_context\", context);\n});\n",
-			"currentHelper": null,
-			"helperAttributes": null,
-			"rawModeData": "{\n  \"operationId\": \"{{operation_id}}\",\n  \"fromAddress\": \"{{my_address}}\",\n  \"toAddress\": \"{{destination_address}}\",\n  \"assetId\": \"XLM\",\n  \"amount\": \"1\",\n  \"includeFee\": true\n}"
-		},
-		{
-			"id": "74934af7-b379-28e9-1f5f-dbae064aa85e",
-			"headers": "",
-			"headerData": [],
-			"url": "{{URL}}//api/transactions/history/from/{{my_address}}/observation",
-			"queryParams": [],
-			"pathVariables": {},
-			"pathVariableData": [],
-			"events": [
-				{
-					"listen": "test",
-					"script": {
-						"id": "231c8bae-2b5b-4077-ba71-11eef41e00ce",
-						"type": "text/javascript",
-						"exec": [
-							"pm.test(\"Status code is 200 or 204\", function () {",
-							"    pm.expect(pm.response.code).to.be.oneOf([200,204]);",
-							"});"
-						]
-					}
-				}
-			],
-			"auth": null,
-			"method": "DELETE",
-			"collectionId": "ab1bfa35-24fc-94c6-34d2-995033547445",
-			"data": null,
-			"dataMode": "params",
-			"name": "History delete subscription",
-			"description": "",
-			"descriptionFormat": "html",
-			"time": 1518106572700,
-			"version": 2,
-			"responses": [],
-			"folder": "674897f3-a0a5-85f0-71ab-89be342df7f4",
-			"isFromCollection": true,
-			"preRequestScript": null,
-			"tests": "pm.test(\"Status code is 200 or 204\", function () {\n    pm.expect(pm.response.code).to.be.oneOf([200,204]);\n});",
-			"currentHelper": null,
-			"helperAttributes": null
-		},
-		{
-			"id": "7a0a712e-d404-9560-9ab0-606a6f914164",
-			"headers": "",
-			"headerData": [],
+			"id": "0855af0e-f1c0-4c60-888d-e10ea32fc59e",
+			"name": "Address_Valid",
 			"url": "{{URL}}/api/addresses/{{my_address}}/validity",
-			"folder": "f1de4854-50b5-89ee-8687-7966b2dafd44",
+			"description": "",
+			"data": null,
+			"dataMode": "params",
+			"headerData": [],
+			"method": "GET",
+			"pathVariableData": [],
 			"queryParams": [],
+			"auth": null,
 			"events": [
 				{
 					"listen": "test",
@@ -286,164 +95,122 @@
 					}
 				}
 			],
-			"pathVariables": {},
-			"pathVariableData": [],
-			"method": "GET",
-			"data": null,
-			"dataMode": "params",
-			"auth": null,
-			"time": 1518102047791,
-			"name": "Address_Valid",
-			"description": "",
-			"collectionId": "ab1bfa35-24fc-94c6-34d2-995033547445",
-			"responses": [],
-			"preRequestScript": null,
-			"tests": "pm.test(\"Validate valid address\", function () {\n    var jsonData = pm.response.json();\n    pm.expect(true).to.eql(jsonData.isValid);\n});",
-			"currentHelper": null,
-			"helperAttributes": null
+			"folder": "24f88f24-df97-4546-91cd-9fa6af0a79fa",
+			"headers": "",
+			"pathVariables": {}
 		},
 		{
-			"id": "86f6131d-3f8d-0504-1463-2f6f5b7a2e37",
-			"headers": "Content-Type: application/json\n",
-			"headerData": [
+			"id": "0d25cdef-11e5-4a5a-93be-1c030d7509d1",
+			"name": "Check balance",
+			"url": "{{URL}}/api/balances?take=100",
+			"description": "",
+			"data": null,
+			"dataMode": "params",
+			"headerData": [],
+			"method": "GET",
+			"pathVariableData": [],
+			"queryParams": [
 				{
-					"key": "Content-Type",
-					"value": "application/json",
+					"key": "take",
+					"value": "100",
+					"equals": true,
 					"description": "",
 					"enabled": true
 				}
 			],
-			"url": "{{URL_SIGN}}/api/sign",
-			"folder": "5be198de-eafe-867a-201a-f9ec19ee36a7",
-			"queryParams": [],
-			"events": [
-				{
-					"listen": "test",
-					"script": {
-						"id": "e748385e-d856-4039-b1a7-8734d8540b4f",
-						"type": "text/javascript",
-						"exec": [
-							"pm.test(\"Status code is 200\", function () {",
-							"    pm.response.to.have.status(200);",
-							"    ",
-							"    var jsonData = pm.response.json();",
-							"    var tx = jsonData.signedTransaction;",
-							"    pm.expect(tx !== undefined).to.be.true;",
-							"",
-							"    pm.globals.set(\"signed_transaction\", tx);",
-							"});"
-						]
-					}
-				}
-			],
-			"pathVariables": {},
-			"pathVariableData": [],
-			"method": "POST",
-			"data": [],
-			"dataMode": "raw",
-			"version": 2,
 			"auth": null,
-			"time": 1518260894711,
-			"name": "transaction sign",
-			"description": "",
-			"collectionId": "ab1bfa35-24fc-94c6-34d2-995033547445",
-			"responses": [],
-			"preRequestScript": null,
-			"tests": "pm.test(\"Status code is 200\", function () {\n    pm.response.to.have.status(200);\n    \n    var jsonData = pm.response.json();\n    var tx = jsonData.signedTransaction;\n    pm.expect(tx !== undefined).to.be.true;\n\n    pm.globals.set(\"signed_transaction\", tx);\n});",
-			"currentHelper": null,
-			"helperAttributes": null,
-			"rawModeData": "{\r\n  \"privateKeys\": [\r\n    \"{{my_private_key}}\"\r\n  ],\r\n  \"transactionContext\": '{{transaction_context}}'\r\n}"
-		},
-		{
-			"id": "88801973-bbe5-7887-35b1-79e3e7c2c687",
-			"headers": "",
-			"headerData": [],
-			"url": "{{URL}}/api/balances/balances/{{my_address}}/observation",
-			"folder": "5be198de-eafe-867a-201a-f9ec19ee36a7",
-			"queryParams": [],
 			"events": [
 				{
 					"listen": "test",
 					"script": {
-						"id": "4c231e89-db11-4d78-9fd1-0dcf136adcb1",
-						"type": "text/javascript",
-						"exec": [
-							"pm.test(\"Status code is 200 or 204\", function () {",
-							"    console.info(\"Status: \" + pm.response.code);",
-							"    pm.expect(pm.response.code).to.be.oneOf([200,204]);",
-							"});"
-						]
-					}
-				}
-			],
-			"pathVariables": {},
-			"pathVariableData": [],
-			"method": "DELETE",
-			"data": null,
-			"dataMode": "params",
-			"auth": null,
-			"time": 1518168404577,
-			"name": "Delete Observation",
-			"description": "",
-			"collectionId": "ab1bfa35-24fc-94c6-34d2-995033547445",
-			"responses": [],
-			"preRequestScript": null,
-			"tests": "pm.test(\"Status code is 200 or 204\", function () {\n    console.info(\"Status: \" + pm.response.code);\n    pm.expect(pm.response.code).to.be.oneOf([200,204]);\n});",
-			"currentHelper": null,
-			"helperAttributes": null
-		},
-		{
-			"id": "b8127321-beb4-eb7a-0ba5-82844a89239d",
-			"headers": "",
-			"headerData": [],
-			"url": "{{URL}}/api/assets",
-			"folder": "f1de4854-50b5-89ee-8687-7966b2dafd44",
-			"queryParams": [],
-			"events": [
-				{
-					"listen": "test",
-					"script": {
-						"id": "c0331db9-0027-40d6-ae36-1216f69e875f",
+						"id": "c39c7f7a-9894-4442-b0ef-3de1dbfadd33",
 						"type": "text/javascript",
 						"exec": [
 							"pm.test(\"Status code is 200\", function () {",
 							"    pm.response.to.have.status(200);",
 							"});",
 							"",
-							"",
-							"pm.test(\"Check Assets\", function () {",
+							"pm.test(\"Check balance\", function () {",
 							"    var jsonData = pm.response.json();",
-							"    var asset = jsonData.items[0].assetId;",
-							"    pm.expect(\"XLM\").to.eql(asset);",
+							"",
+							"    var address = pm.globals.get(\"my_address\");",
+							"    var balance = -1;",
+							"    var balanceEntry = null;",
+							"    ",
+							"    for (var item of jsonData.items) { ",
+							"        if(item.address === address) {",
+							"            balanceEntry = item;",
+							"            balance = Number(item.balance);",
+							"        }",
+							"    }",
+							"    pm.expect(balanceEntry !== null).to.be.true;",
+							"    console.info(\"Balance: \" + balance);",
+							"    pm.expect(-1).to.lt(balance);",
+							"});",
+							"",
+							""
+						]
+					}
+				},
+				{
+					"listen": "prerequest",
+					"script": {
+						"id": "d68ac405-aef6-47dd-a73e-881387b53c5d",
+						"type": "text/javascript",
+						"exec": [
+							"console.info(\"Waiting 60s for job to complete\");",
+							"setTimeout(function(){}, 60000);"
+						]
+					}
+				}
+			],
+			"folder": "d8f9abda-19fd-4966-b533-0b9315455813",
+			"headers": "",
+			"pathVariables": {}
+		},
+		{
+			"id": "1f7975b9-c366-4098-bcd8-ca115c1b8924",
+			"name": "Address_Invalid",
+			"url": "{{URL}}/api/addresses/invalid_address/validity",
+			"description": "",
+			"data": null,
+			"dataMode": "params",
+			"headerData": [],
+			"method": "GET",
+			"pathVariableData": [],
+			"queryParams": [],
+			"auth": null,
+			"events": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "791e077a-4219-4443-8995-7acaf9b1795e",
+						"type": "text/javascript",
+						"exec": [
+							"pm.test(\"Validate invalid address\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(false).to.eql(jsonData.isValid);",
 							"});"
 						]
 					}
 				}
 			],
-			"pathVariables": {},
-			"pathVariableData": [],
-			"method": "GET",
-			"data": null,
-			"dataMode": "params",
-			"version": 2,
-			"auth": null,
-			"time": 1518123489691,
-			"name": "Assets",
-			"description": "",
-			"collectionId": "ab1bfa35-24fc-94c6-34d2-995033547445",
-			"responses": [],
-			"preRequestScript": null,
-			"tests": "pm.test(\"Status code is 200\", function () {\n    pm.response.to.have.status(200);\n});\n\n\npm.test(\"Check Assets\", function () {\n    var jsonData = pm.response.json();\n    var asset = jsonData.items[0].assetId;\n    pm.expect(\"XLM\").to.eql(asset);\n});",
-			"currentHelper": null,
-			"helperAttributes": null
+			"folder": "24f88f24-df97-4546-91cd-9fa6af0a79fa",
+			"headers": "",
+			"pathVariables": {}
 		},
 		{
-			"id": "b90dba81-5af6-d4f1-1401-be2c0da40163",
-			"headers": "",
-			"headerData": [],
+			"id": "5b91c92f-5877-4c2e-bb6a-91d58147ac29",
+			"name": "INIT - IsAlive",
 			"url": "{{URL}}/api/isalive",
-			"folder": "f1de4854-50b5-89ee-8687-7966b2dafd44",
+			"description": "",
+			"data": null,
+			"dataMode": "params",
+			"headerData": [],
+			"method": "GET",
+			"pathVariableData": [],
 			"queryParams": [],
+			"auth": null,
 			"events": [
 				{
 					"listen": "test",
@@ -487,275 +254,22 @@
 					}
 				}
 			],
-			"pathVariables": {},
-			"pathVariableData": [],
-			"method": "GET",
-			"data": null,
-			"dataMode": "params",
-			"version": 2,
-			"auth": null,
-			"time": 1518168300990,
-			"name": "INIT - IsAlive",
-			"description": "",
-			"collectionId": "ab1bfa35-24fc-94c6-34d2-995033547445",
-			"responses": [],
-			"preRequestScript": "// set global variables\npm.globals.set(\"URL\", \"http://localhost:5000\");\npm.globals.set(\"URL_SIGN\", \"http://localhost:5001\");\npm.globals.set(\"my_address\", \"GBLQWS2KU3GW67KXQKAWWAML33465ZDVOWCEVV5TU2PHXMZUA3PFQM5C\");\npm.globals.set(\"destination_address\", \"GDGUDD3WNMAZD6GQXXJXZMJKMCADEZJDA74TAQJSEEPTLNL4PYHZVM4T\");\npm.globals.set(\"my_private_key\", \"SDMJOANF6CDRHWVG3N6I34VHFEWD2KK5I5SPGFU5FDB6SY5FJNXTWN24\");\n\npm.globals.set(\"globalHelpers\", function globalHelpers() {\n    let helpers = {};\n    helpers.guid = function guid() {\n        function S4() {\n            return (((1 + Math.random()) * 0x10000) | 0).toString(16).substring(1);\n        }\n        return (S4() + S4() + \"-\" + S4() + \"-\" + S4() + \"-\" + S4() + \"-\" + S4() + S4() + S4());\n    }\n    \n    return helpers;\n} + '; globalHelpers();');",
-			"tests": "pm.test(\"IsAlive\", function () {\n    pm.response.to.have.status(200);\n});\n\n",
-			"currentHelper": null,
-			"helperAttributes": null
-		},
-		{
-			"id": "c575b9ee-c778-3621-f910-b717ba85ed94",
-			"headers": "Content-Type: application/json\n",
-			"headerData": [
-				{
-					"key": "Content-Type",
-					"value": "application/json",
-					"description": "",
-					"enabled": true
-				}
-			],
-			"url": "{{URL}}/api/transactions/broadcast",
-			"folder": "674897f3-a0a5-85f0-71ab-89be342df7f4",
-			"queryParams": [],
-			"events": [
-				{
-					"listen": "test",
-					"script": {
-						"id": "60be1f8f-450f-44df-8225-a5aa730c724a",
-						"type": "text/javascript",
-						"exec": [
-							"pm.test(\"Status code is 200\", function () {",
-							"    pm.response.to.have.status(200);",
-							"});",
-							""
-						]
-					}
-				}
-			],
-			"pathVariables": {},
-			"pathVariableData": [],
-			"method": "POST",
-			"data": [],
-			"dataMode": "raw",
-			"auth": null,
-			"time": 1518105792533,
-			"name": "transaction broadcast",
-			"description": "",
-			"collectionId": "ab1bfa35-24fc-94c6-34d2-995033547445",
-			"responses": [],
-			"isFromCollection": true,
-			"preRequestScript": null,
-			"tests": "pm.test(\"Status code is 200\", function () {\n    pm.response.to.have.status(200);\n});\n",
-			"currentHelper": null,
-			"helperAttributes": null,
-			"rawModeData": "{\n  \"operationId\": \"{{operation_id}}\",\n  \"signedTransaction\": \"{{signed_transaction}}\"\n}"
-		},
-		{
-			"id": "c7be4a2e-364a-52ad-78b8-eaa5c6cbddc4",
+			"folder": "24f88f24-df97-4546-91cd-9fa6af0a79fa",
 			"headers": "",
-			"headerData": [],
-			"url": "{{URL}}/api/balances?take=100",
-			"folder": "5be198de-eafe-867a-201a-f9ec19ee36a7",
-			"queryParams": [
-				{
-					"key": "take",
-					"value": "100",
-					"equals": true,
-					"description": "",
-					"enabled": true
-				}
-			],
-			"events": [
-				{
-					"listen": "test",
-					"script": {
-						"id": "93de7170-bd07-4ed5-b6e9-413fc3d8b7f7",
-						"type": "text/javascript",
-						"exec": [
-							"pm.test(\"Status code is 200\", function () {",
-							"    pm.response.to.have.status(200);",
-							"});",
-							"",
-							"pm.test(\"Check balance\", function () {",
-							"    var jsonData = pm.response.json();",
-							"",
-							"    var address = pm.globals.get(\"destination_address\");",
-							"    var balance = -1;",
-							"    var balanceEntry = null;",
-							"    ",
-							"    for (var item of jsonData.items) { ",
-							"        if(item.address === address) {",
-							"            balanceEntry = item;",
-							"            balance = Number(item.balance);",
-							"        }",
-							"    }",
-							"    pm.expect(balanceEntry !== null).to.be.true;",
-							"    console.info(\"Balance: \" + balance);",
-							"    pm.expect(-1).to.lt(balance);",
-							"});",
-							"",
-							""
-						]
-					}
-				},
-				{
-					"listen": "prerequest",
-					"script": {
-						"id": "69740c30-9adc-4ed6-a698-1198501646b4",
-						"type": "text/javascript",
-						"exec": [
-							"console.info(\"Waiting 60s for job to complete\");",
-							"setTimeout(function(){}, 60000);"
-						]
-					}
-				}
-			],
-			"pathVariables": {},
-			"pathVariableData": [],
-			"method": "GET",
-			"data": null,
-			"dataMode": "params",
-			"auth": null,
-			"time": 1518168473129,
-			"name": "Check balance",
-			"description": "",
-			"collectionId": "ab1bfa35-24fc-94c6-34d2-995033547445",
-			"responses": [],
-			"preRequestScript": "console.info(\"Waiting 60s for job to complete\");\nsetTimeout(function(){}, 60000);",
-			"tests": "pm.test(\"Status code is 200\", function () {\n    pm.response.to.have.status(200);\n});\n\npm.test(\"Check balance\", function () {\n    var jsonData = pm.response.json();\n\n    var address = pm.globals.get(\"destination_address\");\n    var balance = -1;\n    var balanceEntry = null;\n    \n    for (var item of jsonData.items) { \n        if(item.address === address) {\n            balanceEntry = item;\n            balance = Number(item.balance);\n        }\n    }\n    pm.expect(balanceEntry !== null).to.be.true;\n    console.info(\"Balance: \" + balance);\n    pm.expect(-1).to.lt(balance);\n});\n\n",
-			"currentHelper": null,
-			"helperAttributes": null
+			"pathVariables": {}
 		},
 		{
-			"id": "d6ee59fe-9029-70fa-fbf4-00985a8a4287",
-			"headers": "",
-			"headerData": [],
-			"url": "{{URL}}/api/addresses/invalid_address/validity",
-			"folder": "f1de4854-50b5-89ee-8687-7966b2dafd44",
-			"queryParams": [],
-			"events": [
-				{
-					"listen": "test",
-					"script": {
-						"id": "791e077a-4219-4443-8995-7acaf9b1795e",
-						"type": "text/javascript",
-						"exec": [
-							"pm.test(\"Validate invalid address\", function () {",
-							"    var jsonData = pm.response.json();",
-							"    pm.expect(false).to.eql(jsonData.isValid);",
-							"});"
-						]
-					}
-				}
-			],
-			"pathVariables": {},
-			"pathVariableData": [],
-			"method": "GET",
-			"data": null,
-			"dataMode": "params",
-			"auth": null,
-			"time": 1518123499978,
-			"name": "Address_Invalid",
-			"description": "",
-			"collectionId": "ab1bfa35-24fc-94c6-34d2-995033547445",
-			"responses": [],
-			"preRequestScript": null,
-			"tests": "pm.test(\"Validate invalid address\", function () {\n    var jsonData = pm.response.json();\n    pm.expect(false).to.eql(jsonData.isValid);\n});",
-			"currentHelper": null,
-			"helperAttributes": null
-		},
-		{
-			"id": "d8056bd2-4507-1814-a28f-99b45f17270d",
-			"headers": "",
-			"headerData": [],
-			"url": "{{URL}}/api/transactions/history/from/{{my_address}}/observation",
-			"queryParams": [],
-			"pathVariables": {},
-			"pathVariableData": [],
-			"events": [
-				{
-					"listen": "test",
-					"script": {
-						"id": "67ec9b27-6ba7-40ce-b193-1427c859f188",
-						"type": "text/javascript",
-						"exec": [
-							"pm.test(\"Status code is 200\", function () {",
-							"    pm.response.to.have.status(200);",
-							"});"
-						]
-					}
-				}
-			],
-			"auth": null,
-			"method": "POST",
-			"collectionId": "ab1bfa35-24fc-94c6-34d2-995033547445",
-			"data": null,
-			"dataMode": "params",
-			"name": "History subscribe",
-			"description": "",
-			"descriptionFormat": "html",
-			"time": 1518106510451,
-			"version": 2,
-			"responses": [],
-			"folder": "674897f3-a0a5-85f0-71ab-89be342df7f4",
-			"isFromCollection": true,
-			"preRequestScript": null,
-			"tests": "pm.test(\"Status code is 200\", function () {\n    pm.response.to.have.status(200);\n});",
-			"currentHelper": null,
-			"helperAttributes": null
-		},
-		{
-			"id": "dcf322d5-3834-30c4-9eea-0b7f59a52838",
-			"headers": "",
-			"headerData": [],
-			"url": "{{URL}}/api/assets/XLM",
-			"folder": "f1de4854-50b5-89ee-8687-7966b2dafd44",
-			"queryParams": [],
-			"events": [
-				{
-					"listen": "test",
-					"script": {
-						"id": "9c4b9fb8-23f9-4280-a321-d2c0382f47e5",
-						"type": "text/javascript",
-						"exec": [
-							"pm.test(\"Status code is 200\", function () {",
-							"    pm.response.to.have.status(200);",
-							"});",
-							"",
-							"",
-							"pm.test(\"Check Asset\", function () {",
-							"    var jsonData = pm.response.json();",
-							"    pm.expect(\"XLM\").to.eql(jsonData.assetId);",
-							"});"
-						]
-					}
-				}
-			],
-			"pathVariables": {},
-			"pathVariableData": [],
-			"method": "GET",
-			"data": null,
-			"dataMode": "params",
-			"version": 2,
-			"auth": null,
-			"time": 1518099096162,
-			"name": "Asset",
-			"description": "",
-			"collectionId": "ab1bfa35-24fc-94c6-34d2-995033547445",
-			"responses": [],
-			"preRequestScript": null,
-			"tests": "pm.test(\"Status code is 200\", function () {\n    pm.response.to.have.status(200);\n});\n\n\npm.test(\"Check Asset\", function () {\n    var jsonData = pm.response.json();\n    pm.expect(\"XLM\").to.eql(jsonData.assetId);\n});",
-			"currentHelper": null,
-			"helperAttributes": null
-		},
-		{
-			"id": "e9fc1616-bf6a-2035-f76b-676f33f50508",
-			"headers": "",
-			"headerData": [],
+			"id": "60237739-41f1-4688-a0f0-1f3b4c7054bf",
+			"name": "Add Observation",
 			"url": "{{URL}}/api/balances/{{my_address}}/observation",
-			"folder": "5be198de-eafe-867a-201a-f9ec19ee36a7",
+			"description": "",
+			"data": null,
+			"dataMode": "params",
+			"headerData": [],
+			"method": "POST",
+			"pathVariableData": [],
 			"queryParams": [],
+			"auth": null,
 			"events": [
 				{
 					"listen": "test",
@@ -771,28 +285,20 @@
 					}
 				}
 			],
-			"pathVariables": {},
-			"pathVariableData": [],
-			"method": "POST",
-			"data": null,
-			"dataMode": "params",
-			"auth": null,
-			"time": 1518123524906,
-			"name": "Add Observation",
-			"description": "",
-			"collectionId": "ab1bfa35-24fc-94c6-34d2-995033547445",
-			"responses": [],
-			"preRequestScript": null,
-			"tests": "pm.test(\"Status code is 200\", function () {\n    pm.response.to.have.status(200);\n});\n",
-			"currentHelper": null,
-			"helperAttributes": null
+			"folder": "d8f9abda-19fd-4966-b533-0b9315455813",
+			"headers": "",
+			"pathVariables": {}
 		},
 		{
-			"id": "ef9c4836-ee28-348b-3107-8f4e30eb1a14",
-			"headers": "",
-			"headerData": [],
+			"id": "67f1d29e-b381-4b03-a079-e5ec9b085f61",
+			"name": "History save last hash",
 			"url": "{{URL}}/api/transactions/history/from/{{my_address}}?take=1000",
-			"folder": "674897f3-a0a5-85f0-71ab-89be342df7f4",
+			"description": "",
+			"data": null,
+			"dataMode": "params",
+			"headerData": [],
+			"method": "GET",
+			"pathVariableData": [],
 			"queryParams": [
 				{
 					"key": "take",
@@ -802,6 +308,7 @@
 					"enabled": true
 				}
 			],
+			"auth": null,
 			"events": [
 				{
 					"listen": "test",
@@ -826,7 +333,7 @@
 				{
 					"listen": "prerequest",
 					"script": {
-						"id": "7b582811-3240-4e8c-9dfd-b3ce9cd1297c",
+						"id": "0bdec7b9-9de0-4a33-95ae-3a9b1c06e987",
 						"type": "text/javascript",
 						"exec": [
 							"console.info(\"Waiting 120s for job to complete\");",
@@ -835,28 +342,20 @@
 					}
 				}
 			],
-			"pathVariables": {},
-			"pathVariableData": [],
-			"method": "GET",
-			"data": null,
-			"dataMode": "params",
-			"auth": null,
-			"time": 1518123779273,
-			"name": "History save last hash",
-			"description": "",
-			"collectionId": "ab1bfa35-24fc-94c6-34d2-995033547445",
-			"responses": [],
-			"preRequestScript": "console.info(\"Waiting 120s for job to complete\");\nsetTimeout(function(){}, 120000);",
-			"tests": "pm.test(\"Status code is 200\", function () {\n    pm.response.to.have.status(200);\n});\n\npm.test(\"Save last hash\", function () {\n    var jsonData = pm.response.json();\n    last_hash = jsonData[jsonData.length-1].hash\n    console.info(\"Last hash: \" + last_hash);\n    pm.expect(last_hash !== null).to.be.true;\n    pm.globals.set(\"last_hash\", last_hash);\n});",
-			"currentHelper": null,
-			"helperAttributes": null
+			"folder": "5150b460-7261-46b4-abb4-f9883025c91b",
+			"headers": "",
+			"pathVariables": {}
 		},
 		{
-			"id": "f0b6233a-000a-c29c-eacf-8cad3200905b",
-			"headers": "",
-			"headerData": [],
+			"id": "697a9bbd-13f5-4f4a-b73a-dcb09234c101",
+			"name": "History check last tx",
 			"url": "{{URL}}/api/transactions/history/from/{{my_address}}?take=1000&afterHash={{last_hash}}",
-			"folder": "674897f3-a0a5-85f0-71ab-89be342df7f4",
+			"description": "",
+			"data": null,
+			"dataMode": "params",
+			"headerData": [],
+			"method": "GET",
+			"pathVariableData": [],
 			"queryParams": [
 				{
 					"key": "take",
@@ -873,6 +372,7 @@
 					"enabled": true
 				}
 			],
+			"auth": null,
 			"events": [
 				{
 					"listen": "prerequest",
@@ -906,30 +406,381 @@
 					}
 				}
 			],
-			"pathVariables": {},
-			"pathVariableData": [],
-			"method": "GET",
-			"data": null,
-			"dataMode": "params",
-			"auth": null,
-			"time": 1518128367931,
-			"name": "History check last tx",
-			"description": "",
-			"collectionId": "ab1bfa35-24fc-94c6-34d2-995033547445",
-			"responses": [],
-			"preRequestScript": "//console.info(\"Waiting 60s for job to complete\");\n//setTimeout(function(){}, 60000);",
-			"tests": "pm.test(\"Status code is 200\", function () {\n    pm.response.to.have.status(200);\n});\n\npm.test(\"Check last tx\", function () {\n    var jsonData = pm.response.json();\n    tx = jsonData[jsonData.length-1];\n    console.info(\"hash: \" + tx.hash);\n    amount = Number(tx.amount)\n    pm.expect(1).to.eql(amount);\n});",
-			"currentHelper": null,
-			"helperAttributes": null
+			"folder": "5150b460-7261-46b4-abb4-f9883025c91b",
+			"headers": "",
+			"pathVariables": {}
 		},
 		{
-			"id": "fe35cdac-bfc9-3a5e-1447-b6c5ed99e006",
-			"headers": "",
+			"id": "6afd43b4-3263-4a28-963c-5a6474ada81c",
+			"name": "transaction get",
+			"url": "{{URL}}/api/transactions/broadcast/single/{{operation_id}}",
+			"description": "",
+			"data": null,
+			"dataMode": "params",
 			"headerData": [],
-			"url": "{{URL}}/api/transactions/broadcast/{{operation_id}}",
-			"queryParams": [],
-			"pathVariables": {},
+			"method": "GET",
 			"pathVariableData": [],
+			"queryParams": [],
+			"auth": null,
+			"events": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "69f59c0c-7bff-410d-84cf-eb0301792046",
+						"type": "text/javascript",
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Check amount\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData.amount).to.eql(\"1\");",
+							"});"
+						]
+					}
+				},
+				{
+					"listen": "prerequest",
+					"script": {
+						"id": "90e6f66f-274d-4a62-884c-07ebf59b1d7f",
+						"type": "text/javascript",
+						"exec": [
+							"console.info(\"Waiting 120s for job to complete\");",
+							"setTimeout(function(){}, 120000);"
+						]
+					}
+				}
+			],
+			"folder": "5150b460-7261-46b4-abb4-f9883025c91b",
+			"headers": "",
+			"pathVariables": {}
+		},
+		{
+			"id": "6b62fbc6-3d35-40bd-ae30-cd9c09893d0d",
+			"name": "Assets",
+			"url": "{{URL}}/api/assets?take=1",
+			"description": "",
+			"data": null,
+			"dataMode": "params",
+			"headerData": [],
+			"method": "GET",
+			"pathVariableData": [],
+			"queryParams": [
+				{
+					"key": "take",
+					"value": "1",
+					"equals": true,
+					"description": "",
+					"enabled": true
+				}
+			],
+			"auth": null,
+			"events": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "c0331db9-0027-40d6-ae36-1216f69e875f",
+						"type": "text/javascript",
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"",
+							"pm.test(\"Check Assets\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    var asset = jsonData.items[0].assetId;",
+							"    pm.expect(\"XLM\").to.eql(asset);",
+							"});"
+						]
+					}
+				}
+			],
+			"folder": "24f88f24-df97-4546-91cd-9fa6af0a79fa",
+			"headers": "",
+			"pathVariables": {}
+		},
+		{
+			"id": "8575aa25-211a-43ac-a11c-9af4c4ba150a",
+			"name": "Delete Observation",
+			"url": "{{URL}}/api/balances/{{my_address}}/observation",
+			"description": "",
+			"data": null,
+			"dataMode": "params",
+			"headerData": [],
+			"method": "DELETE",
+			"pathVariableData": [],
+			"queryParams": [],
+			"auth": null,
+			"events": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "4c231e89-db11-4d78-9fd1-0dcf136adcb1",
+						"type": "text/javascript",
+						"exec": [
+							"pm.test(\"Status code is 200 or 204\", function () {",
+							"    console.info(\"Status: \" + pm.response.code);",
+							"    pm.expect(pm.response.code).to.be.oneOf([200,204]);",
+							"});"
+						]
+					}
+				}
+			],
+			"folder": "d8f9abda-19fd-4966-b533-0b9315455813",
+			"headers": "",
+			"pathVariables": {}
+		},
+		{
+			"id": "90e4a3dd-920b-4f96-88e5-9a9fb079b09b",
+			"name": "transaction single",
+			"url": "{{URL}}/api/transactions/single",
+			"description": "",
+			"data": [],
+			"dataMode": "raw",
+			"headerData": [
+				{
+					"key": "Content-Type",
+					"value": "application/json",
+					"description": "",
+					"enabled": true
+				}
+			],
+			"method": "POST",
+			"pathVariableData": [],
+			"queryParams": [],
+			"auth": null,
+			"events": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"id": "9dd0b9a2-2a45-4b22-9e44-2bf40fc45753",
+						"type": "text/javascript",
+						"exec": [
+							"var helpers = eval(pm.globals.get(\"globalHelpers\"));",
+							"var uuid = helpers.guid();",
+							"",
+							"pm.globals.set(\"operation_id\", uuid);"
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"id": "fb4623a2-2a6e-4648-a41f-efbcaed02e0f",
+						"type": "text/javascript",
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"    var jsonData = pm.response.json();",
+							"    ",
+							"    var context = jsonData.transactionContext;",
+							"    pm.expect(context !== undefined).to.be.true;",
+							"    ",
+							"    pm.globals.set(\"transaction_context\", context);",
+							"});",
+							""
+						]
+					}
+				}
+			],
+			"folder": "5150b460-7261-46b4-abb4-f9883025c91b",
+			"rawModeData": "{\n  \"operationId\": \"{{operation_id}}\",\n  \"fromAddress\": \"{{my_address}}\",\n  \"toAddress\": \"{{destination_address}}\",\n  \"assetId\": \"XLM\",\n  \"amount\": \"1\",\n  \"includeFee\": false\n}",
+			"headers": "Content-Type: application/json\n",
+			"pathVariables": {}
+		},
+		{
+			"id": "a7a7dbaa-d7ff-4f19-a187-46ace518d4a2",
+			"name": "transaction sign",
+			"url": "{{URL_SIGN}}/api/sign",
+			"description": "",
+			"data": [],
+			"dataMode": "raw",
+			"headerData": [
+				{
+					"key": "Content-Type",
+					"value": "application/json",
+					"description": "",
+					"enabled": true
+				}
+			],
+			"method": "POST",
+			"pathVariableData": [],
+			"queryParams": [],
+			"auth": null,
+			"events": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "e748385e-d856-4039-b1a7-8734d8540b4f",
+						"type": "text/javascript",
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"    ",
+							"    var jsonData = pm.response.json();",
+							"    var tx = jsonData.signedTransaction;",
+							"    pm.expect(tx !== undefined).to.be.true;",
+							"",
+							"    pm.globals.set(\"signed_transaction\", tx);",
+							"});"
+						]
+					}
+				}
+			],
+			"folder": "5150b460-7261-46b4-abb4-f9883025c91b",
+			"rawModeData": "{\r\n  \"privateKeys\": [\r\n    \"{{my_private_key}}\"\r\n  ],\r\n  \"transactionContext\": '{{transaction_context}}'\r\n}",
+			"headers": "Content-Type: application/json\n",
+			"pathVariables": {}
+		},
+		{
+			"id": "ace5b19b-ba7f-47e7-9339-9aab509783c3",
+			"name": "History subscribe",
+			"url": "{{URL}}/api/transactions/history/from/{{my_address}}/observation",
+			"description": "",
+			"data": null,
+			"dataMode": "params",
+			"headerData": [],
+			"method": "POST",
+			"pathVariableData": [],
+			"queryParams": [],
+			"auth": null,
+			"events": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "67ec9b27-6ba7-40ce-b193-1427c859f188",
+						"type": "text/javascript",
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});"
+						]
+					}
+				}
+			],
+			"folder": "5150b460-7261-46b4-abb4-f9883025c91b",
+			"headers": "",
+			"pathVariables": {}
+		},
+		{
+			"id": "b4c84f96-0478-4483-bb80-5abc765398a5",
+			"name": "Capabilities",
+			"url": "{{URL}}/api/capabilities",
+			"description": "",
+			"data": null,
+			"dataMode": "params",
+			"headerData": [],
+			"method": "GET",
+			"pathVariableData": [],
+			"queryParams": [],
+			"auth": null,
+			"events": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "f534a070-ee2a-4196-9b13-50c654775eba",
+						"type": "text/javascript",
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});"
+						]
+					}
+				}
+			],
+			"folder": "24f88f24-df97-4546-91cd-9fa6af0a79fa",
+			"headers": "",
+			"pathVariables": {}
+		},
+		{
+			"id": "b902b8be-95ad-4d5c-a4e8-cf917d46132e",
+			"name": "Asset",
+			"url": "{{URL}}/api/assets/XLM",
+			"description": "",
+			"data": null,
+			"dataMode": "params",
+			"headerData": [],
+			"method": "GET",
+			"pathVariableData": [],
+			"queryParams": [],
+			"auth": null,
+			"events": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "9c4b9fb8-23f9-4280-a321-d2c0382f47e5",
+						"type": "text/javascript",
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"",
+							"pm.test(\"Check Asset\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(\"XLM\").to.eql(jsonData.assetId);",
+							"});"
+						]
+					}
+				}
+			],
+			"folder": "24f88f24-df97-4546-91cd-9fa6af0a79fa",
+			"headers": "",
+			"pathVariables": {}
+		},
+		{
+			"id": "bd912e56-4455-4eb1-baf8-ed6675acbc2b",
+			"name": "transaction broadcast",
+			"url": "{{URL}}/api/transactions/broadcast",
+			"description": "",
+			"data": [],
+			"dataMode": "raw",
+			"headerData": [
+				{
+					"key": "Content-Type",
+					"value": "application/json",
+					"description": "",
+					"enabled": true
+				}
+			],
+			"method": "POST",
+			"pathVariableData": [],
+			"queryParams": [],
+			"auth": null,
+			"events": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "60be1f8f-450f-44df-8225-a5aa730c724a",
+						"type": "text/javascript",
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							""
+						]
+					}
+				}
+			],
+			"folder": "5150b460-7261-46b4-abb4-f9883025c91b",
+			"rawModeData": "{\n  \"operationId\": \"{{operation_id}}\",\n  \"signedTransaction\": \"{{signed_transaction}}\"\n}",
+			"headers": "Content-Type: application/json\n",
+			"pathVariables": {}
+		},
+		{
+			"id": "ccd24b91-6f5d-4ff6-9438-902ce0b396c4",
+			"name": "transaction delete",
+			"url": "{{URL}}/api/transactions/broadcast/{{operation_id}}",
+			"description": "",
+			"data": null,
+			"dataMode": "params",
+			"headerData": [],
+			"method": "DELETE",
+			"pathVariableData": [],
+			"queryParams": [],
+			"auth": null,
 			"events": [
 				{
 					"listen": "test",
@@ -944,23 +795,39 @@
 					}
 				}
 			],
-			"auth": null,
-			"method": "DELETE",
-			"collectionId": "ab1bfa35-24fc-94c6-34d2-995033547445",
+			"folder": "5150b460-7261-46b4-abb4-f9883025c91b",
+			"headers": "",
+			"pathVariables": {}
+		},
+		{
+			"id": "db2c3b95-085e-4ff9-a828-be87982394de",
+			"name": "History delete subscription",
+			"url": "{{URL}}//api/transactions/history/from/{{my_address}}/observation",
+			"description": "",
 			"data": null,
 			"dataMode": "params",
-			"name": "transaction delete",
-			"description": "",
-			"descriptionFormat": "html",
-			"time": 1518105920307,
-			"version": 2,
-			"responses": [],
-			"folder": "674897f3-a0a5-85f0-71ab-89be342df7f4",
-			"isFromCollection": true,
-			"preRequestScript": null,
-			"tests": "pm.test(\"Status code is 200\", function () {\n    pm.response.to.have.status(200);\n});",
-			"currentHelper": null,
-			"helperAttributes": null
+			"headerData": [],
+			"method": "DELETE",
+			"pathVariableData": [],
+			"queryParams": [],
+			"auth": null,
+			"events": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "231c8bae-2b5b-4077-ba71-11eef41e00ce",
+						"type": "text/javascript",
+						"exec": [
+							"pm.test(\"Status code is 200 or 204\", function () {",
+							"    pm.expect(pm.response.code).to.be.oneOf([200,204]);",
+							"});"
+						]
+					}
+				}
+			],
+			"folder": "5150b460-7261-46b4-abb4-f9883025c91b",
+			"headers": "",
+			"pathVariables": {}
 		}
 	]
 }
