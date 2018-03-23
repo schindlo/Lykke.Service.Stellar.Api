@@ -137,6 +137,8 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
 
             var toKeyPair = KeyPair.FromAddress(toAddress);
 
+            var transferableBalance = from.Balance - from.MinBalance;
+
             StellarBase.Operation operation;
             if (await _horizonService.AccountExists(toAddress))
             {
@@ -144,6 +146,12 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
                 operation = new PaymentOperation.Builder(toKeyPair, asset, amount)
                                                 .SetSourceAccount(fromKeyPair)
                                                 .Build();
+            }
+            if (amount > transferableBalance)
+            {
+                operation = new AccountMergeOperation.Builder(toKeyPair)
+                                            .SetSourceAccount(fromKeyPair)
+                                            .Build();
             }
             else
             {
