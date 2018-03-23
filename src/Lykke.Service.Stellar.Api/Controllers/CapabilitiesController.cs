@@ -21,7 +21,11 @@ namespace Lykke.Service.Stellar.Api.Controllers
             {
                 IsTransactionsRebuildingSupported = false,
                 AreManyInputsSupported = false,
-                AreManyOutputsSupported = false
+                AreManyOutputsSupported = false,
+                CanReturnExplorerUrl = false,
+                IsTestingTransfersSupported = false,
+                IsPublicAddressExtensionRequired = true,
+                IsReceiveTransactionRequired = false
             });
         }
 

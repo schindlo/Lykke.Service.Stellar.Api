@@ -98,6 +98,12 @@ namespace Lykke.Service.Stellar.Api.Controllers
             });
         }
 
+        [HttpPost("single/receive")]
+        public IActionResult ReceiveSingle([Required, FromBody] BuildSingleReceiveTransactionRequest request)
+        {
+            return new StatusCodeResult(StatusCodes.Status501NotImplemented);
+        }
+
         [HttpPost("broadcast")]
         public async Task<IActionResult> Broadcast([Required, FromBody] BroadcastTransactionRequest request)
         {

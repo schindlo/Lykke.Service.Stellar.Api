@@ -1,9 +1,11 @@
 ﻿using System.Net;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Mvc;
 using Lykke.Service.Stellar.Api.Core.Services;
 using Lykke.Service.BlockchainApi.Contract.Addresses;
 using Swashbuckle.AspNetCore.SwaggerGen;
+using Microsoft.AspNetCore.Http;
 
 namespace Lykke.Service.Stellar.Api.Controllers
 {
@@ -21,7 +23,6 @@ namespace Lykke.Service.Stellar.Api.Controllers
         /// Check wallet address validity
         /// </summary>
         [HttpGet("{address}/validity")]
-        [SwaggerOperation("addresses/")]
         [ProducesResponseType(typeof(AddressValidationResponse), (int)HttpStatusCode.OK)]
         public IActionResult Validity([Required] string address)
         {
@@ -31,5 +32,11 @@ namespace Lykke.Service.Stellar.Api.Controllers
             });
         }
 
+        [HttpGet("{address}/explorer-url")]
+        [ProducesResponseType(typeof(List<string>), (int)HttpStatusCode.OK)]
+        public IActionResult GetExplorerUrl([Required] string address)
+        {
+            return new StatusCodeResult(StatusCodes.Status501NotImplemented);
+        }
     }
 }
