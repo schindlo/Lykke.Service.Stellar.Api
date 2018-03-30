@@ -8,7 +8,7 @@ namespace Lykke.Service.Stellar.Api.Core.Domain
 
         public class PublicAddressExtension
         {
-            public const char Separator = '?';
+            public const char Separator = '$';
 
             public const string DisplayName = "MEMO_TEXT";
         }
