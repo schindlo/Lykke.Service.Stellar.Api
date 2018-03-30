@@ -31,17 +31,29 @@ namespace Lykke.Service.Stellar.Api.Services
             _batchSize = batchSize;
         }
 
-        public bool IsAddressValid(string address)
+        public bool IsAddressValid(string address, out bool hasExtension)
         {
+            hasExtension = false;
+
+            var parts = address.Split(Constants.PublicAddressExtension.Separator);
             try
             {
-                StrKey.DecodeCheck(VersionByte.ed25519Publickey, address);
-                return true;
+                var baseAddress = parts[0];
+                StrKey.DecodeCheck(VersionByte.ed25519Publickey, baseAddress);
             }
             catch (Exception)
             {
                 return false;
             }
+
+            if (parts.Length > 1)
+            {
+                var extension = parts[1];
+                hasExtension = true;
+
+            }
+
+            return true;
         }
 
         public async Task<AddressBalance> GetAddressBalanceAsync(string address, Fees fees = null)

@@ -29,7 +29,8 @@ namespace Lykke.Service.Stellar.Api.Controllers
         [ProducesResponseType(typeof(ErrorResponse), (int)HttpStatusCode.BadRequest)]
         public async Task<IActionResult> AddAddressToIncomingObservationList(string address)
         {
-            if (!_balanceService.IsAddressValid(address))
+            bool hasExtension;
+            if (!_balanceService.IsAddressValid(address, out hasExtension))
             {
                 return BadRequest(ErrorResponse.Create("Invalid parameter").AddModelError("address", "Address must be valid"));
             }
@@ -48,7 +49,8 @@ namespace Lykke.Service.Stellar.Api.Controllers
         [ProducesResponseType(typeof(ErrorResponse), (int)HttpStatusCode.BadRequest)]
         public async Task<IActionResult> AddAddressToOutgoingObservationList(string address)
         {
-            if (!_balanceService.IsAddressValid(address))
+            bool hasExtension;
+            if (!_balanceService.IsAddressValid(address, out hasExtension))
             {
                 return BadRequest(ErrorResponse.Create("Invalid parameter").AddModelError("address", "Address must be valid"));
             }
@@ -67,7 +69,8 @@ namespace Lykke.Service.Stellar.Api.Controllers
         [ProducesResponseType(typeof(ErrorResponse), (int)HttpStatusCode.BadRequest)]
         public async Task<IActionResult> DeleteAddressFromIncomingObservationList(string address)
         {
-            if (!_balanceService.IsAddressValid(address))
+            bool hasExtension;
+            if (!_balanceService.IsAddressValid(address, out hasExtension))
             {
                 return BadRequest(ErrorResponse.Create("Invalid parameter").AddModelError("address", "Address must be valid"));
             }
@@ -86,7 +89,8 @@ namespace Lykke.Service.Stellar.Api.Controllers
         [ProducesResponseType(typeof(ErrorResponse), (int)HttpStatusCode.BadRequest)]
         public async Task<IActionResult> DeleteAddressFromOutgoingObservationList(string address)
         {
-            if (!_balanceService.IsAddressValid(address))
+            bool hasExtension;
+            if (!_balanceService.IsAddressValid(address, out hasExtension))
             {
                 return BadRequest(ErrorResponse.Create("Invalid parameter").AddModelError("address", "Address must be valid"));
             }
@@ -108,7 +112,8 @@ namespace Lykke.Service.Stellar.Api.Controllers
             {
                 return BadRequest(ErrorResponse.Create("Invalid parameter").AddModelError("take", "Must be positive non zero integer"));
             }
-            if (!_balanceService.IsAddressValid(address))
+            bool hasExtension;
+            if (!_balanceService.IsAddressValid(address, out hasExtension))
             {
                 return BadRequest(ErrorResponse.Create("Invalid parameter").AddModelError("address", "Address must be valid"));
             }
@@ -130,7 +135,8 @@ namespace Lykke.Service.Stellar.Api.Controllers
             {
                 return BadRequest(ErrorResponse.Create("Invalid parameter").AddModelError("take", "Must be positive non zero integer"));
             }
-            if (!_balanceService.IsAddressValid(address))
+            bool hasExtension;
+            if (!_balanceService.IsAddressValid(address, out hasExtension))
             {
                 return BadRequest(ErrorResponse.Create("Invalid parameter").AddModelError("address", "Address must be valid"));
             }

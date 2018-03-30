@@ -43,12 +43,13 @@ namespace Lykke.Service.Stellar.Api.Controllers
             }
             else
             {
-                if (!_balanceService.IsAddressValid(request.FromAddress))
+                bool hasExtension;
+                if (!_balanceService.IsAddressValid(request.FromAddress, out hasExtension))
                 {
                     return BadRequest(ErrorResponse.Create($"{nameof(request.FromAddress)} is not a valid"));
                 }
 
-                if (!_balanceService.IsAddressValid(request.ToAddress))
+                if (!_balanceService.IsAddressValid(request.ToAddress, out hasExtension))
                 {
                     return BadRequest(ErrorResponse.Create($"{nameof(request.ToAddress)} is not a valid"));
                 }

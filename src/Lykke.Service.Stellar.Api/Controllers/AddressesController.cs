@@ -26,9 +26,10 @@ namespace Lykke.Service.Stellar.Api.Controllers
         [ProducesResponseType(typeof(AddressValidationResponse), (int)HttpStatusCode.OK)]
         public IActionResult Validity([Required] string address)
         {
+            bool hasExtension;
             return Ok(new AddressValidationResponse
             {
-                IsValid = _balanceService.IsAddressValid(address)
+                IsValid = _balanceService.IsAddressValid(address, out hasExtension)
             });
         }
 
