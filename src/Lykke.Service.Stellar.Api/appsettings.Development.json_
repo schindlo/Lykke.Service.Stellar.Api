@@ -5,6 +5,7 @@
       "DataConnString": "UseDevelopmentStorage=true"
     },
     "HorizonUrl": "https://horizon-testnet.stellar.org/",
+    "DepositBaseAddress": "",
     "WalletBalanceJobPeriodSeconds": 30,
     "TransactionHistoryJobPeriodSeconds": 120,
     "BroadcastInProgressJobPeriodSeconds": 120,

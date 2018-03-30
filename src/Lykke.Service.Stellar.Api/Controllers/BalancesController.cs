@@ -1,6 +1,7 @@
-﻿using System.Collections.Generic;
-using System.Threading.Tasks;
+﻿using System;
 using System.Net;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Http;
@@ -79,6 +80,15 @@ namespace Lykke.Service.Stellar.Api.Controllers
             if (!_balanceService.IsAddressValid(address, out hasExtension))
             {
                 return BadRequest(ErrorResponse.Create("Invalid parameter").AddModelError("address", "Address must be valid"));
+            }
+            var baseAddress = _balanceService.GetBaseAddress(address);
+            if (!_balanceService.GetDepositBaseAddress().Equals(baseAddress, StringComparison.OrdinalIgnoreCase))
+            {
+                return BadRequest(ErrorResponse.Create("Invalid parameter").AddModelError("address", $"Address must match configured deposit base address. expected={_balanceService.GetDepositBaseAddress()}"));
+            }
+            if (!hasExtension)
+            {
+                return BadRequest(ErrorResponse.Create("Invalid parameter").AddModelError("address", "Address must have public address extension"));
             }
             var exists = await _balanceService.IsBalanceObservedAsync(address);
             if (exists)

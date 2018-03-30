@@ -13,8 +13,6 @@ namespace Lykke.Service.Stellar.Api.Services
 {
     public class BalanceService : IBalanceService
     {
-        private int _batchSize;
-
         private string _lastJobError;
 
         private readonly IHorizonService _horizonService;
@@ -22,13 +20,17 @@ namespace Lykke.Service.Stellar.Api.Services
         private readonly IWalletBalanceRepository _walletBalanceRepository;
         private readonly ILog _log;
 
-        public BalanceService(IHorizonService horizonService, IObservationRepository<BalanceObservation> observationRepository, IWalletBalanceRepository walletBalanceRepository, ILog log, int batchSize)
+        private readonly int _batchSize;
+        private readonly string _depositBaseAddress;
+
+        public BalanceService(IHorizonService horizonService, IObservationRepository<BalanceObservation> observationRepository, IWalletBalanceRepository walletBalanceRepository, ILog log, int batchSize, string depositBaseAddress)
         {
             _horizonService = horizonService;
             _observationRepository = observationRepository;
             _walletBalanceRepository = walletBalanceRepository;
             _log = log;
             _batchSize = batchSize;
+            _depositBaseAddress = depositBaseAddress;
         }
 
         public bool IsAddressValid(string address, out bool hasExtension)
@@ -46,7 +48,7 @@ namespace Lykke.Service.Stellar.Api.Services
                 return false;
             }
 
-            if (parts.Length > 1)
+            if (parts.Length > 1 && !string.IsNullOrWhiteSpace(parts[1]))
             {
                 var extension = parts[1];
                 hasExtension = true;
@@ -54,6 +56,16 @@ namespace Lykke.Service.Stellar.Api.Services
             }
 
             return true;
+        }
+
+        public string GetDepositBaseAddress()
+        {
+            return _depositBaseAddress;
+        }
+
+        public string GetBaseAddress(string address)
+        {
+            return address.Split(Constants.PublicAddressExtension.Separator)[0];
         }
 
         public async Task<AddressBalance> GetAddressBalanceAsync(string address, Fees fees = null)

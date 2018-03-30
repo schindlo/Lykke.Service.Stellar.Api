@@ -9,6 +9,10 @@ namespace Lykke.Service.Stellar.Api.Core.Services
     {
         bool IsAddressValid(string address, out bool hasExtension);
 
+        string GetDepositBaseAddress();
+
+        string GetBaseAddress(string address);
+
         Task<AddressBalance> GetAddressBalanceAsync(string address, Fees fees = null);
 
         Task<bool> IsBalanceObservedAsync(string address);
