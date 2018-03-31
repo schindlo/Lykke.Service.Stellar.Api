@@ -142,22 +142,32 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
             StellarBase.Operation operation;
             if (await _horizonService.AccountExists(toAddress))
             {
-                var asset = new StellarBase.Asset();
-                operation = new PaymentOperation.Builder(toKeyPair, asset, amount)
-                                                .SetSourceAccount(fromKeyPair)
-                                                .Build();
-            }
-            if (amount > transferableBalance)
-            {
-                operation = new AccountMergeOperation.Builder(toKeyPair)
-                                            .SetSourceAccount(fromKeyPair)
-                                            .Build();
+                if (amount <= transferableBalance)
+                {
+                    var asset = new StellarBase.Asset();
+                    operation = new PaymentOperation.Builder(toKeyPair, asset, amount)
+                                                    .SetSourceAccount(fromKeyPair)
+                                                    .Build();
+                }
+                else
+                {
+                    operation = new AccountMergeOperation.Builder(toKeyPair)
+                                                         .SetSourceAccount(fromKeyPair)
+                                                         .Build();
+                }
             }
             else
             {
-                operation = new CreateAccountOperation.Builder(toKeyPair, amount)
+                if (amount <= transferableBalance)
+                {
+                    operation = new CreateAccountOperation.Builder(toKeyPair, amount)
                                                       .SetSourceAccount(fromKeyPair)
                                                       .Build();
+                }
+                else
+                {
+                    throw new BusinessException($"Currently not possible to transfer entire balance to an unused account! Use a destination in existance. transferable={transferableBalance}");
+                }
             }
 
             fromAccount.IncrementSequenceNumber();
