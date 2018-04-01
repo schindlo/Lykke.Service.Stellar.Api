@@ -150,7 +150,6 @@ namespace Lykke.Service.Stellar.Api.Controllers
             {
                 ret.Add(new StellarHistoricalTransactionContract
                 {
-                    OperationId = tx.OperationId.HasValue ? tx.OperationId.Value : Guid.Empty,
                     Timestamp = tx.CreatedAt,
                     FromAddress = tx.FromAddress,
                     ToAddress = tx.ToAddress,
