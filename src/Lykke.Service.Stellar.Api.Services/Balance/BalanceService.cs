@@ -158,14 +158,7 @@ namespace Lykke.Service.Stellar.Api.Services
             try
             {
                 var addressBalance = await GetAddressBalanceAsync(address);
-                if (addressBalance == null)
-                {
-                    await _log.WriteWarningAsync(nameof(BalanceService), nameof(ProcessWallet),
-                        $"Address not found. address={address}");
-                    return;
-                }
-
-                if (addressBalance.Balance > 0)
+                if (addressBalance != null && addressBalance.Balance > 0)
                 {
                     var walletEntry = await _walletBalanceRepository.GetAsync(address);
                     if (walletEntry == null)

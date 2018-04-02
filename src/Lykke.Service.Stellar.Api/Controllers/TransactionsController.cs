@@ -83,7 +83,7 @@ namespace Lykke.Service.Stellar.Api.Controllers
                     requiredBalance = amount + fees.BaseFee;
                 };
 
-                var availableBalance = fromAddressBalance.Balance;
+                var availableBalance = fromAddressBalance?.Balance ?? 0;
                 if (requiredBalance > availableBalance)
                 {
                     return BadRequest(StellarErrorResponse.Create($"Not enough balance to create transaction. required={requiredBalance}, available={availableBalance}"
