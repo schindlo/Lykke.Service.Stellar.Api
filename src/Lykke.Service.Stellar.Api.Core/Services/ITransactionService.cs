@@ -18,7 +18,7 @@ namespace Lykke.Service.Stellar.Api.Core.Services
 
         Task<TxBuild> GetTxBuildAsync(Guid operationId);
 
-        Task<string> BuildTransactionAsync(Guid operationId, AddressBalance from, string toAddress, long amount);
+        Task<string> BuildTransactionAsync(Guid operationId, AddressBalance from, string toAddress, string memoText, long amount);
 
         Task<int> UpdateBroadcastsInProgress();
 

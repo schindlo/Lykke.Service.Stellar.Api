@@ -43,15 +43,28 @@ namespace Lykke.Service.Stellar.Api.Controllers
             }
             else
             {
-                bool hasExtension;
-                if (!_balanceService.IsAddressValid(request.FromAddress, out hasExtension))
+                bool fromAddressHasExtension;
+                if (!_balanceService.IsAddressValid(request.FromAddress, out fromAddressHasExtension))
                 {
                     return BadRequest(ErrorResponse.Create($"{nameof(request.FromAddress)} is not a valid"));
                 }
-
-                if (!_balanceService.IsAddressValid(request.ToAddress, out hasExtension))
+                bool toAddressHasExtension;
+                if (!_balanceService.IsAddressValid(request.ToAddress, out toAddressHasExtension))
                 {
                     return BadRequest(ErrorResponse.Create($"{nameof(request.ToAddress)} is not a valid"));
+                }
+
+                var fromBaseAddress = _balanceService.GetBaseAddress(request.FromAddress);
+                if (fromAddressHasExtension)
+                {
+                    if (!fromBaseAddress.Equals(_balanceService.GetDepositBaseAddress(), StringComparison.OrdinalIgnoreCase))
+                    {
+                        return BadRequest(ErrorResponse.Create($"{nameof(request.FromAddress)} is not a valid. Public address extension allowed for deposit base address only!"));
+                    }
+                    else if (!request.ToAddress.Equals(_balanceService.GetDepositBaseAddress(), StringComparison.OrdinalIgnoreCase))
+                    {
+                        return BadRequest(ErrorResponse.Create($"{nameof(request.ToAddress)} is not a valid. Deposit base address allowed as destination only, when sending from address with public address extension!"));
+                    }
                 }
 
                 if (request.AssetId != Asset.Stellar.Id)
@@ -90,7 +103,7 @@ namespace Lykke.Service.Stellar.Api.Controllers
                                                                   , BlockchainErrorCode.NotEnoughtBalance));
                 }
 
-                xdrBase64 = await _transactionService.BuildTransactionAsync(request.OperationId, fromAddressBalance, request.ToAddress, amount);
+                xdrBase64 = await _transactionService.BuildTransactionAsync(request.OperationId, fromAddressBalance, request.ToAddress, null, amount);
             }
 
             return Ok(new BuildTransactionResponse

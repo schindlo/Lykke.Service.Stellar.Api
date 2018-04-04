@@ -130,7 +130,7 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
             return await _buildRepository.GetAsync(operationId);
         }
 
-        public async Task<string> BuildTransactionAsync(Guid operationId, AddressBalance from, string toAddress, long amount)
+        public async Task<string> BuildTransactionAsync(Guid operationId, AddressBalance from, string toAddress, string memoText, long amount)
         {
             var fromKeyPair = KeyPair.FromAddress(from.Address);
             var fromAccount = new Account(fromKeyPair, from.Sequence);
@@ -172,9 +172,14 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
 
             fromAccount.IncrementSequenceNumber();
 
-            var tx = new StellarBase.Transaction.Builder(fromAccount)
-                                    .AddOperation(operation)
-                                    .Build();
+            var builder = new StellarBase.Transaction.Builder(fromAccount)
+                                         .AddOperation(operation);
+            if (!string.IsNullOrWhiteSpace(memoText))
+            {
+                var memo = StellarBase.Memo.MemoText(memoText);
+                builder = builder.AddMemo(memo);
+            }
+            var tx = builder.Build();
 
             var xdr = tx.ToXDR();
             var writer = new ByteWriter();
