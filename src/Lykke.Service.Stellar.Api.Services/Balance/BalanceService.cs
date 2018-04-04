@@ -8,6 +8,9 @@ using Lykke.Service.Stellar.Api.Core.Domain.Balance;
 using Lykke.Service.Stellar.Api.Core.Services;
 using Lykke.Service.Stellar.Api.Core.Domain;
 using Lykke.Service.Stellar.Api.Core.Domain.Observation;
+using Lykke.Service.Stellar.Api.Core;
+using StellarBase.Generated;
+using Lykke.Service.Stellar.Api.Core.Exceptions;
 
 namespace Lykke.Service.Stellar.Api.Services
 {
@@ -81,7 +84,7 @@ namespace Lykke.Service.Stellar.Api.Services
             {
                 Address = address
             };
-            result.Sequence = Int64.Parse(accountDetails.Sequence);
+            result.Sequence = long.Parse(accountDetails.Sequence);
 
             var nativeBalance = accountDetails.Balances.Single(b => Core.Domain.Asset.Stellar.TypeName.Equals(b.AssetType, StringComparison.OrdinalIgnoreCase));
             result.Balance = Convert.ToInt64(Decimal.Parse(nativeBalance.Balance) * One.Value);
@@ -125,17 +128,15 @@ namespace Lykke.Service.Stellar.Api.Services
             int count = 0;
             try
             {
-                string continuationToken = null;
+                string cursor = await _walletBalanceRepository.GetCurrentPagingToken();
+
                 do
                 {
-                    var observations = await _observationRepository.GetAllAsync(_batchSize, continuationToken);
-                    foreach (var item in observations.Items)
-                    {
-                        await ProcessWallet(item.Address);
-                        count++;
-                    }
-                    continuationToken = observations.ContinuationToken;
-                } while (continuationToken != null);
+                    var result = await ProcessDeposits(cursor);
+                    count += result.Count;
+                    cursor = result.Cursor;
+                }
+                while (!string.IsNullOrEmpty(cursor));
 
                 _lastJobError = null;
             }
@@ -148,43 +149,102 @@ namespace Lykke.Service.Stellar.Api.Services
             return count;
         }
 
+        private async Task<(int Count, string Cursor)> ProcessDeposits(string cursor)
+        {
+            var transactions = await _horizonService.GetTransactions(_depositBaseAddress, StellarSdkConstants.OrderAsc, cursor);
+
+            int count = 0;
+            cursor = null;
+            foreach (var transaction in transactions)
+            {
+                try
+                {
+                    cursor = transaction.PagingToken;
+                    count++;
+
+                    // skip outgoing transactions and transactions without memo
+                    string memo = _horizonService.GetMemo(transaction);
+                    if (_depositBaseAddress.Equals(transaction.SourceAccount, StringComparison.OrdinalIgnoreCase) ||
+                        string.IsNullOrWhiteSpace(memo))
+                    {
+                        continue;
+                    }
+
+                    var xdr = Convert.FromBase64String(transaction.EnvelopeXdr);
+                    var reader = new ByteReader(xdr);
+                    var txEnvelope = TransactionEnvelope.Decode(reader);
+                    var tx = txEnvelope.Tx;
+
+                    for (short i = 0; i < tx.Operations.Length; i++)
+                    {
+                        var operation = tx.Operations[i];
+                        var operationType = operation.Body.Discriminant.InnerValue;
+
+                        string toAddress = null;
+                        long amount = 0;
+                        if (operationType == OperationType.OperationTypeEnum.PAYMENT)
+                        {
+                            var op = operation.Body.PaymentOp;
+                            if (op.Asset.Discriminant.InnerValue == AssetType.AssetTypeEnum.ASSET_TYPE_NATIVE)
+                            {
+                                var keyPair = KeyPair.FromXdrPublicKey(op.Destination.InnerValue);
+                                toAddress = keyPair.Address;
+                                amount = op.Amount.InnerValue;
+                            }
+                        }
+                        else if (operationType == OperationType.OperationTypeEnum.ACCOUNT_MERGE)
+                        {
+                            var op = operation.Body;
+                            var keyPair = KeyPair.FromXdrPublicKey(op.Destination.InnerValue);
+                            toAddress = keyPair.Address;
+                            amount = _horizonService.GetAccountMergeAmount(transaction.ResultXdr, i);
+                        }
+
+                        if (toAddress != null && amount > 0)
+                        {
+                            var addressWithExtension = $"{toAddress}{Constants.PublicAddressExtension.Separator}{memo}";
+                            var observation = await _observationRepository.GetAsync(addressWithExtension);
+                            if (observation == null)
+                            {
+                                continue;    
+                            }
+
+                            var walletEntry = await _walletBalanceRepository.GetAsync(addressWithExtension);
+                            if (walletEntry == null)
+                            {
+                                walletEntry = new WalletBalance
+                                {
+                                    Address = addressWithExtension
+                                };
+                            }
+                            if (transaction.Ledger > walletEntry.Ledger && i <= walletEntry.OperationCount)
+                            {
+                                walletEntry.Balance += amount;
+                                walletEntry.Ledger = transaction.Ledger;
+                                walletEntry.OperationCount = i + 1;
+
+                                await _walletBalanceRepository.InsertOrReplaceAsync(walletEntry);
+                            }
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    throw new BusinessException($"Failed to process transaction. hash={transaction?.Hash}", ex);
+                }
+            }
+
+            if (!string.IsNullOrEmpty(cursor))
+            {
+                await _walletBalanceRepository.SetCurrentPagingToken(cursor);
+            }
+
+            return (count, cursor);
+        }
+
         public string GetLastJobError()
         {
             return _lastJobError;
-        }
-
-        private async Task ProcessWallet(string address)
-        {
-            try
-            {
-                var addressBalance = await GetAddressBalanceAsync(address);
-                if (addressBalance != null && addressBalance.Balance > 0)
-                {
-                    var walletEntry = await _walletBalanceRepository.GetAsync(address);
-                    if (walletEntry == null)
-                    {
-                        walletEntry = new WalletBalance
-                        {
-                            Address = address
-                        };
-                    }
-                    if (walletEntry.Balance != addressBalance.Balance)
-                    {
-                        walletEntry.Balance = addressBalance.Balance;
-                        walletEntry.Ledger = await _horizonService.GetLedgerNoOfLastPayment(address);
-                        await _walletBalanceRepository.InsertOrReplaceAsync(walletEntry);
-                    }
-                }
-                else
-                {
-                    await _walletBalanceRepository.DeleteIfExistAsync(address);
-                }
-            }
-            catch (Exception ex)
-            {
-                await _log.WriteErrorAsync(nameof(BalanceService), nameof(ProcessWallet),
-                                           $"Failed to process wallet during balance update. address={address}", ex);
-            }
         }
     }
 }

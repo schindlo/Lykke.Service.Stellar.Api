@@ -173,5 +173,17 @@ namespace Lykke.Service.Stellar.Api.Services.Horizon
             var paymentOp = txEnvelope.Tx.Operations[0].Body.PaymentOp;
             return paymentOp;
         }
+
+        public string GetMemo(TransactionDetails tx)
+        {
+            if ((StellarSdkConstants.MemoTextTypeName.Equals(tx.MemoType, StringComparison.OrdinalIgnoreCase) ||
+                StellarSdkConstants.MemoIdTypeName.Equals(tx.MemoType, StringComparison.OrdinalIgnoreCase)) &&
+                !string.IsNullOrEmpty(tx.Memo))
+            {
+                return tx.Memo;
+            }
+
+            return null;
+        }
     }
 }

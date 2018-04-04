@@ -11,7 +11,8 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Balance
                 Address = entity.Address,
                 AssetId = entity.AssetId,
                 Balance = entity.Balance,
-                Ledger = entity.Ledger
+                Ledger = entity.Ledger,
+                OperationCount = entity.OperationCount
             };
             return balance;
         }

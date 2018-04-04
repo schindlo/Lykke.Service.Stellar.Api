@@ -13,5 +13,9 @@ namespace Lykke.Service.Stellar.Api.Core.Domain.Balance
         Task InsertOrReplaceAsync(WalletBalance balance);
 
         Task DeleteIfExistAsync(string address);
+
+        Task<string> GetCurrentPagingToken();
+
+        Task SetCurrentPagingToken(string pagingToken);
     }
 }

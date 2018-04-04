@@ -11,5 +11,7 @@ namespace Lykke.Service.Stellar.Api.Core.Domain.Balance
         public long Balance { get; set; }
 
         public long Ledger { get; set; }
+
+        public int OperationCount { get; set; }
     }
 }

@@ -26,5 +26,7 @@ namespace Lykke.Service.Stellar.Api.Core.Services
         long GetAccountMergeAmount(string resultXdrBase64, int operationIndex);
 
         PaymentOp GetFirstPaymentFromTransaction(TransactionDetails tx);
+
+        string GetMemo(TransactionDetails tx);
     }
 }

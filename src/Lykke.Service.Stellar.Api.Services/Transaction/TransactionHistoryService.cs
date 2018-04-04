@@ -166,18 +166,6 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
             return _lastJobError;
         }
 
-        private string GetMemo(TransactionDetails tx)
-        {
-            if ((StellarSdkConstants.MemoTextTypeName.Equals(tx.MemoType, StringComparison.OrdinalIgnoreCase) ||
-                StellarSdkConstants.MemoIdTypeName.Equals(tx.MemoType, StringComparison.OrdinalIgnoreCase)) &&
-                !string.IsNullOrEmpty(tx.Memo))
-            {
-                return tx.Memo;
-            }
-
-            return null;
-        }
-
         private async Task<int> QueryAndProcessTransactions(string address, TransactionContext context)
         {
             var transactions = await _horizonService.GetTransactions(address, StellarSdkConstants.OrderAsc, context.Cursor);
@@ -196,6 +184,7 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
                     var txEnvelope = TransactionEnvelope.Decode(reader);
                     var tx = txEnvelope.Tx;
 
+                    var memo = _horizonService.GetMemo(transaction);
                     for (short i = 0; i < tx.Operations.Length; i++)
                     {
                         var operation = tx.Operations[i];
@@ -209,7 +198,7 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
                             OperationIndex = i,
                             PagingToken = transaction.PagingToken,
                             CreatedAt = transaction.CreatedAt,
-                            Memo = GetMemo(transaction)
+                            Memo = memo
                         };
 
                         if (operationType == OperationType.OperationTypeEnum.CREATE_ACCOUNT)

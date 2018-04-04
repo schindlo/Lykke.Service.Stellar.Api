@@ -1,6 +1,6 @@
 ﻿using Lykke.AzureStorage.Tables;
 
-namespace Lykke.Service.Stellar.Api.AzureRepositories.Transaction
+namespace Lykke.Service.Stellar.Api.AzureRepositories
 {
     public class IndexEntity : AzureTableEntity
     {
