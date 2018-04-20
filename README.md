@@ -18,10 +18,16 @@ Available configuration variables are documented below. See [developing](https:/
       // Connection string to the Azure storage account where data tables for observations, transactions and balances are stored
       "DataConnString": ""
     },
+    // The network passphrase used when signing transactions. The following passphrases are currently in use:
+    // Test: "Test SDF Network ; September 2015"
+    // Live: "Public Global Stellar Network ; September 2015"
+    "NetworkPassphrase": "",
     // Address of Horizon REST Api endpoint. The following public endpoints are available:
     // Test: https://horizon-testnet.stellar.org/
     // Live: https://horizon.stellar.org/
     "HorizonUrl": "",
+    // The public address used as base address during wallet generation
+    "DepositBaseAddress": "",
     // Period in seconds of the wallet balance update job
     "WalletBalanceJobPeriodSeconds": 30,
     // Period in seconds of the transaction history update job
