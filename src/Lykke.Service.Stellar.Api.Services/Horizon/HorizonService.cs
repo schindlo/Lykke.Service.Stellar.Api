@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using StellarBase;
 using StellarBase.Generated;
 using StellarSdk;
 using StellarSdk.Model;
@@ -8,6 +9,7 @@ using StellarSdk.Exceptions;
 using Lykke.Service.Stellar.Api.Core.Exceptions;
 using Lykke.Service.Stellar.Api.Core.Services;
 using Lykke.Service.Stellar.Api.Core;
+using Chaos.NaCl;
 
 namespace Lykke.Service.Stellar.Api.Services.Horizon
 {
@@ -15,8 +17,9 @@ namespace Lykke.Service.Stellar.Api.Services.Horizon
     {
         private readonly string _horizonUrl;
 
-        public HorizonService(string horizonUrl)
+        public HorizonService(string network, string horizonUrl)
         {
+            Network.CurrentNetwork = network;
             _horizonUrl = horizonUrl;
         }
 
@@ -184,6 +187,26 @@ namespace Lykke.Service.Stellar.Api.Services.Horizon
             }
 
             return null;
+        }
+
+        public string GetTransactionHash(StellarBase.Generated.Transaction tx)
+        {
+            var writer = new ByteWriter();
+
+            // Hashed NetworkID
+            writer.Write(Network.CurrentNetworkId);
+
+            // Envelope Type - 4 bytes
+            EnvelopeType.Encode(writer, EnvelopeType.Create(EnvelopeType.EnvelopeTypeEnum.ENVELOPE_TYPE_TX));
+
+            // Transaction XDR bytes
+            var txWriter = new ByteWriter();
+            StellarBase.Generated.Transaction.Encode(txWriter, tx);
+            writer.Write(txWriter.ToArray());
+
+            var data = writer.ToArray();
+            var hash = Utilities.Hash(data);
+            return CryptoBytes.ToHexStringLower(hash);
         }
     }
 }

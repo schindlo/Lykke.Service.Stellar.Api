@@ -17,6 +17,8 @@ namespace Lykke.Service.Stellar.Api.Core.Services
 
         Task<AddressBalance> GetAddressBalanceAsync(string address, Fees fees = null);
 
+        Task<bool> DecreaseBalance(string address, long amount);
+       
         Task<bool> IsBalanceObservedAsync(string address);
 
         Task AddBalanceObservationAsync(string address);

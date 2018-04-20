@@ -86,6 +86,7 @@ namespace Lykke.Service.Stellar.Api.Modules
 
             builder.RegisterType<HorizonService>()
                    .As<IHorizonService>()
+                   .WithParameter("network", _settings.CurrentValue.NetworkPassphrase)
                    .WithParameter("horizonUrl", _settings.CurrentValue.HorizonUrl)
                    .SingleInstance();
 

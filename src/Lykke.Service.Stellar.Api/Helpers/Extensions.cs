@@ -45,7 +45,7 @@ namespace Lykke.Service.Stellar.Api.Helpers
                     return BlockchainErrorCode.Unknown;
                 case TxExecutionError.AmountIsTooSmall:
                     return BlockchainErrorCode.AmountIsTooSmall;
-                case TxExecutionError.NotEnoughtBalance:
+                case TxExecutionError.NotEnoughBalance:
                     return BlockchainErrorCode.NotEnoughtBalance;
                 default:
                     throw new ArgumentException($"Failed to convert " +

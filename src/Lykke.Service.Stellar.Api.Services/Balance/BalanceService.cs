@@ -117,6 +117,27 @@ namespace Lykke.Service.Stellar.Api.Services
             return result;
         }
 
+        public async Task<bool> DecreaseBalance(string address, long amount)
+        {
+            var walletEntry = await _walletBalanceRepository.GetAsync(address);
+            if (walletEntry == null || walletEntry.Balance < amount) 
+            {
+                return false;
+            }
+
+            walletEntry.Balance -= amount;
+            if (walletEntry.Balance == 0) 
+            {
+                await _walletBalanceRepository.DeleteIfExistAsync(address);
+            }
+            else
+            {
+                await _walletBalanceRepository.InsertOrReplaceAsync(walletEntry);
+            }
+
+            return true;
+        }
+
         public async Task<bool> IsBalanceObservedAsync(string address)
         {
             return await _observationRepository.GetAsync(address) != null;

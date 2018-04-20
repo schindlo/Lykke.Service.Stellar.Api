@@ -4,6 +4,7 @@
       "LogsConnString": "UseDevelopmentStorage=true",
       "DataConnString": "UseDevelopmentStorage=true"
     },
+    "NetworkPassphrase": "Test SDF Network ; September 2015",
     "HorizonUrl": "https://horizon-testnet.stellar.org/",
     "DepositBaseAddress": "",
     "WalletBalanceJobPeriodSeconds": 30,

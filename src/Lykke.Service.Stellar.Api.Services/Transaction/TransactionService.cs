@@ -22,15 +22,17 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
 
         private string _lastJobError;
 
+        private readonly IBalanceService _balanceService;
         private readonly IHorizonService _horizonService;
         private readonly IObservationRepository<BroadcastObservation> _observationRepository;
         private readonly ITxBroadcastRepository _broadcastRepository;
         private readonly ITxBuildRepository _buildRepository;
         private readonly ILog _log;
 
-        public TransactionService(IHorizonService horizonService, IObservationRepository<BroadcastObservation> observationRepository,
+        public TransactionService(IBalanceService balanceService, IHorizonService horizonService, IObservationRepository<BroadcastObservation> observationRepository,
                                   ITxBroadcastRepository broadcastRepository, ITxBuildRepository buildRepository, ILog log, int batchSize)
         {
+            _balanceService = balanceService;
             _horizonService = horizonService;
             _observationRepository = observationRepository;
             _broadcastRepository = broadcastRepository;
@@ -48,19 +50,22 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
         {
             try
             {
-                var hash = await _horizonService.SubmitTransactionAsync(xdrBase64);
-                var broadcast = new TxBroadcast
+                if (!await ProcessDwToHwTransaction(operationId, xdrBase64))
                 {
-                    OperationId = operationId,
-                    State = TxBroadcastState.InProgress,
-                    Hash = hash
-                };
-                await _broadcastRepository.InsertOrReplaceAsync(broadcast);
-                var observation = new BroadcastObservation
-                {
-                    OperationId = operationId
-                };
-                await _observationRepository.InsertOrReplaceAsync(observation);
+                    var hash = await _horizonService.SubmitTransactionAsync(xdrBase64);
+                    var broadcast = new TxBroadcast
+                    {
+                        OperationId = operationId,
+                        State = TxBroadcastState.InProgress,
+                        Hash = hash
+                    };
+                    await _broadcastRepository.InsertOrReplaceAsync(broadcast);
+                    var observation = new BroadcastObservation
+                    {
+                        OperationId = operationId
+                    };
+                    await _observationRepository.InsertOrReplaceAsync(observation);   
+                }
             }
             catch (Exception ex)
             {
@@ -77,6 +82,51 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
                 be.Data.Add("ErrorCode", broadcast.ErrorCode);
                 throw be;
             }
+        }
+
+        private async Task<bool> ProcessDwToHwTransaction(Guid operationId, string xdrBase64)
+        {
+            var xdr = Convert.FromBase64String(xdrBase64);
+            var reader = new ByteReader(xdr);
+            var txEnvelope = TransactionEnvelope.Decode(reader);
+            var tx = txEnvelope.Tx;
+
+            var fromKeyPair = KeyPair.FromXdrPublicKey(tx.SourceAccount.InnerValue);
+            if (_balanceService.GetDepositBaseAddress().Equals(fromKeyPair.Address, StringComparison.OrdinalIgnoreCase) &&
+                tx.Operations.Length == 1 && tx.Operations[0].Body.PaymentOp != null && !string.IsNullOrWhiteSpace(tx.Memo.Text))
+            {
+                var toKeyPair = KeyPair.FromXdrPublicKey(tx.Operations[0].Body.PaymentOp.Destination.InnerValue);
+                if (_balanceService.GetDepositBaseAddress().Equals(toKeyPair.Address, StringComparison.OrdinalIgnoreCase))
+                {
+                    var fromAddress = $"{fromKeyPair.Address}{Constants.PublicAddressExtension.Separator}{tx.Memo.Text}";
+                    var amount = tx.Operations[0].Body.PaymentOp.Amount.InnerValue;
+
+                    var broadcast = new TxBroadcast
+                    {
+                        OperationId = operationId,
+                        Amount = amount,
+                        Fee = 0,
+                        Hash = _horizonService.GetTransactionHash(tx),
+                        CreatedAt = DateTime.UtcNow
+                    };
+
+                    if (await _balanceService.DecreaseBalance(fromAddress, amount))
+                    {
+                        broadcast.State = TxBroadcastState.Completed;
+                    }
+                    else
+                    {
+                        broadcast.State = TxBroadcastState.Failed;
+                        broadcast.Error = "Not enough balance!";
+                        broadcast.ErrorCode = TxExecutionError.NotEnoughBalance;
+                    }
+
+                    await _broadcastRepository.InsertOrReplaceAsync(broadcast);
+                    return true;   
+                }
+            }
+
+            return false;
         }
 
         private string GetErrorMessage(Exception ex)
@@ -101,7 +151,7 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
                 if (bre.ErrorDetails.Status == (int)HttpStatusCode.BadRequest &&
                     ops != null && ops.Length > 0 && ops[0].Equals(StellarSdkConstants.OperationUnderfunded))
                 {
-                    return TxExecutionError.NotEnoughtBalance;
+                    return TxExecutionError.NotEnoughBalance;
                 }
             }
             return TxExecutionError.Unknown;

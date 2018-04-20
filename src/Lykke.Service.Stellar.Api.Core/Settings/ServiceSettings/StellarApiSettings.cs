@@ -4,6 +4,8 @@
     {
         public DbSettings Db { get; set; }
 
+        public string NetworkPassphrase { get; set; }
+
         public string HorizonUrl { get; set; }
 
         public string DepositBaseAddress { get; set; }

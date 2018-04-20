@@ -28,5 +28,7 @@ namespace Lykke.Service.Stellar.Api.Core.Services
         PaymentOp GetFirstPaymentFromTransaction(TransactionDetails tx);
 
         string GetMemo(TransactionDetails tx);
+
+        string GetTransactionHash(Transaction tx);
     }
 }

@@ -4,6 +4,6 @@
     {
         Unknown = 0,
         AmountIsTooSmall = 1,
-        NotEnoughtBalance = 2
+        NotEnoughBalance = 2
     }
 }
