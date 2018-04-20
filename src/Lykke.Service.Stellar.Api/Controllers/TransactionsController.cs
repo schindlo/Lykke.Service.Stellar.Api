@@ -73,10 +73,6 @@ namespace Lykke.Service.Stellar.Api.Controllers
                 var toBaseAddress = _balanceService.GetBaseAddress(request.ToAddress);
                 if (toAddressHasExtension)
                 {
-                    if (toBaseAddress.Equals(_balanceService.GetDepositBaseAddress(), StringComparison.OrdinalIgnoreCase))
-                    {
-                        return BadRequest(ErrorResponse.Create($"{nameof(request.ToAddress)} is not a valid. Deposit base address with public address extension not allowed!"));
-                    }
                     memo = _balanceService.GetPublicAddressExtension(request.ToAddress);    
                 }
 
