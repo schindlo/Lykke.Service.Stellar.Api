@@ -43,6 +43,8 @@ namespace Lykke.Service.Stellar.Api.Controllers
             }
             else
             {
+                string memo = null;
+
                 bool fromAddressHasExtension;
                 if (!_balanceService.IsAddressValid(request.FromAddress, out fromAddressHasExtension))
                 {
@@ -63,8 +65,19 @@ namespace Lykke.Service.Stellar.Api.Controllers
                     }
                     else if (!request.ToAddress.Equals(_balanceService.GetDepositBaseAddress(), StringComparison.OrdinalIgnoreCase))
                     {
-                        return BadRequest(ErrorResponse.Create($"{nameof(request.ToAddress)} is not a valid. Deposit base address allowed as destination only, when sending from address with public address extension!"));
+                        return BadRequest(ErrorResponse.Create($"{nameof(request.ToAddress)} is not a valid. Only deposit base address allowed as destination, when sending from address with public address extension!"));
                     }
+
+                    memo = _balanceService.GetPublicAddressExtension(request.FromAddress);
+                }
+                var toBaseAddress = _balanceService.GetBaseAddress(request.ToAddress);
+                if (toAddressHasExtension)
+                {
+                    if (toBaseAddress.Equals(_balanceService.GetDepositBaseAddress(), StringComparison.OrdinalIgnoreCase))
+                    {
+                        return BadRequest(ErrorResponse.Create($"{nameof(request.ToAddress)} is not a valid. Deposit base address with public address extension not allowed!"));
+                    }
+                    memo = _balanceService.GetPublicAddressExtension(request.ToAddress);    
                 }
 
                 if (request.AssetId != Asset.Stellar.Id)
@@ -82,7 +95,12 @@ namespace Lykke.Service.Stellar.Api.Controllers
                     // too small (e.g. 0.1)
                     return BadRequest(StellarErrorResponse.Create($"Amount is too small. min=1, amount={request.Amount}", BlockchainErrorCode.AmountIsTooSmall));
                 }
-                var fees = await _transactionService.GetFeesAsync();
+
+                var fees = new Fees();
+                if (!fromAddressHasExtension) 
+                {
+                    fees = await _transactionService.GetFeesAsync();
+                }
                 var fromAddressBalance = await _balanceService.GetAddressBalanceAsync(request.FromAddress, fees);
 
                 Int64 requiredBalance;
@@ -96,14 +114,14 @@ namespace Lykke.Service.Stellar.Api.Controllers
                     requiredBalance = amount + fees.BaseFee;
                 };
 
-                var availableBalance = fromAddressBalance?.Balance ?? 0;
+                var availableBalance = fromAddressBalance.Balance;
                 if (requiredBalance > availableBalance)
                 {
-                    return BadRequest(StellarErrorResponse.Create($"Not enough balance to create transaction. required={requiredBalance}, available={availableBalance}"
-                                                                  , BlockchainErrorCode.NotEnoughtBalance));
+                    return BadRequest(StellarErrorResponse.Create($"Not enough balance to create transaction. required={requiredBalance}, available={availableBalance}",
+                                                                  BlockchainErrorCode.NotEnoughtBalance));
                 }
 
-                xdrBase64 = await _transactionService.BuildTransactionAsync(request.OperationId, fromAddressBalance, request.ToAddress, null, amount);
+                xdrBase64 = await _transactionService.BuildTransactionAsync(request.OperationId, fromAddressBalance, toBaseAddress, memo, amount);
             }
 
             return Ok(new BuildTransactionResponse

@@ -55,7 +55,6 @@ namespace Lykke.Service.Stellar.Api.Services
             {
                 var extension = parts[1];
                 hasExtension = true;
-
             }
 
             return true;
@@ -71,23 +70,43 @@ namespace Lykke.Service.Stellar.Api.Services
             return address.Split(Constants.PublicAddressExtension.Separator)[0];
         }
 
+        public string GetPublicAddressExtension(string address)
+        {
+            var parts = address.Split(Constants.PublicAddressExtension.Separator);
+            return parts.Length > 1 ? parts[1] : null;
+        }
+
         public async Task<AddressBalance> GetAddressBalanceAsync(string address, Fees fees = null)
         {
-            var accountDetails = await _horizonService.GetAccountDetails(address);
+            var baseAddress = GetBaseAddress(address);
+            var result = new AddressBalance
+            {
+                Address = baseAddress
+            };
+
+            var accountDetails = await _horizonService.GetAccountDetails(baseAddress);
             if (accountDetails == null)
             {
                 // address not found
-                return null;
+                return result;
             }
-
-            var result = new AddressBalance
-            {
-                Address = address
-            };
             result.Sequence = long.Parse(accountDetails.Sequence);
 
-            var nativeBalance = accountDetails.Balances.Single(b => Core.Domain.Asset.Stellar.TypeName.Equals(b.AssetType, StringComparison.OrdinalIgnoreCase));
-            result.Balance = Convert.ToInt64(Decimal.Parse(nativeBalance.Balance) * One.Value);
+            var addressExtension = GetPublicAddressExtension(address);
+            if (string.IsNullOrEmpty(addressExtension))
+            {
+                var nativeBalance = accountDetails.Balances.Single(b => Core.Domain.Asset.Stellar.TypeName.Equals(b.AssetType, StringComparison.OrdinalIgnoreCase));
+                result.Balance = Convert.ToInt64(Decimal.Parse(nativeBalance.Balance) * One.Value);
+            }
+            else
+            {
+                var walletBalance = await _walletBalanceRepository.GetAsync(address);
+                if (walletBalance != null)
+                {
+                    result.Balance = walletBalance.Balance;
+                }
+            }
+
             if (fees != null)
             {
                 long entries = accountDetails.Signers.Length + accountDetails.SubentryCount;

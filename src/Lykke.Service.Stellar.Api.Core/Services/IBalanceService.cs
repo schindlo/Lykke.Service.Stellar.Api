@@ -13,6 +13,8 @@ namespace Lykke.Service.Stellar.Api.Core.Services
 
         string GetBaseAddress(string address);
 
+        string GetPublicAddressExtension(string address);
+
         Task<AddressBalance> GetAddressBalanceAsync(string address, Fees fees = null);
 
         Task<bool> IsBalanceObservedAsync(string address);
