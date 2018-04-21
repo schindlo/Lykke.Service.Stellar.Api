@@ -30,9 +30,9 @@ namespace Lykke.Service.Stellar.Api.Controllers
         [ProducesResponseType(typeof(BuildTransactionResponse), StatusCodes.Status200OK)]
         public async Task<IActionResult> BuildSingle([Required, FromBody] BuildSingleTransactionRequest request)
         {
-            if (!ModelState.IsValid)
+            if (Guid.Empty.Equals(request?.OperationId))
             {
-                return BadRequest();
+                return BadRequest(ErrorResponse.Create("Invalid parameter").AddModelError(nameof(request.OperationId), "Must be valid guid"));
             }
 
             string xdrBase64;
@@ -135,9 +135,9 @@ namespace Lykke.Service.Stellar.Api.Controllers
         [HttpPost("broadcast")]
         public async Task<IActionResult> Broadcast([Required, FromBody] BroadcastTransactionRequest request)
         {
-            if (!ModelState.IsValid)
+            if (Guid.Empty.Equals(request?.OperationId))
             {
-                return BadRequest();
+                return BadRequest(ErrorResponse.Create("Invalid parameter").AddModelError(nameof(request.OperationId), "Must be valid guid"));
             }
 
             var broadcast = await _transactionService.GetTxBroadcastAsync(request.OperationId);
@@ -182,7 +182,7 @@ namespace Lykke.Service.Stellar.Api.Controllers
         {
             if (Guid.Empty.Equals(operationId))
             {
-                return BadRequest(ErrorResponse.Create("Invalid parameter").AddModelError("operationId", "OperationId must be valid guid"));
+                return BadRequest(ErrorResponse.Create("Invalid parameter").AddModelError(nameof(operationId), "Must be valid guid"));
             }
             var broadcast = await _transactionService.GetTxBroadcastAsync(operationId);
             if (broadcast == null)

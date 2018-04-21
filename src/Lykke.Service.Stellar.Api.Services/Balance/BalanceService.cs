@@ -40,6 +40,11 @@ namespace Lykke.Service.Stellar.Api.Services
         {
             hasExtension = false;
 
+            if (string.IsNullOrWhiteSpace(address)) 
+            {
+                return false;
+            }
+
             var parts = address.Split(Constants.PublicAddressExtension.Separator);
             try
             {
