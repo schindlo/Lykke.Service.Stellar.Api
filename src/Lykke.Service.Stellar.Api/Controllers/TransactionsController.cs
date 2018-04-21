@@ -45,13 +45,11 @@ namespace Lykke.Service.Stellar.Api.Controllers
             {
                 string memo = null;
 
-                bool fromAddressHasExtension;
-                if (!_balanceService.IsAddressValid(request.FromAddress, out fromAddressHasExtension))
+                if (!_balanceService.IsAddressValid(request.FromAddress, out bool fromAddressHasExtension))
                 {
                     return BadRequest(ErrorResponse.Create($"{nameof(request.FromAddress)} is not a valid"));
                 }
-                bool toAddressHasExtension;
-                if (!_balanceService.IsAddressValid(request.ToAddress, out toAddressHasExtension))
+                if (!_balanceService.IsAddressValid(request.ToAddress, out bool toAddressHasExtension))
                 {
                     return BadRequest(ErrorResponse.Create($"{nameof(request.ToAddress)} is not a valid"));
                 }
@@ -73,7 +71,7 @@ namespace Lykke.Service.Stellar.Api.Controllers
                 var toBaseAddress = _balanceService.GetBaseAddress(request.ToAddress);
                 if (toAddressHasExtension)
                 {
-                    memo = _balanceService.GetPublicAddressExtension(request.ToAddress);    
+                    memo = _balanceService.GetPublicAddressExtension(request.ToAddress);
                 }
 
                 if (request.AssetId != Asset.Stellar.Id)
@@ -93,7 +91,7 @@ namespace Lykke.Service.Stellar.Api.Controllers
                 }
 
                 var fees = new Fees();
-                if (!fromAddressHasExtension) 
+                if (!fromAddressHasExtension)
                 {
                     fees = await _transactionService.GetFeesAsync();
                 }
@@ -103,13 +101,12 @@ namespace Lykke.Service.Stellar.Api.Controllers
                 if (request.IncludeFee)
                 {
                     requiredBalance = amount;
-                    amount -= fees.BaseFee; 
+                    amount -= fees.BaseFee;
                 }
                 else
                 {
                     requiredBalance = amount + fees.BaseFee;
-                };
-
+                }
                 var availableBalance = fromAddressBalance.Balance;
                 if (requiredBalance > availableBalance)
                 {
@@ -194,7 +191,7 @@ namespace Lykke.Service.Stellar.Api.Controllers
             {
                 OperationId = broadcast.OperationId,
                 State = broadcast.State.ToBroadcastedTransactionState(),
-                Timestamp = broadcast.CreatedAt.HasValue ? broadcast.CreatedAt.Value : DateTime.MinValue,
+                Timestamp = broadcast.CreatedAt ?? DateTime.MinValue,
                 Amount = broadcast.Amount.ToString(),
                 Fee = broadcast.Fee.ToString(),
                 Hash = broadcast.Hash,
