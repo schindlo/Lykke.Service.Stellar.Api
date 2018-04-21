@@ -39,7 +39,11 @@ Available configuration variables are documented below. See [developing](https:/
     // Size of batches processed by the transaction history update job
     "TransactionHistoryJobBatchSize": 100,
     // Size of batches processed by the broadcasts in progress update job
-    "BroadcastInProgressJobBatchSize": 100
+    "BroadcastInProgressJobBatchSize": 100,
+    // Array with url formats of blockchain explorers
+    // Test: https://stellar.expert/explorer/testnet/account/{0}, http://testnet.stellarchain.io/address/{0}
+    // Live: https://stellar.expert/explorer/public/account/{0}, https://stellarchain.io/address/{0}
+    "ExplorerUrlFormats": [ "https://stellar.expert/explorer/testnet/account/{0}", "http://testnet.stellarchain.io/address/{0}" ]
   },
   "SlackNotifications": {
     "AzureQueue": {
