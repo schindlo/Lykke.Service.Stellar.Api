@@ -247,7 +247,7 @@ namespace Lykke.Service.Stellar.Api.Services
 
                         if (toAddress != null && amount > 0)
                         {
-                            var addressWithExtension = $"{toAddress}{Constants.PublicAddressExtension.Separator}{memo}";
+                            var addressWithExtension = $"{toAddress}{Constants.PublicAddressExtension.Separator}{memo.ToLower()}";
                             var observation = await _observationRepository.GetAsync(addressWithExtension);
                             if (observation == null)
                             {
