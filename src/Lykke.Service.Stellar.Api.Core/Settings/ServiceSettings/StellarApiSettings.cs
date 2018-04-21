@@ -21,5 +21,7 @@
         public int TransactionHistoryJobBatchSize { get; set; }
 
         public int BroadcastInProgressJobBatchSize { get; set; }
+
+        public string[] ExplorerUrlFormats { get; set; }
     }
 }

@@ -12,7 +12,8 @@
     "BroadcastInProgressJobPeriodSeconds": 120,
     "WalletBalanceJobBatchSize": 100,
     "TransactionHistoryJobBatchSize": 100,
-    "BroadcastInProgressJobBatchSize": 100
+    "BroadcastInProgressJobBatchSize": 100,
+    "ExplorerUrlFormats": [ "https://stellar.expert/explorer/testnet/account/{0}", "http://testnet.stellarchain.io/address/{0}" ]
   },
   "SlackNotifications": {
     "AzureQueue": {

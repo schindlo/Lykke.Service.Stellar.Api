@@ -25,8 +25,9 @@ namespace Lykke.Service.Stellar.Api.Services
 
         private readonly int _batchSize;
         private readonly string _depositBaseAddress;
+        private readonly string[] _explorerUrlFormats;
 
-        public BalanceService(IHorizonService horizonService, IObservationRepository<BalanceObservation> observationRepository, IWalletBalanceRepository walletBalanceRepository, ILog log, int batchSize, string depositBaseAddress)
+        public BalanceService(IHorizonService horizonService, IObservationRepository<BalanceObservation> observationRepository, IWalletBalanceRepository walletBalanceRepository, ILog log, int batchSize, string depositBaseAddress, string[] explorerUrlFormats)
         {
             _horizonService = horizonService;
             _observationRepository = observationRepository;
@@ -34,6 +35,7 @@ namespace Lykke.Service.Stellar.Api.Services
             _log = log;
             _batchSize = batchSize;
             _depositBaseAddress = depositBaseAddress;
+            _explorerUrlFormats = explorerUrlFormats;
         }
 
         public bool IsAddressValid(string address, out bool hasExtension)
@@ -166,6 +168,18 @@ namespace Lykke.Service.Stellar.Api.Services
         public async Task<(List<WalletBalance> Wallets, string ContinuationToken)> GetBalancesAsync(int take, string continuationToken)
         {
             return await _walletBalanceRepository.GetAllAsync(take, continuationToken);
+        }
+
+        public List<string> GetExplorerUrls(string address)
+        {
+            var results = new List<string>();
+            foreach (var format in _explorerUrlFormats)
+            {
+                var url = string.Format(format, address);
+                results.Add(url);
+            }
+
+            return results;
         }
 
         public async Task<int> UpdateWalletBalances()

@@ -6,6 +6,7 @@ using Lykke.Service.Stellar.Api.Core.Services;
 using Lykke.Service.BlockchainApi.Contract.Addresses;
 using Swashbuckle.AspNetCore.SwaggerGen;
 using Microsoft.AspNetCore.Http;
+using Lykke.Common.Api.Contract.Responses;
 
 namespace Lykke.Service.Stellar.Api.Controllers
 {
@@ -36,7 +37,14 @@ namespace Lykke.Service.Stellar.Api.Controllers
         [ProducesResponseType(typeof(List<string>), (int)HttpStatusCode.OK)]
         public IActionResult GetExplorerUrl([Required] string address)
         {
-            return new StatusCodeResult(StatusCodes.Status501NotImplemented);
+            if (!_balanceService.IsAddressValid(address, out bool hasExtension))
+            {
+                return BadRequest(ErrorResponse.Create("Invalid parameter").AddModelError("address", "Address must be valid"));
+            }
+
+            string baseAddress = _balanceService.GetBaseAddress(address);
+            var urls = _balanceService.GetExplorerUrls(baseAddress);
+            return Ok(urls);
         }
     }
 }

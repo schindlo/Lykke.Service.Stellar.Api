@@ -94,6 +94,7 @@ namespace Lykke.Service.Stellar.Api.Modules
                    .As<IBalanceService>()
                    .WithParameter("batchSize", _settings.CurrentValue.WalletBalanceJobBatchSize)
                    .WithParameter("depositBaseAddress", _settings.CurrentValue.DepositBaseAddress)
+                   .WithParameter("explorerUrlFormats", _settings.CurrentValue.ExplorerUrlFormats)
                    .SingleInstance();
 
             builder.RegisterType<TransactionService>()
