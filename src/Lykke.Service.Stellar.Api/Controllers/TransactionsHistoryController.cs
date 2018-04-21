@@ -8,6 +8,7 @@ using Lykke.Service.Stellar.Api.Core.Services;
 using Lykke.Service.Stellar.Api.Models;
 using Lykke.Service.Stellar.Api.Core.Domain.Transaction;
 using Lykke.Common.Api.Contract.Responses;
+using Lykke.Service.Stellar.Api.Core.Domain;
 
 namespace Lykke.Service.Stellar.Api.Controllers
 {
@@ -118,7 +119,7 @@ namespace Lykke.Service.Stellar.Api.Controllers
                 return Ok(new List<StellarHistoricalTransactionContract>());
             }
             var transactions = await _txHistoryService.GetHistory(TxDirectionType.Incoming, address, take, afterHash);
-            return Ok(HistoryToModel(transactions));
+            return Ok(HistoryToModel(TxDirectionType.Incoming, transactions));
         }
 
         [HttpGet("from/{address}")]
@@ -140,15 +141,15 @@ namespace Lykke.Service.Stellar.Api.Controllers
                 return Ok(new List<StellarHistoricalTransactionContract>());
             }
             var transactions = await _txHistoryService.GetHistory(TxDirectionType.Outgoing, address, take, afterHash);
-            return Ok(HistoryToModel(transactions));
+            return Ok(HistoryToModel(TxDirectionType.Outgoing, transactions));
         }
 
-        private List<StellarHistoricalTransactionContract> HistoryToModel(List<TxHistory> transactions)
+        private List<StellarHistoricalTransactionContract> HistoryToModel(TxDirectionType direction, List<TxHistory> transactions)
         {
             var ret = new List<StellarHistoricalTransactionContract>();
             foreach (var tx in transactions)
             {
-                ret.Add(new StellarHistoricalTransactionContract
+                var contract = new StellarHistoricalTransactionContract
                 {
                     Timestamp = tx.CreatedAt,
                     FromAddress = tx.FromAddress,
@@ -158,7 +159,20 @@ namespace Lykke.Service.Stellar.Api.Controllers
                     Hash = tx.Hash,
                     PaymentType = tx.PaymentType.ToString(),
                     DestinationTag = tx.Memo
-                });
+                };
+                if (!string.IsNullOrEmpty(tx.Memo)) 
+                {
+                    var extension = $"{Constants.PublicAddressExtension.Separator}{tx.Memo}";
+                    if (direction == TxDirectionType.Incoming)
+                    {
+                        contract.ToAddress += extension;
+                    }
+                    else
+                    {
+                        contract.FromAddress += extension;
+                    }
+                }
+                ret.Add(contract);
             }
             return ret;
         }

@@ -19,15 +19,17 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
 
         private string _lastJobError;
 
+        private readonly IBalanceService _balanceService;
         private readonly IHorizonService _horizonService;
         private readonly IObservationRepository<TransactionHistoryObservation> _observationRepository;
         private readonly ITxHistoryRepository _txHistoryRepository;
         private readonly ITxBroadcastRepository _txBroadcastRepository;
         private readonly ILog _log;
 
-        public TransactionHistoryService(IHorizonService horizonService, IObservationRepository<TransactionHistoryObservation> observationRepository,
+        public TransactionHistoryService(IBalanceService balanceService, IHorizonService horizonService, IObservationRepository<TransactionHistoryObservation> observationRepository,
                                          ITxHistoryRepository txHistoryRepository, ITxBroadcastRepository txBroadcastRepository, ILog log, int batchSize)
         {
+            _balanceService = balanceService;
             _horizonService = horizonService;
             _observationRepository = observationRepository;
             _txHistoryRepository = txHistoryRepository;
@@ -168,7 +170,11 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
 
         private async Task<int> QueryAndProcessTransactions(string address, TransactionContext context)
         {
-            var transactions = await _horizonService.GetTransactions(address, StellarSdkConstants.OrderAsc, context.Cursor);
+            var baseAddress = _balanceService.GetBaseAddress(address);
+            var publicAddressExtension = _balanceService.GetPublicAddressExtension(address);
+            var hasPublicAddressExtension = !string.IsNullOrEmpty(publicAddressExtension);
+
+            var transactions = await _horizonService.GetTransactions(baseAddress, StellarSdkConstants.OrderAsc, context.Cursor);
 
             int count = 0;
             context.Cursor = null;
@@ -185,6 +191,12 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
                     var tx = txEnvelope.Tx;
 
                     var memo = _horizonService.GetMemo(transaction);
+                    if (hasPublicAddressExtension && !publicAddressExtension.Equals(memo, StringComparison.OrdinalIgnoreCase))
+                    {
+                        // skip transactions where extension doesn't match
+                        continue;
+                    }
+
                     for (short i = 0; i < tx.Operations.Length; i++)
                     {
                         var operation = tx.Operations[i];
@@ -229,12 +241,12 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
                             history.PaymentType = PaymentType.AccountMerge;
                         }
 
-                        if (address.Equals(history.ToAddress, StringComparison.OrdinalIgnoreCase))
+                        if (baseAddress.Equals(history.ToAddress, StringComparison.OrdinalIgnoreCase))
                         {
                             await _txHistoryRepository.InsertOrReplaceAsync(context.TableId, TxDirectionType.Incoming, history);
 
                         }
-                        if (address.Equals(history.FromAddress, StringComparison.OrdinalIgnoreCase))
+                        if (baseAddress.Equals(history.FromAddress, StringComparison.OrdinalIgnoreCase))
                         {
                             await _txHistoryRepository.InsertOrReplaceAsync(context.TableId, TxDirectionType.Outgoing, history);
                         }
