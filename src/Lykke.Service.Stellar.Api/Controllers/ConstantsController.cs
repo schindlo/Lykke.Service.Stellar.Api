@@ -22,7 +22,8 @@ namespace Lykke.Service.Stellar.Api.Controllers
                 PublicAddressExtension = new PublicAddressExtensionConstantsContract
                 {
                     Separator = Constants.PublicAddressExtension.Separator,
-                    DisplayName = Constants.PublicAddressExtension.DisplayName
+                    DisplayName = Constants.PublicAddressExtension.DisplayName,
+                    BaseDisplayName = string.Empty,
                 }
             };
             return Ok(contants);

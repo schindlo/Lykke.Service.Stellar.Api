@@ -4,7 +4,7 @@ namespace Lykke.Service.Stellar.Api.Core.Domain
 {
     public class Constants
     {
-        public static Version ContractVersion = new Version("1.1.0");
+        public static Version ContractVersion = new Version("1.2.0");
 
         public class PublicAddressExtension
         {
