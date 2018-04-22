@@ -119,7 +119,7 @@ namespace Lykke.Service.Stellar.Api.Controllers
                 return Ok(new List<StellarHistoricalTransactionContract>());
             }
             var transactions = await _txHistoryService.GetHistory(TxDirectionType.Incoming, address, take, afterHash);
-            return Ok(HistoryToModel(TxDirectionType.Incoming, transactions));
+            return Ok(HistoryToModel(transactions));
         }
 
         [HttpGet("from/{address}")]
@@ -141,10 +141,10 @@ namespace Lykke.Service.Stellar.Api.Controllers
                 return Ok(new List<StellarHistoricalTransactionContract>());
             }
             var transactions = await _txHistoryService.GetHistory(TxDirectionType.Outgoing, address, take, afterHash);
-            return Ok(HistoryToModel(TxDirectionType.Outgoing, transactions));
+            return Ok(HistoryToModel(transactions));
         }
 
-        private List<StellarHistoricalTransactionContract> HistoryToModel(TxDirectionType direction, List<TxHistory> transactions)
+        private List<StellarHistoricalTransactionContract> HistoryToModel(List<TxHistory> transactions)
         {
             var ret = new List<StellarHistoricalTransactionContract>();
             foreach (var tx in transactions)
@@ -163,14 +163,7 @@ namespace Lykke.Service.Stellar.Api.Controllers
                 if (!string.IsNullOrEmpty(tx.Memo)) 
                 {
                     var extension = $"{Constants.PublicAddressExtension.Separator}{tx.Memo}";
-                    if (direction == TxDirectionType.Incoming)
-                    {
-                        contract.ToAddress += extension;
-                    }
-                    else
-                    {
-                        contract.FromAddress += extension;
-                    }
+                    contract.ToAddress += extension;
                 }
                 ret.Add(contract);
             }
