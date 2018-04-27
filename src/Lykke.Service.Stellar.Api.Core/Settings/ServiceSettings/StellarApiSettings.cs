@@ -1,4 +1,6 @@
-﻿namespace Lykke.Service.Stellar.Api.Core.Settings.ServiceSettings
+﻿using Lykke.SettingsReader.Attributes;
+
+namespace Lykke.Service.Stellar.Api.Core.Settings.ServiceSettings
 {
     public class StellarApiSettings
     {
@@ -6,6 +8,7 @@
 
         public string NetworkPassphrase { get; set; }
 
+        [HttpCheck("/")]
         public string HorizonUrl { get; set; }
 
         public string DepositBaseAddress { get; set; }

@@ -18,6 +18,7 @@
     <PackageReference Include="csharp-stellar-sdk" Version="1.0.3" />
     <PackageReference Include="csharp-stellar-base" Version="1.0.2" />
     <PackageReference Include="Lykke.Common" Version="6.5.0" />
+    <PackageReference Include="Lykke.SettingsReader" Version="2.3.1" />
   </ItemGroup>
 
 </Project>
