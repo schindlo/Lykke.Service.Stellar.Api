@@ -18,7 +18,7 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Balance
 
         public long Ledger { get; set; }
 
-        public int OperationCount { get; set; }
+        public int OperationIndex { get; set; }
 
         public static string GetRowKey(string assetId, string address)
         {

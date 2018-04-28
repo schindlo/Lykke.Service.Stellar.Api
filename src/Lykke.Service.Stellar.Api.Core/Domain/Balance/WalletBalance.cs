@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Lykke.Service.Stellar.Api.Core.Domain.Balance
+﻿namespace Lykke.Service.Stellar.Api.Core.Domain.Balance
 {
     public class WalletBalance
     {
@@ -12,6 +10,6 @@ namespace Lykke.Service.Stellar.Api.Core.Domain.Balance
 
         public long Ledger { get; set; }
 
-        public int OperationCount { get; set; }
+        public int OperationIndex { get; set; }
     }
 }

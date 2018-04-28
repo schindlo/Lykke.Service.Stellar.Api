@@ -54,5 +54,41 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Balance
             var rowKey = WalletBalanceEntity.GetRowKey(assetId, address);
             await _table.DeleteIfExistAsync(TableKey.GetHashedRowKey(rowKey), rowKey);
         }
+
+        public async Task IncraseBalanceAsync(string assetId, string address, long ledger, int operationIndex, long amount)
+        {
+            var rowKey = WalletBalanceEntity.GetRowKey(assetId, address);
+            var partitionKey = TableKey.GetHashedRowKey(rowKey);
+
+            WalletBalanceEntity CreateEntity()
+            {
+                return new WalletBalanceEntity
+                {
+                    PartitionKey = partitionKey,
+                    RowKey = rowKey,
+                    Balance = amount,
+                    Ledger = ledger,
+                    OperationIndex = operationIndex
+                };
+            }
+
+            // ReSharper disable once ImplicitlyCapturedClosure
+            bool UpdateEntity(WalletBalanceEntity entity)
+            {
+                if (ledger > entity.Ledger ||
+                    (ledger == entity.Ledger && operationIndex > entity.OperationIndex))
+                {
+                    entity.Balance += amount;
+                    entity.Ledger = ledger;
+                    entity.OperationIndex = operationIndex;
+
+                    return true;
+                }
+
+                return false;
+            }
+
+            await _table.InsertOrModifyAsync(partitionKey, rowKey, CreateEntity, UpdateEntity);
+        }
     }
 }

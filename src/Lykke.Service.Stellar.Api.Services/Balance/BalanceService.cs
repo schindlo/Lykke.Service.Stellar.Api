@@ -273,23 +273,8 @@ namespace Lykke.Service.Stellar.Api.Services
                                 continue;    
                             }
 
-                            var walletEntry = await _walletBalanceRepository.GetAsync(Core.Domain.Asset.Stellar.Id, addressWithExtension);
-                            if (walletEntry == null)
-                            {
-                                walletEntry = new WalletBalance
-                                {
-                                    AssetId = Core.Domain.Asset.Stellar.Id,
-                                    Address = addressWithExtension
-                                };
-                            }
-                            if (transaction.Ledger > walletEntry.Ledger && i <= walletEntry.OperationCount)
-                            {
-                                walletEntry.Balance += amount;
-                                walletEntry.Ledger = transaction.Ledger;
-                                walletEntry.OperationCount = i + 1;
-
-                                await _walletBalanceRepository.InsertOrReplaceAsync(walletEntry);
-                            }
+                            var assetId = Core.Domain.Asset.Stellar.Id;
+                            await _walletBalanceRepository.IncraseBalanceAsync(assetId, addressWithExtension, transaction.Ledger, i, amount);
                         }
                     }
                 }
