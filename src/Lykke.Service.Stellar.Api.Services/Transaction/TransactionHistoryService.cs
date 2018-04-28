@@ -139,6 +139,7 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
         public async Task<int> UpdateTransactionHistory()
         {
             int count = 0;
+
             try
             {
                 string continuationToken = null;
@@ -156,10 +157,10 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
             }
             catch (Exception ex)
             {
-                _lastJobError = _lastJobError = $"Error in job {nameof(TransactionHistoryService)}.{nameof(UpdateTransactionHistory)}: {ex.Message}";
-                await _log.WriteErrorAsync(nameof(TransactionHistoryService), nameof(UpdateTransactionHistory),
-                    "Failed to execute transaction history update", ex);
+                _lastJobError = $"Error in job {nameof(TransactionHistoryService)}.{nameof(UpdateTransactionHistory)}: {ex.Message}";
+                throw new JobExecutionException("Failed to execute transaction history update", ex, count);
             }
+
             return count;
         }
 
@@ -269,6 +270,7 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
         private async Task<int> ProcessTransactionObservation(TransactionHistoryObservation observation)
         {
             int count = 0;
+
             try
             {
                 var context = new TransactionContext(observation.TableId);
@@ -282,9 +284,9 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
             }
             catch (Exception ex)
             {
-                await _log.WriteErrorAsync(nameof(TransactionHistoryService), nameof(ProcessTransactionObservation),
-                    $"Failed to process transaction observation for address. address={observation.Address}", ex);
+                throw new BusinessException($"Failed to process transaction observation for address. address={observation.Address}", ex);
             }
+
             return count;
         }
     }

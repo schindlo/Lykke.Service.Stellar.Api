@@ -2,6 +2,7 @@
 using System.Threading.Tasks;
 using Common;
 using Common.Log;
+using Lykke.Service.Stellar.Api.Core.Exceptions;
 using Lykke.Service.Stellar.Api.Core.Services;
 
 namespace Lykke.Service.Stellar.Api.Jobs
@@ -23,10 +24,20 @@ namespace Lykke.Service.Stellar.Api.Jobs
             await _log.WriteInfoAsync(nameof(WalletBalanceJob), nameof(Execute), $"Job started");
             var watch = Stopwatch.StartNew();
 
-            int count = await _balanceService.UpdateWalletBalances();
+            try
+            {
+                int count = await _balanceService.UpdateWalletBalances();
 
-            watch.Stop();
-            await _log.WriteInfoAsync(nameof(WalletBalanceJob), nameof(Execute), $"Job finished. dt={watch.ElapsedMilliseconds}ms, records={count}");
+                watch.Stop();
+                await _log.WriteInfoAsync(nameof(WalletBalanceJob), nameof(Execute), $"Job finished. dt={watch.ElapsedMilliseconds}ms, records={count}");
+            }
+            catch (JobExecutionException ex)
+            {
+                watch.Stop();
+                await _log.WriteInfoAsync(nameof(WalletBalanceJob), nameof(Execute), $"Job aborted with exception. dt={watch.ElapsedMilliseconds}ms, records={ex.Processed}");
+
+                throw;
+            }
         }
     }
 }

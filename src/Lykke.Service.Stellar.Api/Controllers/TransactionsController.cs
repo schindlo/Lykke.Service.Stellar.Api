@@ -148,12 +148,13 @@ namespace Lykke.Service.Stellar.Api.Controllers
             }
             catch (BusinessException ex)
             {
-                if (ex.Data.Contains("ErrorCode"))
+                if (!string.IsNullOrWhiteSpace(ex.ErrorCode))
                 {
-                    return BadRequest(StellarErrorResponse.Create(ex.Message, (BlockchainErrorCode)ex.Data["ErrorCode"]));
+                    var errorResponse = StellarErrorResponse.Create(ex.Message, (BlockchainErrorCode)Enum.Parse(typeof(BlockchainErrorCode), ex.ErrorCode));
+                    return BadRequest(errorResponse);
                 }
                 // technical / unknown problem
-                throw ex;
+                throw;
             }
 
             return Ok();

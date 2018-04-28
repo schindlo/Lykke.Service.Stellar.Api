@@ -78,9 +78,7 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
                 };
                 await _broadcastRepository.InsertOrReplaceAsync(broadcast);
 
-                var be = new BusinessException($"Broadcasting transaction failed. operationId={operationId}, message={broadcast.Error}", ex);
-                be.Data.Add("ErrorCode", broadcast.ErrorCode);
-                throw be;
+                throw new BusinessException($"Broadcasting transaction failed. operationId={operationId}, message={broadcast.Error}", ex, broadcast.ErrorCode.ToString());
             }
         }
 
@@ -254,6 +252,7 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
         public async Task<int> UpdateBroadcastsInProgress()
         {
             int count = 0;
+
             try
             {
                 string continuationToken = null;
@@ -273,9 +272,9 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
             catch (Exception ex)
             {
                 _lastJobError = $"Error in job {nameof(TransactionService)}.{nameof(UpdateBroadcastsInProgress)}: {ex.Message}";
-                await _log.WriteErrorAsync(nameof(TransactionService), nameof(UpdateBroadcastsInProgress),
-                    "Failed to execute broadcast in progress update", ex);
+                throw new JobExecutionException("Failed to execute broadcast in progress updates", ex, count);
             }
+
             return count;
         }
 
@@ -316,8 +315,7 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
                 await _broadcastRepository.MergeAsync(broadcast);
                 await _observationRepository.DeleteIfExistAsync(operationId.ToString());
 
-                await _log.WriteErrorAsync(nameof(TransactionService), nameof(ProcessBroadcastInProgress),
-                                           $"Failed to process in progress broadcast. operationId={operationId})", ex);
+                throw new BusinessException($"Failed to process in progress broadcast. operationId={operationId}", ex);
             }
         }
     }

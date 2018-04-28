@@ -189,6 +189,7 @@ namespace Lykke.Service.Stellar.Api.Services
         public async Task<int> UpdateWalletBalances()
         {
             int count = 0;
+
             try
             {
                 string cursor = await _keyValueStoreRepository.GetAsync(GetPagingTokenKey);
@@ -206,9 +207,9 @@ namespace Lykke.Service.Stellar.Api.Services
             catch (Exception ex)
             {
                 _lastJobError = $"Error in job {nameof(BalanceService)}.{nameof(UpdateWalletBalances)}: {ex.Message}";
-                await _log.WriteErrorAsync(nameof(BalanceService), nameof(UpdateWalletBalances),
-                    "Failed to execute balances update", ex);
+                throw new JobExecutionException("Failed to execute balances updates", ex, count);
             }
+
             return count;
         }
 
