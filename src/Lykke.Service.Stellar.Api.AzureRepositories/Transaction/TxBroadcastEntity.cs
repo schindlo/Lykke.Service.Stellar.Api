@@ -17,6 +17,11 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Transaction
         private string _error;
         private TxExecutionError? _errorCode;
 
+        public Guid OperationId
+        {
+            get => Guid.Parse(RowKey);
+        }
+
         public TxBroadcastState State 
         { 
             get

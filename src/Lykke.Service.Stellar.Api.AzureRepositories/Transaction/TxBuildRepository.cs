@@ -10,12 +10,11 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Transaction
 {
     public class TxBuildRepository : ITxBuildRepository
     {
-        private const string TableName = "Transaction";
+        private const string TableName = "TransactionBuild";
 
-        private static string GetPartitionKey() => "Build";
         private static string GetRowKey(Guid operationId) => operationId.ToString();
 
-        private INoSQLTableStorage<TxBuildEntity> _table;
+        private readonly INoSQLTableStorage<TxBuildEntity> _table;
 
         public TxBuildRepository(IReloadingManager<string> dataConnStringManager, ILog log)
         {
@@ -24,15 +23,12 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Transaction
 
         public async Task<TxBuild> GetAsync(Guid operationId)
         {
-            var entity = await _table.GetDataAsync(GetPartitionKey(), GetRowKey(operationId));
+            var rowKey = GetRowKey(operationId);
+            var entity = await _table.GetDataAsync(TableKey.GetHashedRowKey(rowKey), rowKey);
             if (entity != null)
             {
-                return new TxBuild
-                {
-                    OperationId = entity.OperationId,
-                    Timestamp = entity.Timestamp,
-                    XdrBase64 = entity.XdrBase64
-                };
+                var build = entity.ToDomain();
+                return build;
             }
 
             return null;
@@ -40,20 +36,14 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Transaction
 
         public async Task AddAsync(TxBuild build)
         {
-            var entity = new TxBuildEntity
-            {
-                PartitionKey = GetPartitionKey(),
-                RowKey = GetRowKey(build.OperationId),
-                Timestamp = build.Timestamp,
-                XdrBase64 = build.XdrBase64
-            };
-
+            var entity = build.ToEntity();
             await _table.InsertAsync(entity);
         }
 
         public async Task DeleteAsync(Guid operationId)
         {
-            await _table.DeleteAsync(GetPartitionKey(), GetRowKey(operationId));
+            var rowKey = GetRowKey(operationId);
+            await _table.DeleteAsync(TableKey.GetHashedRowKey(rowKey), rowKey);
         }
     }
 }

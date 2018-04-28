@@ -7,7 +7,7 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Observation
     {
         public override string GetRowKey(BroadcastObservation observation)
         {
-            return observation.OperationId.ToString();
+            return TableKey.GetRowKey(observation.OperationId);
         }
 
         public override BroadcastObservation ToDomain()

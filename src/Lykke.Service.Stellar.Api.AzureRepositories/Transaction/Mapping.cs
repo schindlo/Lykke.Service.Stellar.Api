@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Linq;
 using System.Collections.Generic;
+using Common;
 using Lykke.Service.Stellar.Api.Core.Domain.Transaction;
 
 namespace Lykke.Service.Stellar.Api.AzureRepositories.Transaction
@@ -8,12 +10,7 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Transaction
     {
         public static List<TxHistory> ToDomain(this IEnumerable<TxHistoryEntity> entities)
         {
-            var items = new List<TxHistory>();
-            foreach (var entity in entities)
-            {
-                var history = entity.ToDomain();
-                items.Add(history);
-            }
+            var items = entities.Select(x => x.ToDomain()).ToList();
             return items;
         }
 
@@ -51,11 +48,35 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Transaction
             return entity;
         }
 
+        public static TxBuild ToDomain(this TxBuildEntity entity)
+        {
+            var domain = new TxBuild
+            {
+                OperationId = entity.OperationId,
+                Timestamp = entity.Timestamp,
+                XdrBase64 = entity.XdrBase64
+            };
+            return domain;
+        }
+
+        public static TxBuildEntity ToEntity(this TxBuild domain)
+        {
+            var rowKey = TableKey.GetRowKey(domain.OperationId);
+            var entity = new TxBuildEntity
+            {
+                PartitionKey = TableKey.GetHashedRowKey(rowKey),
+                RowKey = rowKey,
+                Timestamp = domain.Timestamp,
+                XdrBase64 = domain.XdrBase64
+            };
+            return entity;
+        }
+
         public static TxBroadcast ToDomain(this TxBroadcastEntity entity)
         {
             var domain = new TxBroadcast
             {
-                OperationId = Guid.Parse(entity.RowKey),
+                OperationId = entity.OperationId,
                 State = entity.State,
                 Amount = entity.Amount,
                 Fee = entity.Fee,
@@ -68,11 +89,12 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Transaction
             return domain;
         }
 
-        public static TxBroadcastEntity ToEntity(this TxBroadcast domain, string partitionKey, string rowKey)
+        public static TxBroadcastEntity ToEntity(this TxBroadcast domain)
         {
+            var rowKey = TableKey.GetRowKey(domain.OperationId);
             var entity = new TxBroadcastEntity
             {
-                PartitionKey = partitionKey,
+                PartitionKey = TableKey.GetHashedRowKey(rowKey),
                 RowKey = rowKey,
                 State = domain.State,
                 Amount = domain.Amount,

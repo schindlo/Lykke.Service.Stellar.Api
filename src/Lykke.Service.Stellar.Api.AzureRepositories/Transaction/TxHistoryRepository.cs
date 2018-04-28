@@ -20,8 +20,8 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Transaction
         private static string GetPartitionKey(TxDirectionType direction) => direction.ToString();
         private static string GetCurrentRowKey() => "Current";
 
-        private ILog _log;
-        private IReloadingManager<string> _dataConnStringManager;
+        private readonly ILog _log;
+        private readonly IReloadingManager<string> _dataConnStringManager;
 
         private ConcurrentDictionary<string, (INoSQLTableStorage<TxHistoryEntity>, INoSQLTableStorage<IndexEntity>)> _tableCache;
 

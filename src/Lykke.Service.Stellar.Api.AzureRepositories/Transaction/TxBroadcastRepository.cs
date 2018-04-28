@@ -10,12 +10,9 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Transaction
 {
     public class TxBroadcastRepository : ITxBroadcastRepository
     {
-        private const string TableName = "Transaction";
+        private const string TableName = "TransactionBroadcast";
 
-        private static string GetPartitionKey() => "Broadcast";
-        private static string GetRowKey(Guid operationId) => operationId.ToString();
-
-        private INoSQLTableStorage<TxBroadcastEntity> _table;
+        private readonly INoSQLTableStorage<TxBroadcastEntity> _table;
 
         public TxBroadcastRepository(IReloadingManager<string> dataConnStringManager, ILog log)
         {
@@ -24,7 +21,8 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Transaction
 
         public async Task<TxBroadcast> GetAsync(Guid operationId)
         {
-            var entity = await _table.GetDataAsync(GetPartitionKey(), GetRowKey(operationId));
+            var rowKey = TableKey.GetRowKey(operationId);
+            var entity = await _table.GetDataAsync(TableKey.GetHashedRowKey(rowKey), rowKey);
             if (entity != null)
             {
                 var broadcast = entity.ToDomain();
@@ -36,7 +34,7 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Transaction
 
         public async Task InsertOrReplaceAsync(TxBroadcast broadcast)
         {
-            var entity = broadcast.ToEntity(GetPartitionKey(), GetRowKey(broadcast.OperationId));
+            var entity = broadcast.ToEntity();
             await _table.InsertOrReplaceAsync(entity);
         }
 
@@ -55,12 +53,14 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Transaction
                 return entity;
             }
 
-            await _table.MergeAsync(GetPartitionKey(), GetRowKey(broadcast.OperationId), MergeAction);
+            var rowKey = TableKey.GetRowKey(broadcast.OperationId);
+            await _table.MergeAsync(TableKey.GetHashedRowKey(rowKey), rowKey, MergeAction);
         }
 
         public async Task DeleteAsync(Guid operationId)
         {
-            await _table.DeleteAsync(GetPartitionKey(), GetRowKey(operationId));
+            var rowKey = TableKey.GetRowKey(operationId);
+            await _table.DeleteAsync(TableKey.GetHashedRowKey(rowKey), rowKey);
         }
     }
 }
