@@ -20,13 +20,13 @@ namespace Lykke.Service.Stellar.Api.Jobs
 
         public override async Task Execute()
         {
-            await _log.WriteMonitorAsync(nameof(BroadcastInProgressJob), nameof(Execute), $"Job started");
+            await _log.WriteInfoAsync(nameof(BroadcastInProgressJob), nameof(Execute), $"Job started");
             var watch = Stopwatch.StartNew();
 
             int count = await _transactionService.UpdateBroadcastsInProgress();
 
             watch.Stop();
-            await _log.WriteMonitorAsync(nameof(BroadcastInProgressJob), nameof(Execute), $"Job finished. dt={watch.ElapsedMilliseconds}ms, records={count}");
+            await _log.WriteInfoAsync(nameof(BroadcastInProgressJob), nameof(Execute), $"Job finished. dt={watch.ElapsedMilliseconds}ms, records={count}");
         }
     }
 }
