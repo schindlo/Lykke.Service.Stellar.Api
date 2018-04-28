@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace Lykke.Service.Stellar.Api.Core.Domain.Balance
@@ -8,14 +7,10 @@ namespace Lykke.Service.Stellar.Api.Core.Domain.Balance
     {
         Task<(List<WalletBalance> Entities, string ContinuationToken)> GetAllAsync(int take, string continuationToken);
 
-        Task<WalletBalance> GetAsync(string address);
+        Task<WalletBalance> GetAsync(string assetId, string address);
 
         Task InsertOrReplaceAsync(WalletBalance balance);
 
-        Task DeleteIfExistAsync(string address);
-
-        Task<string> GetCurrentPagingToken();
-
-        Task SetCurrentPagingToken(string pagingToken);
+        Task DeleteIfExistAsync(string assetId, string address);
     }
 }

@@ -6,12 +6,12 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Balance
     {
         public string AssetId
         {
-            get => PartitionKey;
+            get => RowKey.Split(':')[0];
         }
 
         public string Address
         {
-            get => RowKey;
+            get => RowKey.Split(':')[1];
         }
 
         public long Balance { get; set; }
@@ -19,5 +19,10 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Balance
         public long Ledger { get; set; }
 
         public int OperationCount { get; set; }
+
+        public static string GetRowKey(string assetId, string address)
+        {
+            return $"{assetId}:{address}";
+        }
     }
 }

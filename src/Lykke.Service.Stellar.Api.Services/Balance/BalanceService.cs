@@ -19,6 +19,7 @@ namespace Lykke.Service.Stellar.Api.Services
         private string _lastJobError;
 
         private readonly IHorizonService _horizonService;
+        private readonly IKeyValueStoreRepository _keyValueStoreRepository;
         private readonly IObservationRepository<BalanceObservation> _observationRepository;
         private readonly IWalletBalanceRepository _walletBalanceRepository;
         private readonly ILog _log;
@@ -27,9 +28,10 @@ namespace Lykke.Service.Stellar.Api.Services
         private readonly string _depositBaseAddress;
         private readonly string[] _explorerUrlFormats;
 
-        public BalanceService(IHorizonService horizonService, IObservationRepository<BalanceObservation> observationRepository, IWalletBalanceRepository walletBalanceRepository, ILog log, int batchSize, string depositBaseAddress, string[] explorerUrlFormats)
+        public BalanceService(IHorizonService horizonService, IKeyValueStoreRepository keyValueStoreRepository, IObservationRepository<BalanceObservation> observationRepository, IWalletBalanceRepository walletBalanceRepository, ILog log, int batchSize, string depositBaseAddress, string[] explorerUrlFormats)
         {
             _horizonService = horizonService;
+            _keyValueStoreRepository = keyValueStoreRepository;
             _observationRepository = observationRepository;
             _walletBalanceRepository = walletBalanceRepository;
             _log = log;
@@ -107,7 +109,7 @@ namespace Lykke.Service.Stellar.Api.Services
             }
             else
             {
-                var walletBalance = await _walletBalanceRepository.GetAsync(address);
+                var walletBalance = await _walletBalanceRepository.GetAsync(Core.Domain.Asset.Stellar.Id, address);
                 if (walletBalance != null)
                 {
                     result.Balance = walletBalance.Balance;
@@ -126,7 +128,7 @@ namespace Lykke.Service.Stellar.Api.Services
 
         public async Task<bool> DecreaseBalance(string address, long amount)
         {
-            var walletEntry = await _walletBalanceRepository.GetAsync(address);
+            var walletEntry = await _walletBalanceRepository.GetAsync(Core.Domain.Asset.Stellar.Id, address);
             if (walletEntry == null || walletEntry.Balance < amount) 
             {
                 return false;
@@ -135,7 +137,7 @@ namespace Lykke.Service.Stellar.Api.Services
             walletEntry.Balance -= amount;
             if (walletEntry.Balance == 0) 
             {
-                await _walletBalanceRepository.DeleteIfExistAsync(address);
+                await _walletBalanceRepository.DeleteIfExistAsync(Core.Domain.Asset.Stellar.Id, address);
             }
             else
             {
@@ -162,7 +164,7 @@ namespace Lykke.Service.Stellar.Api.Services
         public async Task DeleteBalanceObservationAsync(string address)
         {
             await _observationRepository.DeleteIfExistAsync(address);
-            await _walletBalanceRepository.DeleteIfExistAsync(address);
+            await _walletBalanceRepository.DeleteIfExistAsync(Core.Domain.Asset.Stellar.Id, address);
         }
 
         public async Task<(List<WalletBalance> Wallets, string ContinuationToken)> GetBalancesAsync(int take, string continuationToken)
@@ -182,12 +184,14 @@ namespace Lykke.Service.Stellar.Api.Services
             return results;
         }
 
+        private string GetPagingTokenKey => $"TransactionPagingToken:{_depositBaseAddress}";
+
         public async Task<int> UpdateWalletBalances()
         {
             int count = 0;
             try
             {
-                string cursor = await _walletBalanceRepository.GetCurrentPagingToken();
+                string cursor = await _keyValueStoreRepository.GetAsync(GetPagingTokenKey);
 
                 do
                 {
@@ -268,11 +272,12 @@ namespace Lykke.Service.Stellar.Api.Services
                                 continue;    
                             }
 
-                            var walletEntry = await _walletBalanceRepository.GetAsync(addressWithExtension);
+                            var walletEntry = await _walletBalanceRepository.GetAsync(Core.Domain.Asset.Stellar.Id, addressWithExtension);
                             if (walletEntry == null)
                             {
                                 walletEntry = new WalletBalance
                                 {
+                                    AssetId = Core.Domain.Asset.Stellar.Id,
                                     Address = addressWithExtension
                                 };
                             }
@@ -295,7 +300,7 @@ namespace Lykke.Service.Stellar.Api.Services
 
             if (!string.IsNullOrEmpty(cursor))
             {
-                await _walletBalanceRepository.SetCurrentPagingToken(cursor);
+                await _keyValueStoreRepository.SetAsync(GetPagingTokenKey, cursor);
             }
 
             return (count, cursor);

@@ -18,18 +18,21 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Transaction
         private const string IndexSeparator = ";";
 
         private static string GetPartitionKey(TxDirectionType direction) => direction.ToString();
+        private static string GetPartitionKeyHash() => "Hash";
+        private static string GetPartitionKeyPagingToken() => "PagingToken";
+
         private static string GetCurrentRowKey() => "Current";
 
         private readonly ILog _log;
         private readonly IReloadingManager<string> _dataConnStringManager;
 
-        private ConcurrentDictionary<string, (INoSQLTableStorage<TxHistoryEntity>, INoSQLTableStorage<IndexEntity>)> _tableCache;
+        private ConcurrentDictionary<string, (INoSQLTableStorage<TxHistoryEntity>, INoSQLTableStorage<KeyValueEntity>)> _tableCache;
 
         public TxHistoryRepository(IReloadingManager<string> dataConnStringManager, ILog log)
         {
             _dataConnStringManager = dataConnStringManager;
             _log = log;
-            _tableCache = new ConcurrentDictionary<string, (INoSQLTableStorage<TxHistoryEntity>, INoSQLTableStorage<IndexEntity>)>();
+            _tableCache = new ConcurrentDictionary<string, (INoSQLTableStorage<TxHistoryEntity>, INoSQLTableStorage<KeyValueEntity>)>();
         }
 
         private string GetTableName(string tableId)
@@ -38,7 +41,7 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Transaction
             return tableName;
         }
 
-        private (INoSQLTableStorage<TxHistoryEntity>, INoSQLTableStorage<IndexEntity>) GetTable(string tableId)
+        private (INoSQLTableStorage<TxHistoryEntity>, INoSQLTableStorage<KeyValueEntity>) GetTable(string tableId)
         {
             var tableName = GetTableName(tableId);
             if (_tableCache.ContainsKey(tableName))
@@ -46,7 +49,7 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Transaction
                 return _tableCache[tableName];
             }
             var table = AzureTableStorage<TxHistoryEntity>.Create(_dataConnStringManager, tableName, _log);
-            var tableIndex = AzureTableStorage<IndexEntity>.Create(_dataConnStringManager, tableName, _log);
+            var tableIndex = AzureTableStorage<KeyValueEntity>.Create(_dataConnStringManager, tableName, _log);
             _tableCache.TryAdd(tableName, (table, tableIndex));
             return (table, tableIndex);
         }
@@ -69,7 +72,7 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Transaction
             string filter = TableQuery.GenerateFilterCondition(nameof(ITableEntity.PartitionKey), QueryComparisons.Equal, direction.ToString());
             if (!string.IsNullOrEmpty(afterHash))
             {
-                var index = await tableIndex.GetDataAsync(IndexEntity.GetPartitionKeyHash(), afterHash);
+                var index = await tableIndex.GetDataAsync(GetPartitionKeyHash(), afterHash);
                 if (index == null)
                 {
                     throw new ArgumentException($"Unknwon transaction hash: {afterHash}", nameof(afterHash));
@@ -91,7 +94,7 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Transaction
         {
             var (table, tableIndex) = GetTable(tableId);
 
-            var pagingTokenIndex = await tableIndex.GetDataAsync(IndexEntity.GetPartitionKeyPagingToken(), GetCurrentRowKey());
+            var pagingTokenIndex = await tableIndex.GetDataAsync(GetPartitionKeyPagingToken(), GetCurrentRowKey());
             if (pagingTokenIndex != null)
             {
                 return pagingTokenIndex.Value;
@@ -105,9 +108,9 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Transaction
             var (table, tableIndex) = GetTable(tableId);
 
             // index to current paging token
-            var entity = new IndexEntity
+            var entity = new KeyValueEntity
             {
-                PartitionKey = IndexEntity.GetPartitionKeyPagingToken(),
+                PartitionKey = GetPartitionKeyPagingToken(),
                 RowKey = GetCurrentRowKey(),
                 Value = pagingToken
             };
@@ -126,12 +129,12 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Transaction
 
             // hash to row key(s)
             var value = entity.RowKey;
-            var index = await tableIndex.GetDataAsync(IndexEntity.GetPartitionKeyHash(), entity.Hash);
+            var index = await tableIndex.GetDataAsync(GetPartitionKeyHash(), entity.Hash);
             if (index == null || string.IsNullOrEmpty(index.Value))
             {
-                index = new IndexEntity
+                index = new KeyValueEntity
                 {
-                    PartitionKey = IndexEntity.GetPartitionKeyHash(),
+                    PartitionKey = GetPartitionKeyHash(),
                     RowKey = history.Hash,
                     Value = value
                 };
@@ -152,7 +155,7 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Transaction
 
             // remove from cache
             var tableName = GetTableName(tableId);
-            (INoSQLTableStorage<TxHistoryEntity>, INoSQLTableStorage<IndexEntity>) ignored;
+            (INoSQLTableStorage<TxHistoryEntity>, INoSQLTableStorage<KeyValueEntity>) ignored;
             _tableCache.TryRemove(tableName, out ignored);
         }
     }

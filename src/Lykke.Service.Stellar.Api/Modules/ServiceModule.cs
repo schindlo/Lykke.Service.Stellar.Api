@@ -15,6 +15,8 @@ using Lykke.Service.Stellar.Api.AzureRepositories.Observation;
 using Lykke.Service.Stellar.Api.Core.Domain.Observation;
 using Lykke.Service.Stellar.Api.Services.Transaction;
 using Lykke.Service.Stellar.Api.Services.Horizon;
+using Lykke.Service.Stellar.Api.AzureRepositories;
+using Lykke.Service.Stellar.Api.Core.Domain;
 
 namespace Lykke.Service.Stellar.Api.Modules
 {
@@ -83,6 +85,10 @@ namespace Lykke.Service.Stellar.Api.Modules
             builder.RegisterType<WalletBalanceRepository>()
                    .As<IWalletBalanceRepository>()
                    .WithParameter(TypedParameter.From(dataConnStringManager));
+
+            builder.RegisterType<KeyValueStoreRepository>()
+                    .As<IKeyValueStoreRepository>()
+                    .WithParameter(TypedParameter.From(dataConnStringManager));
 
             builder.RegisterType<HorizonService>()
                    .As<IHorizonService>()

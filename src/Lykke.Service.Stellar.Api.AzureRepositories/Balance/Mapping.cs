@@ -16,5 +16,19 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Balance
             };
             return balance;
         }
+
+        public static WalletBalanceEntity ToEntity(this WalletBalance domain)
+        {
+            var rowKey = WalletBalanceEntity.GetRowKey(domain.AssetId, domain.Address);
+            var entity = new WalletBalanceEntity
+            {
+                PartitionKey = TableKey.GetHashedRowKey(rowKey),
+                RowKey = rowKey,
+                Balance = domain.Balance,
+                Ledger = domain.Ledger,
+                OperationCount = domain.OperationCount
+            };
+            return entity;
+        }
     }
 }
