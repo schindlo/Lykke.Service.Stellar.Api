@@ -5,6 +5,11 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Observation
 {
     public class BroadcastObservationEntity : ObservationEntity<BroadcastObservation>
     {
+        public override string GetRowKey(BroadcastObservation observation)
+        {
+            return observation.OperationId.ToString();
+        }
+
         public override BroadcastObservation ToDomain()
         {
             var observation = new BroadcastObservation
@@ -12,11 +17,6 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Observation
                 OperationId = Guid.Parse(RowKey)
             };
             return observation;
-        }
-
-        public override void ToEntity(BroadcastObservation observation)
-        {
-            RowKey = observation.OperationId.ToString();
         }
     }
 }

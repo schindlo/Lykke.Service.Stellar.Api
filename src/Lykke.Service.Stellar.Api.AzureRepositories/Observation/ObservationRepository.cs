@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Threading.Tasks;
 using Common.Log;
 using AzureStorage;
@@ -12,34 +13,25 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Observation
 {
     public class ObservationRepository<T, U> : IObservationRepository<U> where T : ObservationEntity<U>, new() where U : class
     {
-        private const string TableName = "Observation";
-
-        private INoSQLTableStorage<T> _table;
+        private readonly INoSQLTableStorage<T> _table;
 
         public ObservationRepository(IReloadingManager<string> dataConnStringManager, ILog log)
         {
-            _table = AzureTableStorage<T>.Create(dataConnStringManager, TableName, log);
+            _table = AzureTableStorage<T>.Create(dataConnStringManager, typeof(U).Name, log);
         }
 
         public async Task<(List<U> Items, string ContinuationToken)> GetAllAsync(int take, string continuationToken)
         {
-            var query = new TableQuery<T>().Where(TableQuery.GenerateFilterCondition(nameof(ITableEntity.PartitionKey), QueryComparisons.Equal, typeof(U).Name))
-                                           .Take(take);
+            var query = new TableQuery<T>().Take(take);
             var data = await _table.GetDataWithContinuationTokenAsync(query, continuationToken);
 
-            var observations = new List<U>();
-            foreach (var entity in data.Entities)
-            {
-                var observation = entity.ToDomain();
-                observations.Add(observation);
-            }
-
+            var observations = data.Entities.Select(x => x.ToDomain()).ToList();
             return (observations, data.ContinuationToken);
         }
 
         public async Task<U> GetAsync(string key)
         {
-            var entity = await _table.GetDataAsync(typeof(U).Name, key);
+            var entity = await _table.GetDataAsync(ObservationEntity<U>.GetPartitionKey(key), key);
             if (entity != null)
             {
                 var result = entity.ToDomain();
@@ -53,16 +45,16 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Observation
         {
             var entity = new T()
             {
-                PartitionKey = typeof(U).Name,
                 Timestamp = DateTimeOffset.UtcNow,
             };
             entity.ToEntity(observation);
+            entity.PartitionKey = ObservationEntity<U>.GetPartitionKey(entity.RowKey);
             await _table.InsertOrReplaceAsync(entity);
         }
 
         public async Task DeleteIfExistAsync(string key)
         {
-            await _table.DeleteIfExistAsync(typeof(U).Name, key);
+            await _table.DeleteIfExistAsync(ObservationEntity<U>.GetPartitionKey(key), key);
         }
     }
 }

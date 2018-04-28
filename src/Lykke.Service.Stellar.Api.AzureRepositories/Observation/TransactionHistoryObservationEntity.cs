@@ -10,6 +10,11 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Observation
 
         public string TableId { get; set; }
 
+        public override string GetRowKey(TransactionHistoryObservation observation)
+        {
+            return observation.Address;
+        }
+
         public override TransactionHistoryObservation ToDomain()
         {
             var observation = new TransactionHistoryObservation
@@ -25,7 +30,7 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Observation
 
         public override void ToEntity(TransactionHistoryObservation observation)
         {
-            RowKey = observation.Address;
+            base.ToEntity(observation);
             IsIncomingTxObserved = observation.IsIncomingObserved;
             IsOutgoingTxObserved = observation.IsOutgoingObserved;
             TableId = observation.TableId;
