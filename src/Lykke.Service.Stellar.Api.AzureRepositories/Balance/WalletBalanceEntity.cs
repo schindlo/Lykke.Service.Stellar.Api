@@ -1,9 +1,16 @@
 ﻿using Lykke.AzureStorage.Tables;
+using Lykke.AzureStorage.Tables.Entity.Annotation;
+using Lykke.AzureStorage.Tables.Entity.ValueTypesMerging;
 
 namespace Lykke.Service.Stellar.Api.AzureRepositories.Balance
 {
+    [ValueTypeMergingStrategy(ValueTypeMergingStrategy.UpdateIfDirty)]
     public class WalletBalanceEntity : AzureTableEntity
     {
+        private long _balance;
+        private long _ledger;
+        private int _operationIndex;
+
         public string AssetId
         {
             get => RowKey.Split(':')[0];
@@ -14,11 +21,53 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Balance
             get => RowKey.Split(':')[1];
         }
 
-        public long Balance { get; set; }
+        public long Balance 
+        { 
+            get
+            {
+                return _balance;
+            }
+            set
+            {
+                if (_balance != value)
+                {
+                    _balance = value;
+                    MarkValueTypePropertyAsDirty(nameof(Balance));
+                }
+            }
+        }
 
-        public long Ledger { get; set; }
+        public long Ledger
+        {
+            get
+            {
+                return _ledger;
+            }
+            set
+            {
+                if (_ledger != value)
+                {
+                    _ledger = value;
+                    MarkValueTypePropertyAsDirty(nameof(Ledger));
+                }
+            }
+        }
 
-        public int OperationIndex { get; set; }
+        public int OperationIndex
+        {
+            get
+            {
+                return _operationIndex;
+            }
+            set
+            {
+                if (_operationIndex != value)
+                {
+                    _operationIndex = value;
+                    MarkValueTypePropertyAsDirty(nameof(OperationIndex));
+                }
+            }
+        }
 
         public static string GetRowKey(string assetId, string address)
         {

@@ -13,6 +13,8 @@ namespace Lykke.Service.Stellar.Api.Core.Domain.Balance
 
         Task DeleteIfExistAsync(string assetId, string address);
 
-        Task IncraseBalanceAsync(string assetId, string address, long ledger, int operationIndex, long amount);
+        Task<bool> IncreaseBalanceAsync(string assetId, string address, long ledger, int operationIndex, long amount);
+
+        Task<bool> DecreaseBalanceAsync(string assetId, string address, long amount);
     }
 }

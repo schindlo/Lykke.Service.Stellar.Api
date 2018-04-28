@@ -55,7 +55,7 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Balance
             await _table.DeleteIfExistAsync(TableKey.GetHashedRowKey(rowKey), rowKey);
         }
 
-        public async Task IncraseBalanceAsync(string assetId, string address, long ledger, int operationIndex, long amount)
+        public async Task<bool> IncreaseBalanceAsync(string assetId, string address, long ledger, int operationIndex, long amount)
         {
             var rowKey = WalletBalanceEntity.GetRowKey(assetId, address);
             var partitionKey = TableKey.GetHashedRowKey(rowKey);
@@ -73,7 +73,7 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Balance
             }
 
             // ReSharper disable once ImplicitlyCapturedClosure
-            bool UpdateEntity(WalletBalanceEntity entity)
+            bool ModifyEntity(WalletBalanceEntity entity)
             {
                 if (ledger > entity.Ledger ||
                     (ledger == entity.Ledger && operationIndex > entity.OperationIndex))
@@ -81,14 +81,50 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Balance
                     entity.Balance += amount;
                     entity.Ledger = ledger;
                     entity.OperationIndex = operationIndex;
-
                     return true;
                 }
 
                 return false;
             }
 
-            await _table.InsertOrModifyAsync(partitionKey, rowKey, CreateEntity, UpdateEntity);
+            var result = await _table.InsertOrModifyAsync(partitionKey, rowKey, CreateEntity, ModifyEntity);
+            return result;
+        }
+
+        public async Task<bool> DecreaseBalanceAsync(string assetId, string address, long amount)
+        {
+            var rowKey = WalletBalanceEntity.GetRowKey(assetId, address);
+            var partitionKey = TableKey.GetHashedRowKey(rowKey);
+
+            var existing = await _table.GetDataAsync(partitionKey, rowKey);
+            if (existing == null)
+            {
+                return false;
+            }
+
+            if (existing.Balance - amount == 0)
+            {
+                await _table.DeleteAsync(existing);
+            }
+            else
+            {
+                // ReSharper disable once ImplicitlyCapturedClosure
+                WalletBalanceEntity ModifyEntity(WalletBalanceEntity entity)
+                {
+                    if (entity.Balance > amount)
+                    {
+                        entity.Balance -= amount;
+                        return entity;
+                    }
+
+                    return null;
+                }
+
+                var result = await _table.MergeAsync(partitionKey, rowKey, ModifyEntity);
+                return result != null;
+            }
+
+            return true;
         }
     }
 }
