@@ -2,7 +2,7 @@
 
 namespace Lykke.Service.Stellar.Api.Core.Exceptions
 {
-    public class JobExecutionException : Exception
+    public sealed class JobExecutionException : Exception
     {
         private const string ProcessedDataKey = "Processed";
 

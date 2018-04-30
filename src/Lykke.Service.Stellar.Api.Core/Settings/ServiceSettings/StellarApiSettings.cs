@@ -19,8 +19,6 @@ namespace Lykke.Service.Stellar.Api.Core.Settings.ServiceSettings
 
         public int BroadcastInProgressJobPeriodSeconds { get; set; }
 
-        public int WalletBalanceJobBatchSize { get; set; }
-
         public int TransactionHistoryJobBatchSize { get; set; }
 
         public int BroadcastInProgressJobBatchSize { get; set; }

@@ -26,7 +26,7 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Transaction
         private readonly ILog _log;
         private readonly IReloadingManager<string> _dataConnStringManager;
 
-        private ConcurrentDictionary<string, (INoSQLTableStorage<TxHistoryEntity>, INoSQLTableStorage<KeyValueEntity>)> _tableCache;
+        private readonly ConcurrentDictionary<string, (INoSQLTableStorage<TxHistoryEntity>, INoSQLTableStorage<KeyValueEntity>)> _tableCache;
 
         public TxHistoryRepository(IReloadingManager<string> dataConnStringManager, ILog log)
         {

@@ -20,12 +20,10 @@ namespace Lykke.Service.Stellar.Api.Controllers
     [Route("api/balances")]
     public class BalancesController : Controller
     {
-        private readonly ITransactionService _transactionService;
         private readonly IBalanceService _balanceService;
 
-        public BalancesController(ITransactionService transactionService, IBalanceService balanceService)
+        public BalancesController(IBalanceService balanceService)
         {
-            _transactionService = transactionService;
             _balanceService = balanceService;
         }
 
@@ -54,7 +52,7 @@ namespace Lykke.Service.Stellar.Api.Controllers
             var balances = await _balanceService.GetBalancesAsync(take, continuation);
 
             var results = new List<WalletBalanceContract>();
-            foreach (WalletBalance b in balances.Wallets)
+            foreach (var b in balances.Wallets)
             {
                 var result = new WalletBalanceContract
                 {

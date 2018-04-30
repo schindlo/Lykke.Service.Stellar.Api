@@ -30,7 +30,7 @@ namespace Lykke.Service.Stellar.Api.Controllers
         [ProducesResponseType(typeof(BuildTransactionResponse), StatusCodes.Status200OK)]
         public async Task<IActionResult> BuildSingle([Required, FromBody] BuildSingleTransactionRequest request)
         {
-            if (Guid.Empty.Equals(request?.OperationId))
+            if (request == null || request.OperationId.Equals(Guid.Empty))
             {
                 return BadRequest(ErrorResponse.Create("Invalid parameter").AddModelError(nameof(request.OperationId), "Must be valid guid"));
             }
@@ -61,7 +61,8 @@ namespace Lykke.Service.Stellar.Api.Controllers
                     {
                         return BadRequest(ErrorResponse.Create($"{nameof(request.FromAddress)} is not a valid. Public address extension allowed for deposit base address only!"));
                     }
-                    else if (!request.ToAddress.Equals(_balanceService.GetDepositBaseAddress(), StringComparison.OrdinalIgnoreCase))
+
+                    if (!request.ToAddress.Equals(_balanceService.GetDepositBaseAddress(), StringComparison.OrdinalIgnoreCase))
                     {
                         return BadRequest(ErrorResponse.Create($"{nameof(request.ToAddress)} is not a valid. Only deposit base address allowed as destination, when sending from address with public address extension!"));
                     }
@@ -132,7 +133,7 @@ namespace Lykke.Service.Stellar.Api.Controllers
         [HttpPost("broadcast")]
         public async Task<IActionResult> Broadcast([Required, FromBody] BroadcastTransactionRequest request)
         {
-            if (Guid.Empty.Equals(request?.OperationId))
+            if (request == null || request.OperationId.Equals(Guid.Empty))
             {
                 return BadRequest(ErrorResponse.Create("Invalid parameter").AddModelError(nameof(request.OperationId), "Must be valid guid"));
             }
@@ -178,7 +179,7 @@ namespace Lykke.Service.Stellar.Api.Controllers
         [ProducesResponseType(typeof(BroadcastedSingleTransactionResponse), StatusCodes.Status200OK)]
         public async Task<IActionResult> GetBroadcastSingle([Required] Guid operationId)
         {
-            if (Guid.Empty.Equals(operationId))
+            if (operationId.Equals(Guid.Empty))
             {
                 return BadRequest(ErrorResponse.Create("Invalid parameter").AddModelError(nameof(operationId), "Must be valid guid"));
             }
@@ -198,7 +199,7 @@ namespace Lykke.Service.Stellar.Api.Controllers
                 Hash = broadcast.Hash,
                 Block = broadcast.Ledger ?? 0,
                 Error = broadcast.Error,
-                ErrorCode = broadcast.ErrorCode.HasValue ? broadcast.ErrorCode.Value.ToTransactionExecutionError() : null
+                ErrorCode = broadcast.ErrorCode?.ToTransactionExecutionError()
             });
         }
 

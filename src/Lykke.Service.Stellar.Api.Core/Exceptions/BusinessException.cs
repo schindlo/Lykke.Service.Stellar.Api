@@ -2,7 +2,7 @@
 
 namespace Lykke.Service.Stellar.Api.Core.Exceptions
 {
-    public class BusinessException : Exception
+    public sealed class BusinessException : Exception
     {
         private const string ErrorCodeDataKey = "ErrorCode";
 
@@ -24,9 +24,6 @@ namespace Lykke.Service.Stellar.Api.Core.Exceptions
             }
         }
 
-        public string ErrorCode
-        {
-            get => Data.Contains(ErrorCodeDataKey) ? Data[ErrorCodeDataKey].ToString() : null;
-        }
+        public string ErrorCode => Data.Contains(ErrorCodeDataKey) ? Data[ErrorCodeDataKey].ToString() : null;
     }
 }

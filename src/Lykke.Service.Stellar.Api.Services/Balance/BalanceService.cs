@@ -1,18 +1,17 @@
 ﻿using System;
-using System.Linq;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
-using StellarBase;
-using Common.Log;
-using Lykke.Service.Stellar.Api.Core.Domain.Balance;
-using Lykke.Service.Stellar.Api.Core.Services;
-using Lykke.Service.Stellar.Api.Core.Domain;
-using Lykke.Service.Stellar.Api.Core.Domain.Observation;
 using Lykke.Service.Stellar.Api.Core;
-using StellarBase.Generated;
+using Lykke.Service.Stellar.Api.Core.Domain;
+using Lykke.Service.Stellar.Api.Core.Domain.Balance;
+using Lykke.Service.Stellar.Api.Core.Domain.Observation;
 using Lykke.Service.Stellar.Api.Core.Exceptions;
+using Lykke.Service.Stellar.Api.Core.Services;
+using StellarBase;
+using StellarBase.Generated;
 
-namespace Lykke.Service.Stellar.Api.Services
+namespace Lykke.Service.Stellar.Api.Services.Balance
 {
     public class BalanceService : IBalanceService
     {
@@ -22,20 +21,17 @@ namespace Lykke.Service.Stellar.Api.Services
         private readonly IKeyValueStoreRepository _keyValueStoreRepository;
         private readonly IObservationRepository<BalanceObservation> _observationRepository;
         private readonly IWalletBalanceRepository _walletBalanceRepository;
-        private readonly ILog _log;
 
-        private readonly int _batchSize;
         private readonly string _depositBaseAddress;
         private readonly string[] _explorerUrlFormats;
 
-        public BalanceService(IHorizonService horizonService, IKeyValueStoreRepository keyValueStoreRepository, IObservationRepository<BalanceObservation> observationRepository, IWalletBalanceRepository walletBalanceRepository, ILog log, int batchSize, string depositBaseAddress, string[] explorerUrlFormats)
+        public BalanceService(IHorizonService horizonService, IKeyValueStoreRepository keyValueStoreRepository, IObservationRepository<BalanceObservation> observationRepository, 
+                              IWalletBalanceRepository walletBalanceRepository, string depositBaseAddress, string[] explorerUrlFormats)
         {
             _horizonService = horizonService;
             _keyValueStoreRepository = keyValueStoreRepository;
             _observationRepository = observationRepository;
             _walletBalanceRepository = walletBalanceRepository;
-            _log = log;
-            _batchSize = batchSize;
             _depositBaseAddress = depositBaseAddress;
             _explorerUrlFormats = explorerUrlFormats;
         }

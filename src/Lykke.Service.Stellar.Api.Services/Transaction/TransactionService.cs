@@ -18,7 +18,7 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
 {
     public class TransactionService : ITransactionService
     {
-        private int _batchSize;
+        private readonly int _batchSize;
 
         private string _lastJobError;
 
@@ -28,10 +28,9 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
         private readonly IWalletBalanceRepository _balanceRepository;
         private readonly ITxBroadcastRepository _broadcastRepository;
         private readonly ITxBuildRepository _buildRepository;
-        private readonly ILog _log;
 
         public TransactionService(IBalanceService balanceService, IHorizonService horizonService, IObservationRepository<BroadcastObservation> observationRepository,
-                                  IWalletBalanceRepository balanceRepository, ITxBroadcastRepository broadcastRepository, ITxBuildRepository buildRepository, ILog log, int batchSize)
+                                  IWalletBalanceRepository balanceRepository, ITxBroadcastRepository broadcastRepository, ITxBuildRepository buildRepository, int batchSize)
         {
             _balanceService = balanceService;
             _horizonService = horizonService;
@@ -39,7 +38,6 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
             _balanceRepository = balanceRepository;
             _broadcastRepository = broadcastRepository;
             _buildRepository = buildRepository;
-            _log = log;
             _batchSize = batchSize;
         }
 

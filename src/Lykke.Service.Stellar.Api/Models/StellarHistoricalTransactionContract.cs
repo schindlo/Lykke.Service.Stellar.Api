@@ -1,5 +1,4 @@
-﻿using System;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using Lykke.Service.BlockchainApi.Contract.Transactions;
 
 namespace Lykke.Service.Stellar.Api.Models

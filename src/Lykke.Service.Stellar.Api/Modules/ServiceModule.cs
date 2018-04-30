@@ -17,6 +17,7 @@ using Lykke.Service.Stellar.Api.Services.Transaction;
 using Lykke.Service.Stellar.Api.Services.Horizon;
 using Lykke.Service.Stellar.Api.AzureRepositories;
 using Lykke.Service.Stellar.Api.Core.Domain;
+using Lykke.Service.Stellar.Api.Services.Balance;
 
 namespace Lykke.Service.Stellar.Api.Modules
 {
@@ -98,7 +99,6 @@ namespace Lykke.Service.Stellar.Api.Modules
 
             builder.RegisterType<BalanceService>()
                    .As<IBalanceService>()
-                   .WithParameter("batchSize", _settings.CurrentValue.WalletBalanceJobBatchSize)
                    .WithParameter("depositBaseAddress", _settings.CurrentValue.DepositBaseAddress)
                    .WithParameter("explorerUrlFormats", _settings.CurrentValue.ExplorerUrlFormats)
                    .SingleInstance();

@@ -17,17 +17,11 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Transaction
         private string _error;
         private TxExecutionError? _errorCode;
 
-        public Guid OperationId
-        {
-            get => Guid.Parse(RowKey);
-        }
+        public Guid OperationId => Guid.Parse(RowKey);
 
         public TxBroadcastState State 
         { 
-            get
-            {
-                return _state;    
-            }
+            get => _state;
             set
             {
                 if (_state != value)
@@ -40,10 +34,7 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Transaction
 
         public long? Amount
         {
-            get
-            {
-                return _amount;
-            }
+            get => _amount;
             set
             {
                 if (_amount != value)
@@ -56,10 +47,7 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Transaction
 
         public long? Fee
         {
-            get
-            {
-                return _fee;
-            }
+            get => _fee;
             set
             {
                 if (_fee != value)
@@ -74,10 +62,7 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Transaction
 
         public long? Ledger
         { 
-            get
-            {
-                return _ledger;
-            }
+            get => _ledger;
             set
             {
                 if (_ledger != value)
@@ -90,10 +75,7 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Transaction
 
         public DateTime? CreatedAt
         {
-            get
-            {
-                return _createdAt;
-            }
+            get => _createdAt;
             set
             {
                 if (_createdAt != value)
@@ -106,10 +88,7 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Transaction
 
         public string Error
         {
-            get
-            {
-                return _error;
-            }
+            get => _error;
             set
             {
                 if (_error != value)
@@ -122,10 +101,7 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Transaction
 
         public TxExecutionError? ErrorCode
         { 
-            get
-            {
-                return _errorCode;
-            }
+            get => _errorCode;
             set
             {
                 if (_errorCode != value)

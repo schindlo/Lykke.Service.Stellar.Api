@@ -9,8 +9,8 @@ namespace Lykke.Service.Stellar.Api.Jobs
 {
     public class TransactionHistoryJob : TimerPeriod
     {
-        private ITransactionHistoryService _txHistoryService;
-        private ILog _log;
+        private readonly ITransactionHistoryService _txHistoryService;
+        private readonly ILog _log;
 
         public TransactionHistoryJob(ITransactionHistoryService txHistoryService, int period, ILog log)
             : base(nameof(TransactionHistoryJob), period, log)
@@ -21,7 +21,7 @@ namespace Lykke.Service.Stellar.Api.Jobs
 
         public override async Task Execute()
         {
-            await _log.WriteInfoAsync(nameof(TransactionHistoryJob), nameof(Execute), $"Job started");
+            await _log.WriteInfoAsync(nameof(TransactionHistoryJob), nameof(Execute), "Job started");
             var watch = Stopwatch.StartNew();
 
             try 

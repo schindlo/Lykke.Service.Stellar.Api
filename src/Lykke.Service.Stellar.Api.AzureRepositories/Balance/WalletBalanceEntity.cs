@@ -12,22 +12,13 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Balance
         private int _operationIndex;
         private string _lastTransactionHash;
 
-        public string AssetId
-        {
-            get => RowKey.Split(':')[0];
-        }
+        public string AssetId => RowKey.Split(':')[0];
 
-        public string Address
-        {
-            get => RowKey.Split(':')[1];
-        }
+        public string Address => RowKey.Split(':')[1];
 
         public long Balance 
         { 
-            get
-            {
-                return _balance;
-            }
+            get => _balance;
             set
             {
                 if (_balance != value)
@@ -40,10 +31,7 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Balance
 
         public long Ledger
         {
-            get
-            {
-                return _ledger;
-            }
+            get => _ledger;
             set
             {
                 if (_ledger != value)
@@ -56,10 +44,7 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Balance
 
         public int OperationIndex
         {
-            get
-            {
-                return _operationIndex;
-            }
+            get => _operationIndex;
             set
             {
                 if (_operationIndex != value)
@@ -72,10 +57,7 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Balance
 
         public string LastTransactionHash
         {
-            get
-            {
-                return _lastTransactionHash;
-            }
+            get => _lastTransactionHash;
             set
             {
                 if (_lastTransactionHash != value)

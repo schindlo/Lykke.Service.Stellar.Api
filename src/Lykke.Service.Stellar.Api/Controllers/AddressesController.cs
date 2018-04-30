@@ -4,8 +4,6 @@ using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Mvc;
 using Lykke.Service.Stellar.Api.Core.Services;
 using Lykke.Service.BlockchainApi.Contract.Addresses;
-using Swashbuckle.AspNetCore.SwaggerGen;
-using Microsoft.AspNetCore.Http;
 using Lykke.Common.Api.Contract.Responses;
 
 namespace Lykke.Service.Stellar.Api.Controllers

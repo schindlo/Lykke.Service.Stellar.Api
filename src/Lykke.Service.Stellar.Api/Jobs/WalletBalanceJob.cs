@@ -9,8 +9,8 @@ namespace Lykke.Service.Stellar.Api.Jobs
 {
     public class WalletBalanceJob : TimerPeriod
     {
-        private IBalanceService _balanceService;
-        private ILog _log;
+        private readonly IBalanceService _balanceService;
+        private readonly ILog _log;
 
         public WalletBalanceJob(IBalanceService balanceService, int period, ILog log)
             : base(nameof(WalletBalanceJob), period, log)
@@ -21,7 +21,7 @@ namespace Lykke.Service.Stellar.Api.Jobs
 
         public override async Task Execute()
         {
-            await _log.WriteInfoAsync(nameof(WalletBalanceJob), nameof(Execute), $"Job started");
+            await _log.WriteInfoAsync(nameof(WalletBalanceJob), nameof(Execute), "Job started");
             var watch = Stopwatch.StartNew();
 
             try

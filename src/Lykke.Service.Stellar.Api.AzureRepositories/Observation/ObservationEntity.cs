@@ -1,5 +1,4 @@
-﻿using Common;
-using Lykke.AzureStorage.Tables;
+﻿using Lykke.AzureStorage.Tables;
 
 namespace Lykke.Service.Stellar.Api.AzureRepositories.Observation
 {

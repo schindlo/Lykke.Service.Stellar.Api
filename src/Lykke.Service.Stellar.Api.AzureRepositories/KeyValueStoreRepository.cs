@@ -21,12 +21,7 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories
         public async Task<string> GetAsync(string key)
         {
             var entity = await _table.GetDataAsync(string.Empty, key);
-            if (entity != null)
-            {
-                return entity.Value;
-            }
-
-            return null;
+            return entity?.Value;
         }
 
         public async Task SetAsync(string key, string value)

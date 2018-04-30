@@ -9,8 +9,8 @@ namespace Lykke.Service.Stellar.Api.Jobs
 {
     public class BroadcastInProgressJob : TimerPeriod
     {
-        private ITransactionService _transactionService;
-        private ILog _log;
+        private readonly ITransactionService _transactionService;
+        private readonly ILog _log;
 
         public BroadcastInProgressJob(ITransactionService transactionService, int period, ILog log)
             : base(nameof(BroadcastInProgressJob), period, log)
@@ -21,7 +21,7 @@ namespace Lykke.Service.Stellar.Api.Jobs
 
         public override async Task Execute()
         {
-            await _log.WriteInfoAsync(nameof(BroadcastInProgressJob), nameof(Execute), $"Job started");
+            await _log.WriteInfoAsync(nameof(BroadcastInProgressJob), nameof(Execute), "Job started");
             var watch = Stopwatch.StartNew();
 
             try

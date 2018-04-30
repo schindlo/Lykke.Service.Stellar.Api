@@ -3,8 +3,6 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using StellarBase;
 using StellarBase.Generated;
-using StellarSdk.Model;
-using Common.Log;
 using Lykke.Service.Stellar.Api.Core.Domain.Observation;
 using Lykke.Service.Stellar.Api.Core.Domain.Transaction;
 using Lykke.Service.Stellar.Api.Core.Services;
@@ -15,7 +13,7 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
 {
     public class TransactionHistoryService : ITransactionHistoryService
     {
-        private int _batchSize;
+        private readonly int _batchSize;
 
         private string _lastJobError;
 
@@ -23,18 +21,14 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
         private readonly IHorizonService _horizonService;
         private readonly IObservationRepository<TransactionHistoryObservation> _observationRepository;
         private readonly ITxHistoryRepository _txHistoryRepository;
-        private readonly ITxBroadcastRepository _txBroadcastRepository;
-        private readonly ILog _log;
 
         public TransactionHistoryService(IBalanceService balanceService, IHorizonService horizonService, IObservationRepository<TransactionHistoryObservation> observationRepository,
-                                         ITxHistoryRepository txHistoryRepository, ITxBroadcastRepository txBroadcastRepository, ILog log, int batchSize)
+                                         ITxHistoryRepository txHistoryRepository, int batchSize)
         {
             _balanceService = balanceService;
             _horizonService = horizonService;
             _observationRepository = observationRepository;
             _txHistoryRepository = txHistoryRepository;
-            _txBroadcastRepository = txBroadcastRepository;
-            _log = log;
             _batchSize = batchSize;
         }
 

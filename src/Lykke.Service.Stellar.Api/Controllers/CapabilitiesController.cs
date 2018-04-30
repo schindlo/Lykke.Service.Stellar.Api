@@ -2,7 +2,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Swashbuckle.AspNetCore.SwaggerGen;
 using Lykke.Service.BlockchainApi.Contract.Common;
-using Lykke.Service.Stellar.Api.Models;
 
 namespace Lykke.Service.Stellar.Api.Controllers
 {
