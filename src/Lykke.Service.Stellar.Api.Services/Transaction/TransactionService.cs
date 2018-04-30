@@ -25,16 +25,18 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
         private readonly IBalanceService _balanceService;
         private readonly IHorizonService _horizonService;
         private readonly IObservationRepository<BroadcastObservation> _observationRepository;
+        private readonly IWalletBalanceRepository _balanceRepository;
         private readonly ITxBroadcastRepository _broadcastRepository;
         private readonly ITxBuildRepository _buildRepository;
         private readonly ILog _log;
 
         public TransactionService(IBalanceService balanceService, IHorizonService horizonService, IObservationRepository<BroadcastObservation> observationRepository,
-                                  ITxBroadcastRepository broadcastRepository, ITxBuildRepository buildRepository, ILog log, int batchSize)
+                                  IWalletBalanceRepository balanceRepository, ITxBroadcastRepository broadcastRepository, ITxBuildRepository buildRepository, ILog log, int batchSize)
         {
             _balanceService = balanceService;
             _horizonService = horizonService;
             _observationRepository = observationRepository;
+            _balanceRepository = balanceRepository;
             _broadcastRepository = broadcastRepository;
             _buildRepository = buildRepository;
             _log = log;
@@ -97,6 +99,7 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
                 if (_balanceService.GetDepositBaseAddress().Equals(toKeyPair.Address, StringComparison.OrdinalIgnoreCase))
                 {
                     var fromAddress = $"{fromKeyPair.Address}{Constants.PublicAddressExtension.Separator}{tx.Memo.Text}";
+                    var hash = _horizonService.GetTransactionHash(tx);
                     var amount = tx.Operations[0].Body.PaymentOp.Amount.InnerValue;
 
                     var broadcast = new TxBroadcast
@@ -104,11 +107,12 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
                         OperationId = operationId,
                         Amount = amount,
                         Fee = 0,
-                        Hash = _horizonService.GetTransactionHash(tx),
+                        Hash = hash,
                         CreatedAt = DateTime.UtcNow
                     };
 
-                    if (await _balanceService.DecreaseBalance(fromAddress, amount))
+                    var assetId = Core.Domain.Asset.Stellar.Id;
+                    if (await _balanceRepository.DecreaseBalanceAsync(assetId, fromAddress, hash, amount))
                     {
                         broadcast.State = TxBroadcastState.Completed;
                     }
@@ -120,6 +124,7 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
                     }
 
                     await _broadcastRepository.InsertOrReplaceAsync(broadcast);
+                    await _balanceRepository.DeleteIfBalanceIsZero(assetId, fromAddress);
                     return true;   
                 }
             }

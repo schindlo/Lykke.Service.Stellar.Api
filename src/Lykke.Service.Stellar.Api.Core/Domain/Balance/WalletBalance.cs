@@ -11,5 +11,7 @@
         public long Ledger { get; set; }
 
         public int OperationIndex { get; set; }
+
+        public string LastTransactionHash { get; set; }
     }
 }

@@ -12,7 +12,8 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Balance
                 AssetId = entity.AssetId,
                 Balance = entity.Balance,
                 Ledger = entity.Ledger,
-                OperationIndex = entity.OperationIndex
+                OperationIndex = entity.OperationIndex,
+                LastTransactionHash = entity.LastTransactionHash                                       
             };
             return balance;
         }
@@ -26,7 +27,8 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Balance
                 RowKey = rowKey,
                 Balance = domain.Balance,
                 Ledger = domain.Ledger,
-                OperationIndex = domain.OperationIndex
+                OperationIndex = domain.OperationIndex,
+                LastTransactionHash = domain.LastTransactionHash
             };
             return entity;
         }

@@ -126,13 +126,6 @@ namespace Lykke.Service.Stellar.Api.Services
             return result;
         }
 
-        public async Task<bool> DecreaseBalance(string address, long amount)
-        {
-            var assetId = Core.Domain.Asset.Stellar.Id;
-            var result = await _walletBalanceRepository.DecreaseBalanceAsync(assetId, address, amount);
-            return result;
-        }
-
         public async Task<bool> IsBalanceObservedAsync(string address)
         {
             return await _observationRepository.GetAsync(address) != null;
@@ -260,7 +253,7 @@ namespace Lykke.Service.Stellar.Api.Services
                             }
 
                             var assetId = Core.Domain.Asset.Stellar.Id;
-                            await _walletBalanceRepository.IncreaseBalanceAsync(assetId, addressWithExtension, transaction.Ledger, i, amount);
+                            await _walletBalanceRepository.IncreaseBalanceAsync(assetId, addressWithExtension, transaction.Ledger, i, transaction.Hash, amount);
                         }
                     }
                 }

@@ -10,6 +10,7 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Balance
         private long _balance;
         private long _ledger;
         private int _operationIndex;
+        private string _lastTransactionHash;
 
         public string AssetId
         {
@@ -65,6 +66,22 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Balance
                 {
                     _operationIndex = value;
                     MarkValueTypePropertyAsDirty(nameof(OperationIndex));
+                }
+            }
+        }
+
+        public string LastTransactionHash
+        {
+            get
+            {
+                return _lastTransactionHash;
+            }
+            set
+            {
+                if (_lastTransactionHash != value)
+                {
+                    _lastTransactionHash = value;
+                    MarkValueTypePropertyAsDirty(nameof(LastTransactionHash));
                 }
             }
         }
