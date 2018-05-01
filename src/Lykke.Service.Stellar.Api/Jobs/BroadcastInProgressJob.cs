@@ -11,12 +11,14 @@ namespace Lykke.Service.Stellar.Api.Jobs
     {
         private readonly ITransactionService _transactionService;
         private readonly ILog _log;
+        private readonly int _batchSize;
 
-        public BroadcastInProgressJob(ITransactionService transactionService, int period, ILog log)
+        public BroadcastInProgressJob(ITransactionService transactionService, ILog log, int period, int batchSize)
             : base(nameof(BroadcastInProgressJob), period, log)
         {
             _transactionService = transactionService;
             _log = log;
+            _batchSize = batchSize;
         }
 
         public override async Task Execute()
@@ -26,7 +28,7 @@ namespace Lykke.Service.Stellar.Api.Jobs
 
             try
             {
-                int count = await _transactionService.UpdateBroadcastsInProgress();
+                int count = await _transactionService.UpdateBroadcastsInProgress(_batchSize);
 
                 watch.Stop();
                 await _log.WriteInfoAsync(nameof(BroadcastInProgressJob), nameof(Execute), $"Job finished. dt={watch.ElapsedMilliseconds}ms, records={count}");

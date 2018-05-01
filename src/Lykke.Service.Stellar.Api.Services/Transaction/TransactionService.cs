@@ -18,8 +18,6 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
 {
     public class TransactionService : ITransactionService
     {
-        private readonly int _batchSize;
-
         private string _lastJobError;
 
         private readonly IBalanceService _balanceService;
@@ -30,7 +28,7 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
         private readonly ITxBuildRepository _buildRepository;
 
         public TransactionService(IBalanceService balanceService, IHorizonService horizonService, IObservationRepository<BroadcastObservation> observationRepository,
-                                  IWalletBalanceRepository balanceRepository, ITxBroadcastRepository broadcastRepository, ITxBuildRepository buildRepository, int batchSize)
+                                  IWalletBalanceRepository balanceRepository, ITxBroadcastRepository broadcastRepository, ITxBuildRepository buildRepository)
         {
             _balanceService = balanceService;
             _horizonService = horizonService;
@@ -38,7 +36,6 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
             _balanceRepository = balanceRepository;
             _broadcastRepository = broadcastRepository;
             _buildRepository = buildRepository;
-            _batchSize = batchSize;
         }
 
         public async Task<TxBroadcast> GetTxBroadcastAsync(Guid operationId)
@@ -252,7 +249,7 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
             return _lastJobError;
         }
 
-        public async Task<int> UpdateBroadcastsInProgress()
+        public async Task<int> UpdateBroadcastsInProgress(int batchSize)
         {
             int count = 0;
 
@@ -261,7 +258,7 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
                 string continuationToken = null;
                 do
                 {
-                    var observations = await _observationRepository.GetAllAsync(_batchSize, continuationToken);
+                    var observations = await _observationRepository.GetAllAsync(batchSize, continuationToken);
                     foreach (var item in observations.Items)
                     {
                         await ProcessBroadcastInProgress(item.OperationId);

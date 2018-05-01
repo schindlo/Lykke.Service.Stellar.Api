@@ -21,5 +21,6 @@
     <Folder Include="Balance\" />
     <Folder Include="Transaction\" />
     <Folder Include="Horizon\" />
+    <Folder Include="Modules\" />
   </ItemGroup>
 </Project>

@@ -19,5 +19,6 @@
     <Folder Include="Transaction\" />
     <Folder Include="Balance\" />
     <Folder Include="Observation\" />
+    <Folder Include="Modules\" />
   </ItemGroup>
 </Project>

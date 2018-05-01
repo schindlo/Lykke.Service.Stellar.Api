@@ -9,9 +9,11 @@ using Lykke.AzureStorage.Tables.Entity.Metamodel.Providers;
 using Lykke.Common.ApiLibrary.Middleware;
 using Lykke.Common.ApiLibrary.Swagger;
 using Lykke.Logs;
+using Lykke.Service.Stellar.Api.AzureRepositories.Modules;
 using Lykke.Service.Stellar.Api.Core.Services;
 using Lykke.Service.Stellar.Api.Core.Settings;
 using Lykke.Service.Stellar.Api.Modules;
+using Lykke.Service.Stellar.Api.Services.Modules;
 using Lykke.SettingsReader;
 using Lykke.SlackNotification.AzureQueue;
 using Microsoft.AspNetCore.Builder;
@@ -61,6 +63,8 @@ namespace Lykke.Service.Stellar.Api
 
                 Log = CreateLogWithSlack(services, appSettings);
 
+                builder.RegisterModule(new StellarApiModule(appSettings.Nested(x => x.StellarApiService), Log));
+                builder.RegisterModule(new RepositoryModule(appSettings.Nested(x => x.StellarApiService), Log));
                 builder.RegisterModule(new ServiceModule(appSettings.Nested(x => x.StellarApiService), Log));
                 builder.Populate(services);
                 ApplicationContainer = builder.Build();

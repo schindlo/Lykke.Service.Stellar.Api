@@ -13,8 +13,6 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
 {
     public class TransactionHistoryService : ITransactionHistoryService
     {
-        private readonly int _batchSize;
-
         private string _lastJobError;
 
         private readonly IBalanceService _balanceService;
@@ -22,14 +20,13 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
         private readonly IObservationRepository<TransactionHistoryObservation> _observationRepository;
         private readonly ITxHistoryRepository _txHistoryRepository;
 
-        public TransactionHistoryService(IBalanceService balanceService, IHorizonService horizonService, IObservationRepository<TransactionHistoryObservation> observationRepository,
-                                         ITxHistoryRepository txHistoryRepository, int batchSize)
+        public TransactionHistoryService(IBalanceService balanceService, IHorizonService horizonService,
+                                         IObservationRepository<TransactionHistoryObservation> observationRepository, ITxHistoryRepository txHistoryRepository)
         {
             _balanceService = balanceService;
             _horizonService = horizonService;
             _observationRepository = observationRepository;
             _txHistoryRepository = txHistoryRepository;
-            _batchSize = batchSize;
         }
 
         public async Task<bool> IsIncomingTransactionObservedAsync(string address)
@@ -130,7 +127,7 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
             return new List<TxHistory>();
         }
 
-        public async Task<int> UpdateTransactionHistory()
+        public async Task<int> UpdateTransactionHistory(int batchSize)
         {
             int count = 0;
 
@@ -139,7 +136,7 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
                 string continuationToken = null;
                 do
                 {
-                    var observations = await _observationRepository.GetAllAsync(_batchSize, continuationToken);
+                    var observations = await _observationRepository.GetAllAsync(batchSize, continuationToken);
                     foreach (var item in observations.Items)
                     {
                         count += await ProcessTransactionObservation(item);
