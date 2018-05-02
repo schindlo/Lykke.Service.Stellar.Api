@@ -29,6 +29,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lykke.Service.Stellar.Api.T
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "4. Tests", "4. Tests", "{8F9036B1-5106-4C69-B2D2-B78EE52687A0}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lykke.Job.Stellar.Api", "src\Lykke.Job.Stellar.Api\Lykke.Job.Stellar.Api.csproj", "{BBB5DB18-3F99-4AE9-98DF-DB32198C99EB}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -59,6 +61,10 @@ Global
 		{E414FDB9-FEEA-4CD0-9BBA-D1541601DF29}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E414FDB9-FEEA-4CD0-9BBA-D1541601DF29}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E414FDB9-FEEA-4CD0-9BBA-D1541601DF29}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BBB5DB18-3F99-4AE9-98DF-DB32198C99EB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BBB5DB18-3F99-4AE9-98DF-DB32198C99EB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BBB5DB18-3F99-4AE9-98DF-DB32198C99EB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BBB5DB18-3F99-4AE9-98DF-DB32198C99EB}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

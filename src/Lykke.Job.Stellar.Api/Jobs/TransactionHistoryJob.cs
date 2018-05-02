@@ -5,7 +5,7 @@ using Common.Log;
 using Lykke.Service.Stellar.Api.Core.Exceptions;
 using Lykke.Service.Stellar.Api.Core.Services;
 
-namespace Lykke.Service.Stellar.Api.Jobs
+namespace Lykke.Job.Stellar.Api.Jobs
 {
     public class TransactionHistoryJob : TimerPeriod
     {

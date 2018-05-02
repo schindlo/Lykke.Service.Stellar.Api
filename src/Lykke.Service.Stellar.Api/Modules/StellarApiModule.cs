@@ -4,7 +4,6 @@ using Common.Log;
 using Lykke.Service.Stellar.Api.Core.Settings.ServiceSettings;
 using Lykke.SettingsReader;
 using Microsoft.Extensions.DependencyInjection;
-using Lykke.Service.Stellar.Api.Jobs;
 
 namespace Lykke.Service.Stellar.Api.Modules
 {
@@ -33,26 +32,6 @@ namespace Lykke.Service.Stellar.Api.Modules
 
             builder.RegisterInstance(_log)
                    .As<ILog>()
-                   .SingleInstance();
-
-            builder.RegisterType<WalletBalanceJob>()
-                   .As<IStartable>()
-                   .AutoActivate()
-                   .WithParameter("period", _settings.CurrentValue.WalletBalanceJobPeriodSeconds * 1000)
-                   .SingleInstance();
-
-            builder.RegisterType<TransactionHistoryJob>()
-                   .As<IStartable>()
-                   .AutoActivate()
-                   .WithParameter("period", _settings.CurrentValue.TransactionHistoryJobPeriodSeconds * 1000)
-                   .WithParameter("batchSize", _settings.CurrentValue.TransactionHistoryJobBatchSize)
-                   .SingleInstance();
-
-            builder.RegisterType<BroadcastInProgressJob>()
-                   .As<IStartable>()
-                   .AutoActivate()
-                   .WithParameter("period", _settings.CurrentValue.BroadcastInProgressJobPeriodSeconds * 1000)
-                   .WithParameter("batchSize", _settings.CurrentValue.BroadcastInProgressJobBatchSize)
                    .SingleInstance();
 
             builder.Populate(_services);

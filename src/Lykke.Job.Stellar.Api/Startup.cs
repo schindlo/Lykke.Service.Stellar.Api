@@ -11,17 +11,17 @@ using Lykke.Common.ApiLibrary.Swagger;
 using Lykke.Logs;
 using Lykke.Service.Stellar.Api.AzureRepositories.Modules;
 using Lykke.Service.Stellar.Api.Core.Services;
-using Lykke.Service.Stellar.Api.Core.Settings;
-using Lykke.Service.Stellar.Api.Modules;
+using Lykke.Job.Stellar.Api.Modules;
 using Lykke.Service.Stellar.Api.Services.Modules;
 using Lykke.SettingsReader;
 using Lykke.SlackNotification.AzureQueue;
+using Lykke.Job.Stellar.Api.Settings;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Lykke.Service.Stellar.Api
+namespace Lykke.Job.Stellar.Api
 {
     public class Startup
     {
@@ -53,7 +53,7 @@ namespace Lykke.Service.Stellar.Api
 
                 services.AddSwaggerGen(options =>
                 {
-                    options.DefaultLykkeConfiguration("v1", "ServiceStellarApi API");
+                    options.DefaultLykkeConfiguration("v1", "JobStellarApi API");
                 });
 
                 EntityMetamodel.Configure(new AnnotationsBasedMetamodelProvider());
@@ -63,7 +63,7 @@ namespace Lykke.Service.Stellar.Api
 
                 Log = CreateLogWithSlack(services, appSettings);
 
-                builder.RegisterModule(new StellarApiModule(appSettings.Nested(x => x.StellarApiService), Log));
+                builder.RegisterModule(new StellarJobModule(appSettings.Nested(x => x.StellarApiJob), Log));
                 builder.RegisterModule(new RepositoryModule(appSettings.Nested(x => x.StellarApiService), Log));
                 builder.RegisterModule(new ServiceModule(appSettings.Nested(x => x.StellarApiService), Log));
                 builder.Populate(services);
@@ -88,7 +88,7 @@ namespace Lykke.Service.Stellar.Api
                 }
 
                 app.UseLykkeForwardedHeaders();
-                app.UseLykkeMiddleware("ServiceStellarApi", ex => new { Message = "Technical problem" });
+                app.UseLykkeMiddleware("JobStellarApi", ex => new { Message = "Technical problem" });
 
                 app.UseMvc();
                 app.UseSwagger(c =>
@@ -192,7 +192,7 @@ namespace Lykke.Service.Stellar.Api
                 throw new InvalidOperationException($"LogsConnString {dbLogConnectionString} is not filled in settings");
 
             var persistenceManager = new LykkeLogToAzureStoragePersistenceManager(
-                AzureTableStorage<LogEntity>.Create(dbLogConnectionStringManager, "ServiceStellarApiLog", consoleLogger),
+                AzureTableStorage<LogEntity>.Create(dbLogConnectionStringManager, "JobStellarApiLog", consoleLogger),
                 consoleLogger);
 
             // Creating slack notification service, which logs own azure queue processing messages to aggregate log

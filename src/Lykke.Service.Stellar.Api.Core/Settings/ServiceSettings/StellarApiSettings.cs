@@ -13,16 +13,6 @@ namespace Lykke.Service.Stellar.Api.Core.Settings.ServiceSettings
 
         public string DepositBaseAddress { get; set; }
 
-        public int WalletBalanceJobPeriodSeconds { get; set; }
-
-        public int TransactionHistoryJobPeriodSeconds { get; set; }
-
-        public int BroadcastInProgressJobPeriodSeconds { get; set; }
-
-        public int TransactionHistoryJobBatchSize { get; set; }
-
-        public int BroadcastInProgressJobBatchSize { get; set; }
-
         public string[] ExplorerUrlFormats { get; set; }
     }
 }
