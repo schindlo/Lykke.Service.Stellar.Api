@@ -10,10 +10,10 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Transaction
     public class TxBroadcastEntity : AzureTableEntity
     {
         private TxBroadcastState _state;
-        private long? _amount;
-        private long? _fee;
-        private long? _ledger;
-        private DateTime? _createdAt;
+        private long _amount;
+        private long _fee;
+        private long _ledger;
+        private DateTime _createdAt;
         private string _error;
         private TxExecutionError? _errorCode;
 
@@ -32,7 +32,7 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Transaction
             }
         }
 
-        public long? Amount
+        public long Amount
         {
             get => _amount;
             set
@@ -45,7 +45,7 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Transaction
             }
         }
 
-        public long? Fee
+        public long Fee
         {
             get => _fee;
             set
@@ -60,7 +60,7 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Transaction
 
         public string Hash { get; set; }
 
-        public long? Ledger
+        public long Ledger
         { 
             get => _ledger;
             set
@@ -73,7 +73,7 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Transaction
             }
         }
 
-        public DateTime? CreatedAt
+        public DateTime CreatedAt
         {
             get => _createdAt;
             set

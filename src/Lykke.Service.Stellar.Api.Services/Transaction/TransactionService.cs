@@ -13,6 +13,7 @@ using Lykke.Service.Stellar.Api.Core.Services;
 using Lykke.Service.Stellar.Api.Core.Domain;
 using Lykke.Service.Stellar.Api.Core.Domain.Observation;
 using Newtonsoft.Json;
+using System.Linq;
 
 namespace Lykke.Service.Stellar.Api.Services.Transaction
 {
@@ -45,16 +46,26 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
 
         public async Task BroadcastTxAsync(Guid operationId, string xdrBase64)
         {
+            long amount = 0;
+
             try
             {
-                if (!await ProcessDwToHwTransaction(operationId, xdrBase64))
+                var xdr = Convert.FromBase64String(xdrBase64);
+                var reader = new ByteReader(xdr);
+                var txEnvelope = TransactionEnvelope.Decode(reader);
+                var tx = txEnvelope.Tx;
+
+                if (!await ProcessDwToHwTransaction(operationId, tx))
                 {
+                    amount = tx?.Operations?.FirstOrDefault()?.Body?.PaymentOp?.Amount?.InnerValue ?? 0;
                     var hash = await _horizonService.SubmitTransactionAsync(xdrBase64);
                     var broadcast = new TxBroadcast
                     {
                         OperationId = operationId,
                         State = TxBroadcastState.InProgress,
-                        Hash = hash
+                        Amount = amount,
+                        Hash = hash,
+                        CreatedAt = DateTime.UtcNow
                     };
                     await _broadcastRepository.InsertOrReplaceAsync(broadcast);
                     var observation = new BroadcastObservation
@@ -70,6 +81,8 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
                 {
                     OperationId = operationId,
                     State = TxBroadcastState.Failed,
+                    Amount = amount,
+                    CreatedAt = DateTime.UtcNow,
                     Error = GetErrorMessage(ex),
                     ErrorCode = GetErrorCode(ex)
                 };
@@ -79,13 +92,8 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
             }
         }
 
-        private async Task<bool> ProcessDwToHwTransaction(Guid operationId, string xdrBase64)
+        private async Task<bool> ProcessDwToHwTransaction(Guid operationId, StellarBase.Generated.Transaction tx)
         {
-            var xdr = Convert.FromBase64String(xdrBase64);
-            var reader = new ByteReader(xdr);
-            var txEnvelope = TransactionEnvelope.Decode(reader);
-            var tx = txEnvelope.Tx;
-
             var fromKeyPair = KeyPair.FromXdrPublicKey(tx.SourceAccount.InnerValue);
             if (_balanceService.GetDepositBaseAddress().Equals(fromKeyPair.Address, StringComparison.OrdinalIgnoreCase) &&
                 tx.Operations.Length == 1 && tx.Operations[0].Body.PaymentOp != null && !string.IsNullOrWhiteSpace(tx.Memo.Text))
@@ -94,8 +102,9 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
                 if (_balanceService.GetDepositBaseAddress().Equals(toKeyPair.Address, StringComparison.OrdinalIgnoreCase))
                 {
                     var fromAddress = $"{fromKeyPair.Address}{Constants.PublicAddressExtension.Separator}{tx.Memo.Text}";
-                    var hash = _horizonService.GetTransactionHash(tx);
                     var amount = tx.Operations[0].Body.PaymentOp.Amount.InnerValue;
+                    var hash = _horizonService.GetTransactionHash(tx);
+                    var ledger = await _horizonService.GetLatestLedger();
 
                     var broadcast = new TxBroadcast
                     {
@@ -103,6 +112,7 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
                         Amount = amount,
                         Fee = 0,
                         Hash = hash,
+                        Ledger = (ledger.Sequence * 10) + 1,
                         CreatedAt = DateTime.UtcNow
                     };
 

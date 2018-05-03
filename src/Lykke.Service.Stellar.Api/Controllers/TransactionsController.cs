@@ -193,11 +193,11 @@ namespace Lykke.Service.Stellar.Api.Controllers
             {
                 OperationId = broadcast.OperationId,
                 State = broadcast.State.ToBroadcastedTransactionState(),
-                Timestamp = broadcast.CreatedAt ?? DateTime.MinValue,
+                Timestamp = broadcast.CreatedAt,
                 Amount = broadcast.Amount.ToString(),
                 Fee = broadcast.Fee.ToString(),
                 Hash = broadcast.Hash,
-                Block = broadcast.Ledger ?? 0,
+                Block = broadcast.Ledger,
                 Error = broadcast.Error,
                 ErrorCode = broadcast.ErrorCode?.ToTransactionExecutionError()
             });
