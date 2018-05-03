@@ -249,7 +249,7 @@ namespace Lykke.Service.Stellar.Api.Services.Balance
                             }
 
                             var assetId = Core.Domain.Asset.Stellar.Id;
-                            await _walletBalanceRepository.IncreaseBalanceAsync(assetId, addressWithExtension, transaction.Ledger, i, transaction.Hash, amount);
+                            await _walletBalanceRepository.IncreaseBalanceAsync(assetId, addressWithExtension, transaction.Ledger * 10, i, transaction.Hash, amount);
                         }
                     }
                 }

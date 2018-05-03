@@ -310,7 +310,7 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
                 broadcast.Amount = paymentOp.Amount.InnerValue;
                 broadcast.Fee = tx.FeePaid;
                 broadcast.CreatedAt = tx.CreatedAt;
-                broadcast.Ledger = tx.Ledger;
+                broadcast.Ledger = tx.Ledger * 10;
                 await _broadcastRepository.MergeAsync(broadcast);
                 await _observationRepository.DeleteIfExistAsync(operationId.ToString());
             }
