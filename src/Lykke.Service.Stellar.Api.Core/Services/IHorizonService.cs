@@ -11,7 +11,7 @@ namespace Lykke.Service.Stellar.Api.Core.Services
 
         Task<TransactionDetails> GetTransactionDetails(string hash);
 
-        Task<List<TransactionDetails>> GetTransactions(string address, string order = StellarSdkConstants.OrderAsc, string cursor = "");
+        Task<List<TransactionDetails>> GetTransactions(string address, string order = StellarSdkConstants.OrderAsc, string cursor = "", int limit = 100);
 
         Task<Payments> GetPayments(string address, string order = StellarSdkConstants.OrderAsc, string cursor = "");
 

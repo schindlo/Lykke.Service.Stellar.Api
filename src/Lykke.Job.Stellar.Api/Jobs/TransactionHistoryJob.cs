@@ -11,14 +11,12 @@ namespace Lykke.Job.Stellar.Api.Jobs
     {
         private readonly ITransactionHistoryService _txHistoryService;
         private readonly ILog _log;
-        private readonly int _batchSize;
 
-        public TransactionHistoryJob(ITransactionHistoryService txHistoryService, ILog log, int period, int batchSize)
+        public TransactionHistoryJob(ITransactionHistoryService txHistoryService, ILog log, int period)
             : base(nameof(TransactionHistoryJob), period, log)
         {
             _txHistoryService = txHistoryService;
             _log = log;
-            _batchSize = batchSize;
         }
 
         public override async Task Execute()
@@ -28,7 +26,7 @@ namespace Lykke.Job.Stellar.Api.Jobs
 
             try 
             {
-                int count = await _txHistoryService.UpdateTransactionHistory(_batchSize);
+                int count = await _txHistoryService.UpdateDepositBaseTransactionHistory();
 
                 watch.Stop();
                 await _log.WriteInfoAsync(nameof(TransactionHistoryJob), nameof(Execute), $"Job finished. dt={watch.ElapsedMilliseconds}ms, records={count}");

@@ -2,14 +2,11 @@
 {
     internal class TransactionContext
     {
-        internal TransactionContext(string tableId)
+        internal TransactionContext()
         {
             Cursor = string.Empty;
-            TableId = tableId;
         }
 
         internal string Cursor { get; set; }
-
-        internal string TableId { get; set; }
     }
 }

@@ -39,10 +39,8 @@ Available configuration variables are documented below. See [developing](https:/
     "TransactionHistoryJobPeriodSeconds": 120,
     // Period in seconds of the broadcasts in progress update job
     "BroadcastInProgressJobPeriodSeconds": 120,
-    // Size of batches processed by the transaction history update job
-    "TransactionHistoryJobBatchSize": 100,
     // Size of batches processed by the broadcasts in progress update job
-    "BroadcastInProgressJobBatchSize": 100,
+    "BroadcastInProgressJobBatchSize": 100
   },
   "SlackNotifications": {
     "AzureQueue": {

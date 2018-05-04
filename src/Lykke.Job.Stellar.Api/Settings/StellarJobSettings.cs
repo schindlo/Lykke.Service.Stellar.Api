@@ -8,8 +8,6 @@ namespace Lykke.Job.Stellar.Api.Settings
 
         public int BroadcastInProgressJobPeriodSeconds { get; set; }
 
-        public int TransactionHistoryJobBatchSize { get; set; }
-
         public int BroadcastInProgressJobBatchSize { get; set; }
     }
 }

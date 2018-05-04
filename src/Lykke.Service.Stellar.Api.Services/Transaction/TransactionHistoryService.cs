@@ -8,6 +8,7 @@ using Lykke.Service.Stellar.Api.Core.Domain.Transaction;
 using Lykke.Service.Stellar.Api.Core.Services;
 using Lykke.Service.Stellar.Api.Core.Exceptions;
 using Lykke.Service.Stellar.Api.Core;
+using Lykke.Service.Stellar.Api.Core.Domain;
 
 namespace Lykke.Service.Stellar.Api.Services.Transaction
 {
@@ -17,14 +18,16 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
 
         private readonly IBalanceService _balanceService;
         private readonly IHorizonService _horizonService;
+        private readonly IKeyValueStoreRepository _keyValueStoreRepository;
         private readonly IObservationRepository<TransactionHistoryObservation> _observationRepository;
         private readonly ITxHistoryRepository _txHistoryRepository;
 
-        public TransactionHistoryService(IBalanceService balanceService, IHorizonService horizonService,
+        public TransactionHistoryService(IBalanceService balanceService, IHorizonService horizonService, IKeyValueStoreRepository keyValueStoreRepository,
                                          IObservationRepository<TransactionHistoryObservation> observationRepository, ITxHistoryRepository txHistoryRepository)
         {
             _balanceService = balanceService;
             _horizonService = horizonService;
+            _keyValueStoreRepository = keyValueStoreRepository;
             _observationRepository = observationRepository;
             _txHistoryRepository = txHistoryRepository;
         }
@@ -41,22 +44,15 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
             return observation != null && observation.IsOutgoingObserved;
         }
 
-        private TransactionHistoryObservation CreateTransactionObservation(string address)
-        {
-            var observation = new TransactionHistoryObservation
-            {
-                Address = address,
-                TableId = Guid.NewGuid().ToString("N").ToUpper()
-            };
-            return observation;
-        }
-
         public async Task AddIncomingTransactionObservationAsync(string address)
         {
             var observation = await _observationRepository.GetAsync(address);
             if (observation == null)
             {
-                observation = CreateTransactionObservation(address);
+                observation = new TransactionHistoryObservation
+                {
+                    Address = address
+                };
             }
             observation.IsIncomingObserved = true;
 
@@ -68,7 +64,10 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
             var observation = await _observationRepository.GetAsync(address);
             if (observation == null)
             {
-                observation = CreateTransactionObservation(address);
+                observation = new TransactionHistoryObservation
+                {
+                    Address = address
+                };
             }
             observation.IsOutgoingObserved = true;
 
@@ -86,7 +85,6 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
             observation.IsIncomingObserved = false;
             if (observation.IsIncomingObserved == false && observation.IsOutgoingObserved == false)
             {
-                await _txHistoryRepository.DeleteAsync(observation.TableId);
                 await _observationRepository.DeleteIfExistAsync(address);
             }
             else
@@ -106,7 +104,6 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
             observation.IsOutgoingObserved = false;
             if (observation.IsIncomingObserved == false && observation.IsOutgoingObserved == false)
             {
-                await _txHistoryRepository.DeleteAsync(observation.TableId);
                 await _observationRepository.DeleteIfExistAsync(address);
             }
             else
@@ -118,41 +115,114 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
         public async Task<List<TxHistory>> GetHistory(TxDirectionType direction, string address, int take, string afterHash)
         {
             var observation = await _observationRepository.GetAsync(address);
-            if (observation != null)
+            if (observation == null)
             {
-                var result = await _txHistoryRepository.GetAllAfterHashAsync(observation.TableId, direction, take, afterHash);
-                return result;
+                return new List<TxHistory>();
             }
 
-            return new List<TxHistory>();
+            List<TxHistory> result;
+            string afterPagingToken = null;
+            if (!string.IsNullOrEmpty(afterHash))
+            {
+                var tx = await _horizonService.GetTransactionDetails(afterHash);
+                if (tx == null)
+                {
+                    throw new BusinessException($"No transaction found. hash={afterHash}");
+                }
+                afterPagingToken = tx.PagingToken;
+            }
+
+            var baseAddress = _balanceService.GetBaseAddress(address);
+            if (_balanceService.GetDepositBaseAddress().Equals(baseAddress, StringComparison.OrdinalIgnoreCase))
+            {
+                result = await GetDepositBaseHistory(direction, address, take, afterPagingToken);
+            }
+            else
+            {
+                result = await GetBaseAddressHistory(direction, address, take, afterPagingToken);
+            }
+
+            return result;
         }
 
-        public async Task<int> UpdateTransactionHistory(int batchSize)
+        private async Task<List<TxHistory>> GetDepositBaseHistory(TxDirectionType direction, string address, int take, string afterPagingToken)
+        {
+            string afterKey = null;
+            if (afterPagingToken != null)
+            {
+                afterKey = TxHistory.GetKey(afterPagingToken, 999);
+            }
+
+            var memo = _balanceService.GetPublicAddressExtension(address);
+            var result = await _txHistoryRepository.GetAllAfterHashAsync(direction, memo, take, afterKey);
+            return result;
+        }
+
+        private async Task<List<TxHistory>> GetBaseAddressHistory(TxDirectionType direction, string address, int take, string afterPagingToken)
+        {
+            var result = new List<TxHistory>();
+            var context = new TransactionContext();
+            context.Cursor = afterPagingToken;
+
+            #pragma warning disable 1998
+            Func<TxDirectionType, TxHistory, Task<bool>> process = async (type, history) =>
+            {
+                if (direction == type)
+                {
+                    result.Add(history);
+                }
+                return result.Count >= take;
+            };
+            #pragma warning restore 1998
+
+            do
+            {
+                await QueryAndProcessTransactions(address, context, process);
+            }
+            while (!string.IsNullOrEmpty(context.Cursor) && result.Count < take);
+
+            return result;
+        }
+
+        public async Task<int> UpdateDepositBaseTransactionHistory()
         {
             int count = 0;
 
             try
             {
-                string continuationToken = null;
+                var depositBase = _balanceService.GetDepositBaseAddress();
+
+                var context = new TransactionContext();
+                context.Cursor = await _keyValueStoreRepository.GetAsync(GetPagingTokenKey);
+
                 do
                 {
-                    var observations = await _observationRepository.GetAllAsync(batchSize, continuationToken);
-                    foreach (var item in observations.Items)
+                    count += await QueryAndProcessTransactions(depositBase, context, SaveTransactionHistory);
+
+                    if (!string.IsNullOrEmpty(context.Cursor))
                     {
-                        count += await ProcessTransactionObservation(item);
+                        await _keyValueStoreRepository.SetAsync(GetPagingTokenKey, context.Cursor);
                     }
-                    continuationToken = observations.ContinuationToken;
-                } while (continuationToken != null);
+                }
+                while (!string.IsNullOrEmpty(context.Cursor));
 
                 _lastJobError = null;
             }
             catch (Exception ex)
             {
-                _lastJobError = $"Error in job {nameof(TransactionHistoryService)}.{nameof(UpdateTransactionHistory)}: {ex.Message}";
-                throw new JobExecutionException("Failed to execute transaction history update", ex, count);
+                _lastJobError = $"Error in job {nameof(TransactionHistoryService)}.{nameof(UpdateDepositBaseTransactionHistory)}: {ex.Message}";
+                throw new JobExecutionException("Failed to execute deposit base transaction history update", ex, count);
             }
 
             return count;
+        }
+
+        private string GetPagingTokenKey => $"TransactionHistoryPagingToken:{_balanceService.GetDepositBaseAddress()}";
+
+        private async Task<bool> SaveTransactionHistory(TxDirectionType direction, TxHistory history)
+        {
+            await _txHistoryRepository.InsertOrReplaceAsync(direction, history);
+            return false;
         }
 
         public string GetLastJobError()
@@ -160,13 +230,9 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
             return _lastJobError;
         }
 
-        private async Task<int> QueryAndProcessTransactions(string address, TransactionContext context)
+        private async Task<int> QueryAndProcessTransactions(string address, TransactionContext context, Func<TxDirectionType, TxHistory, Task<bool>> process)
         {
-            var baseAddress = _balanceService.GetBaseAddress(address);
-            var publicAddressExtension = _balanceService.GetPublicAddressExtension(address);
-            var hasPublicAddressExtension = !string.IsNullOrEmpty(publicAddressExtension);
-
-            var transactions = await _horizonService.GetTransactions(baseAddress, StellarSdkConstants.OrderAsc, context.Cursor);
+            var transactions = await _horizonService.GetTransactions(address, StellarSdkConstants.OrderAsc, context.Cursor);
 
             int count = 0;
             context.Cursor = null;
@@ -182,13 +248,6 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
                     var txEnvelope = TransactionEnvelope.Decode(reader);
                     var tx = txEnvelope.Tx;
 
-                    var memo = _horizonService.GetMemo(transaction);
-                    if (hasPublicAddressExtension && !publicAddressExtension.Equals(memo, StringComparison.OrdinalIgnoreCase))
-                    {
-                        // skip transactions where extension doesn't match
-                        continue;
-                    }
-
                     for (short i = 0; i < tx.Operations.Length; i++)
                     {
                         var operation = tx.Operations[i];
@@ -202,7 +261,7 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
                             OperationIndex = i,
                             PagingToken = transaction.PagingToken,
                             CreatedAt = transaction.CreatedAt,
-                            Memo = memo
+                            Memo = _horizonService.GetMemo(transaction)
                         };
 
                         if (operationType == OperationType.OperationTypeEnum.CREATE_ACCOUNT)
@@ -233,49 +292,22 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
                             history.PaymentType = PaymentType.AccountMerge;
                         }
 
-                        if (baseAddress.Equals(history.ToAddress, StringComparison.OrdinalIgnoreCase))
+                        bool cancel = false;
+                        if (address.Equals(history.ToAddress, StringComparison.OrdinalIgnoreCase))
                         {
-                            await _txHistoryRepository.InsertOrReplaceAsync(context.TableId, TxDirectionType.Incoming, history);
-
+                            cancel = await process(TxDirectionType.Incoming, history);
                         }
-                        if (baseAddress.Equals(history.FromAddress, StringComparison.OrdinalIgnoreCase))
+                        if (address.Equals(history.FromAddress, StringComparison.OrdinalIgnoreCase))
                         {
-                            await _txHistoryRepository.InsertOrReplaceAsync(context.TableId, TxDirectionType.Outgoing, history);
+                            cancel = await process(TxDirectionType.Outgoing, history);
                         }
+                        if (cancel) return count;
                     }
                 }
                 catch (Exception ex)
                 {
                     throw new BusinessException($"Failed to process transaction. hash={transaction?.Hash}", ex);
                 }
-            }
-
-            if (!string.IsNullOrEmpty(context.Cursor))
-            {
-                await _txHistoryRepository.SetCurrentPagingToken(context.TableId, context.Cursor);
-            }
-
-            return count;
-        }
-
-        private async Task<int> ProcessTransactionObservation(TransactionHistoryObservation observation)
-        {
-            int count = 0;
-
-            try
-            {
-                var context = new TransactionContext(observation.TableId);
-                context.Cursor = await _txHistoryRepository.GetCurrentPagingToken(context.TableId);
-
-                do
-                {
-                    count += await QueryAndProcessTransactions(observation.Address, context);
-                }
-                while (!string.IsNullOrEmpty(context.Cursor));
-            }
-            catch (Exception ex)
-            {
-                throw new BusinessException($"Failed to process transaction observation for address. address={observation.Address}", ex);
             }
 
             return count;

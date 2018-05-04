@@ -29,20 +29,19 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Transaction
             return domain;
         }
 
-        public static TxHistoryEntity ToEntity(this TxHistory domain, string partitionKey)
+        public static TxHistoryEntity ToEntity(this TxHistory domain)
         {
             var entity = new TxHistoryEntity
             {
-                PartitionKey = partitionKey,
-                RowKey = UInt64.Parse(domain.PagingToken).ToString("D20") + domain.OperationIndex.ToString("D3"),
+                PartitionKey = TxHistory.GetKey(domain.PagingToken, domain.OperationIndex),
+                RowKey = domain.Memo ?? string.Empty,
                 FromAddress = domain.FromAddress,
                 ToAddress = domain.ToAddress,
                 AssetId = domain.AssetId,
                 Amount = domain.Amount,
                 Hash = domain.Hash,
                 CreatedAt = domain.CreatedAt,
-                PaymentType = domain.PaymentType,
-                Memo = domain.Memo
+                PaymentType = domain.PaymentType
             };
             return entity;
         }

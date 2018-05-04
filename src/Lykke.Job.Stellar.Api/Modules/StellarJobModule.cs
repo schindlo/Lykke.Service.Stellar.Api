@@ -45,7 +45,6 @@ namespace Lykke.Job.Stellar.Api.Modules
                    .As<IStartable>()
                    .AutoActivate()
                    .WithParameter("period", _settings.CurrentValue.TransactionHistoryJobPeriodSeconds * 1000)
-                   .WithParameter("batchSize", _settings.CurrentValue.TransactionHistoryJobBatchSize)
                    .SingleInstance();
 
             builder.RegisterType<BroadcastInProgressJob>()

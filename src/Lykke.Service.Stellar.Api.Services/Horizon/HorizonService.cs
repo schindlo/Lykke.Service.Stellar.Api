@@ -52,13 +52,13 @@ namespace Lykke.Service.Stellar.Api.Services.Horizon
             }
         }
 
-        public async Task<List<TransactionDetails>> GetTransactions(string address, string order = StellarSdkConstants.OrderAsc, string cursor = "")
+        public async Task<List<TransactionDetails>> GetTransactions(string address, string order = StellarSdkConstants.OrderAsc, string cursor = "", int limit = 100)
         {
             try
             {
                 var builder = new AccountTransactionCallBuilder(_horizonUrl);
                 builder.accountId(address);
-                builder.order(order).cursor(cursor).limit(100);
+                builder.order(order).cursor(cursor).limit(limit);
                 var details = await builder.Call();
                 var transactions = details?.Embedded?.Records;
                 if (transactions != null)
