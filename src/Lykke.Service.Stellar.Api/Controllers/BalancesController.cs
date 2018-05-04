@@ -78,8 +78,7 @@ namespace Lykke.Service.Stellar.Api.Controllers
             {
                 return BadRequest(ErrorResponse.Create("Invalid parameter").AddModelError("address", "Address must be valid"));
             }
-            var baseAddress = _balanceService.GetBaseAddress(address);
-            if (!_balanceService.GetDepositBaseAddress().Equals(baseAddress, StringComparison.OrdinalIgnoreCase))
+            if (!_balanceService.IsDepositBaseAddress(address))
             {
                 return BadRequest(ErrorResponse.Create("Invalid parameter").AddModelError("address", $"Address must match configured deposit base address. expected={_balanceService.GetDepositBaseAddress()}"));
             }

@@ -70,6 +70,12 @@ namespace Lykke.Service.Stellar.Api.Services.Balance
             return _depositBaseAddress;
         }
 
+        public bool IsDepositBaseAddress(string address)
+        {
+            var baseAddress = GetBaseAddress(address);
+            return GetDepositBaseAddress().Equals(baseAddress, StringComparison.OrdinalIgnoreCase);
+        }
+
         public string GetBaseAddress(string address)
         {
             return address.Split(Constants.PublicAddressExtension.Separator)[0];

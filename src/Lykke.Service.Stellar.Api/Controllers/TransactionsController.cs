@@ -54,15 +54,14 @@ namespace Lykke.Service.Stellar.Api.Controllers
                     return BadRequest(ErrorResponse.Create($"{nameof(request.ToAddress)} is not a valid"));
                 }
 
-                var fromBaseAddress = _balanceService.GetBaseAddress(request.FromAddress);
                 if (fromAddressHasExtension)
                 {
-                    if (!fromBaseAddress.Equals(_balanceService.GetDepositBaseAddress(), StringComparison.OrdinalIgnoreCase))
+                    if (!_balanceService.IsDepositBaseAddress(request.FromAddress))
                     {
                         return BadRequest(ErrorResponse.Create($"{nameof(request.FromAddress)} is not a valid. Public address extension allowed for deposit base address only!"));
                     }
 
-                    if (!request.ToAddress.Equals(_balanceService.GetDepositBaseAddress(), StringComparison.OrdinalIgnoreCase))
+                    if (!_balanceService.IsDepositBaseAddress(request.ToAddress) || toAddressHasExtension)
                     {
                         return BadRequest(ErrorResponse.Create($"{nameof(request.ToAddress)} is not a valid. Only deposit base address allowed as destination, when sending from address with public address extension!"));
                     }

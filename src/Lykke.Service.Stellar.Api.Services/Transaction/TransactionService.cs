@@ -94,11 +94,11 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
         private async Task<bool> ProcessDwToHwTransaction(Guid operationId, StellarBase.Generated.Transaction tx)
         {
             var fromKeyPair = KeyPair.FromXdrPublicKey(tx.SourceAccount.InnerValue);
-            if (_balanceService.GetDepositBaseAddress().Equals(fromKeyPair.Address, StringComparison.OrdinalIgnoreCase) &&
-                tx.Operations.Length == 1 && tx.Operations[0].Body.PaymentOp != null && !string.IsNullOrWhiteSpace(tx.Memo.Text))
+            if (_balanceService.IsDepositBaseAddress(fromKeyPair.Address) && tx.Operations.Length == 1 &&
+                tx.Operations[0].Body.PaymentOp != null && !string.IsNullOrWhiteSpace(tx.Memo.Text))
             {
                 var toKeyPair = KeyPair.FromXdrPublicKey(tx.Operations[0].Body.PaymentOp.Destination.InnerValue);
-                if (_balanceService.GetDepositBaseAddress().Equals(toKeyPair.Address, StringComparison.OrdinalIgnoreCase))
+                if (_balanceService.IsDepositBaseAddress(toKeyPair.Address))
                 {
                     var fromAddress = $"{fromKeyPair.Address}{Constants.PublicAddressExtension.Separator}{tx.Memo.Text}";
                     var amount = tx.Operations[0].Body.PaymentOp.Amount.InnerValue;

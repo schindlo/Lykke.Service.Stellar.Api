@@ -11,6 +11,8 @@ namespace Lykke.Service.Stellar.Api.Core.Services
 
         string GetDepositBaseAddress();
 
+        bool IsDepositBaseAddress(string address);
+
         string GetBaseAddress(string address);
 
         string GetPublicAddressExtension(string address);

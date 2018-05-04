@@ -33,6 +33,10 @@ namespace Lykke.Service.Stellar.Api.Controllers
             {
                 return BadRequest(ErrorResponse.Create("Invalid parameter").AddModelError("address", "Address must be valid"));
             }
+            if (hasExtension && !_balanceService.IsDepositBaseAddress(address))
+            {
+                return BadRequest(ErrorResponse.Create("Invalid parameter").AddModelError("address", "Public address extension allowed for deposit base address only!"));
+            }
             var exists = await _txHistoryService.IsIncomingTransactionObservedAsync(address);
             if (exists)
             {
@@ -51,6 +55,10 @@ namespace Lykke.Service.Stellar.Api.Controllers
             if (!_balanceService.IsAddressValid(address, out bool hasExtension))
             {
                 return BadRequest(ErrorResponse.Create("Invalid parameter").AddModelError("address", "Address must be valid"));
+            }
+            if (hasExtension && !_balanceService.IsDepositBaseAddress(address))
+            {
+                return BadRequest(ErrorResponse.Create("Invalid parameter").AddModelError("address", "Public address extension allowed for deposit base address only!"));
             }
             var exists = await _txHistoryService.IsOutgoingTransactionObservedAsync(address);
             if (exists)

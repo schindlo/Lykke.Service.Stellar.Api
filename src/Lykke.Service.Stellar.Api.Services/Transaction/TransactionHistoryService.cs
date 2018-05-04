@@ -132,8 +132,7 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
                 afterPagingToken = tx.PagingToken;
             }
 
-            var baseAddress = _balanceService.GetBaseAddress(address);
-            if (_balanceService.GetDepositBaseAddress().Equals(baseAddress, StringComparison.OrdinalIgnoreCase))
+            if (_balanceService.IsDepositBaseAddress(address))
             {
                 result = await GetDepositBaseHistory(direction, address, take, afterPagingToken);
             }
