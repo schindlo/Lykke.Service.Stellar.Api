@@ -20,7 +20,8 @@ namespace Lykke.Service.Stellar.Api.Controllers
         private readonly ITransactionService _transactionService;
         private readonly IBalanceService _balanceService;
 
-        public TransactionsController(ITransactionService transactionService, IBalanceService balanceService)
+        public TransactionsController(ITransactionService transactionService,
+                                      IBalanceService balanceService)
         {
             _transactionService = transactionService;
             _balanceService = balanceService;

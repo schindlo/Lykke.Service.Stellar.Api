@@ -17,7 +17,8 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Modules
         private readonly IReloadingManager<StellarApiSettings> _settings;
         private readonly ILog _log;
 
-        public RepositoryModule(IReloadingManager<StellarApiSettings> settings, ILog log)
+        public RepositoryModule(IReloadingManager<StellarApiSettings> settings,
+                                ILog log)
         {
             _settings = settings;
             _log = log;

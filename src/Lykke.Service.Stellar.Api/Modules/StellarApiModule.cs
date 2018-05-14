@@ -14,7 +14,8 @@ namespace Lykke.Service.Stellar.Api.Modules
         // NOTE: you can remove it if you don't need to use IServiceCollection extensions to register service specific dependencies
         private readonly IServiceCollection _services;
 
-        public StellarApiModule(IReloadingManager<StellarApiSettings> settings, ILog log)
+        public StellarApiModule(IReloadingManager<StellarApiSettings> settings,
+                                ILog log)
         {
             _settings = settings;
             _log = log;

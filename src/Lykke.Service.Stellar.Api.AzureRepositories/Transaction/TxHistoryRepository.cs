@@ -16,7 +16,8 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Transaction
         private readonly INoSQLTableStorage<TxHistoryEntity> _tableIn;
         private readonly INoSQLTableStorage<TxHistoryEntity> _tableOut;
 
-        public TxHistoryRepository(IReloadingManager<string> dataConnStringManager, ILog log)
+        public TxHistoryRepository(IReloadingManager<string> dataConnStringManager,
+                                   ILog log)
         {
             _tableIn = AzureTableStorage<TxHistoryEntity>.Create(dataConnStringManager, $"{TableNamePrefix}In", log);
             _tableOut = AzureTableStorage<TxHistoryEntity>.Create(dataConnStringManager, $"{TableNamePrefix}Out", log);

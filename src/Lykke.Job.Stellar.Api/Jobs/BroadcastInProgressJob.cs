@@ -13,7 +13,10 @@ namespace Lykke.Job.Stellar.Api.Jobs
         private readonly ILog _log;
         private readonly int _batchSize;
 
-        public BroadcastInProgressJob(ITransactionService transactionService, ILog log, int period, int batchSize)
+        public BroadcastInProgressJob(ITransactionService transactionService,
+                                      ILog log,
+                                      int period,
+                                      int batchSize)
             : base(nameof(BroadcastInProgressJob), period, log)
         {
             _transactionService = transactionService;

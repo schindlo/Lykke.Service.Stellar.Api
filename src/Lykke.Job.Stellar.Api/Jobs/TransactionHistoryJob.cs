@@ -12,7 +12,9 @@ namespace Lykke.Job.Stellar.Api.Jobs
         private readonly ITransactionHistoryService _txHistoryService;
         private readonly ILog _log;
 
-        public TransactionHistoryJob(ITransactionHistoryService txHistoryService, ILog log, int period)
+        public TransactionHistoryJob(ITransactionHistoryService txHistoryService,
+                                     ILog log,
+                                     int period)
             : base(nameof(TransactionHistoryJob), period, log)
         {
             _txHistoryService = txHistoryService;

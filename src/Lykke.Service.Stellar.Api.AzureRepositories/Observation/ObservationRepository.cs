@@ -15,7 +15,9 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Observation
     {
         private readonly INoSQLTableStorage<T> _table;
 
-        public ObservationRepository(string tableName, IReloadingManager<string> dataConnStringManager, ILog log)
+        public ObservationRepository(string tableName,
+                                     IReloadingManager<string> dataConnStringManager,
+                                     ILog log)
         {
             _table = AzureTableStorage<T>.Create(dataConnStringManager, tableName, log);
         }

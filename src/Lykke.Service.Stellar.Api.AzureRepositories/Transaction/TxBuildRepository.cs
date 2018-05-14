@@ -16,7 +16,8 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Transaction
 
         private readonly INoSQLTableStorage<TxBuildEntity> _table;
 
-        public TxBuildRepository(IReloadingManager<string> dataConnStringManager, ILog log)
+        public TxBuildRepository(IReloadingManager<string> dataConnStringManager,
+                                 ILog log)
         {
             _table = AzureTableStorage<TxBuildEntity>.Create(dataConnStringManager, TableName, log);
         }

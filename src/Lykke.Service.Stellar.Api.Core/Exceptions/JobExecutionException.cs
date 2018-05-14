@@ -6,14 +6,17 @@ namespace Lykke.Service.Stellar.Api.Core.Exceptions
     {
         private const string ProcessedDataKey = "Processed";
 
-        public JobExecutionException(string message, int processed)
-        : base(message)
+        public JobExecutionException(string message,
+                                     int processed)
+            : base(message)
         {
             Data.Add(ProcessedDataKey, processed);
         }
 
-        public JobExecutionException(string message, Exception inner, int processed)
-        : base(message, inner)
+        public JobExecutionException(string message,
+                                     Exception inner,
+                                     int processed)
+            : base(message, inner)
         {
             Data.Add(ProcessedDataKey, processed);
         }

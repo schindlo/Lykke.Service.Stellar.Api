@@ -25,8 +25,12 @@ namespace Lykke.Service.Stellar.Api.Services.Balance
         private readonly string _depositBaseAddress;
         private readonly string[] _explorerUrlFormats;
 
-        public BalanceService(IHorizonService horizonService, IKeyValueStoreRepository keyValueStoreRepository, IObservationRepository<BalanceObservation> observationRepository, 
-                              IWalletBalanceRepository walletBalanceRepository, string depositBaseAddress, string[] explorerUrlFormats)
+        public BalanceService(IHorizonService horizonService,
+                              IKeyValueStoreRepository keyValueStoreRepository,
+                              IObservationRepository<BalanceObservation> observationRepository, 
+                              IWalletBalanceRepository walletBalanceRepository,
+                              string depositBaseAddress,
+                              string[] explorerUrlFormats)
         {
             _horizonService = horizonService;
             _keyValueStoreRepository = keyValueStoreRepository;

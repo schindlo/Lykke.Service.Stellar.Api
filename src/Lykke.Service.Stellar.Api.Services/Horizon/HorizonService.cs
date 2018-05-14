@@ -17,7 +17,8 @@ namespace Lykke.Service.Stellar.Api.Services.Horizon
     {
         private readonly string _horizonUrl;
 
-        public HorizonService(string network, string horizonUrl)
+        public HorizonService(string network,
+                              string horizonUrl)
         {
             Network.CurrentNetwork = network;
             _horizonUrl = horizonUrl;

@@ -7,7 +7,8 @@ namespace Lykke.Service.Stellar.Api.Client
     {
         private readonly ILog _log;
 
-        public StellarApiClient(string serviceUrl, ILog log)
+        public StellarApiClient(string serviceUrl,
+                                ILog log)
         {
             _log = log;
         }

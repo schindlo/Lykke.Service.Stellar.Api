@@ -14,7 +14,8 @@ namespace Lykke.Service.Stellar.Api.Services.Modules
         private readonly IReloadingManager<StellarApiSettings> _settings;
         private readonly ILog _log;
 
-        public ServiceModule(IReloadingManager<StellarApiSettings> settings, ILog log)
+        public ServiceModule(IReloadingManager<StellarApiSettings> settings,
+                             ILog log)
         {
             _settings = settings;
             _log = log;

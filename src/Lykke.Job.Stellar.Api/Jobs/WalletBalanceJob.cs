@@ -12,7 +12,9 @@ namespace Lykke.Job.Stellar.Api.Jobs
         private readonly IBalanceService _balanceService;
         private readonly ILog _log;
 
-        public WalletBalanceJob(IBalanceService balanceService, int period, ILog log)
+        public WalletBalanceJob(IBalanceService balanceService,
+                                int period,
+                                ILog log)
             : base(nameof(WalletBalanceJob), period, log)
         {
             _balanceService = balanceService;

@@ -13,7 +13,8 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories
 
         private readonly INoSQLTableStorage<KeyValueEntity> _table;
 
-        public KeyValueStoreRepository(IReloadingManager<string> dataConnStringManager, ILog log)
+        public KeyValueStoreRepository(IReloadingManager<string> dataConnStringManager,
+                                       ILog log)
         {
             _table = AzureTableStorage<KeyValueEntity>.Create(dataConnStringManager, TableName, log);
         }

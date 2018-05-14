@@ -27,8 +27,12 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
         private readonly ITxBroadcastRepository _broadcastRepository;
         private readonly ITxBuildRepository _buildRepository;
 
-        public TransactionService(IBalanceService balanceService, IHorizonService horizonService, IObservationRepository<BroadcastObservation> observationRepository,
-                                  IWalletBalanceRepository balanceRepository, ITxBroadcastRepository broadcastRepository, ITxBuildRepository buildRepository)
+        public TransactionService(IBalanceService balanceService,
+                                  IHorizonService horizonService,
+                                  IObservationRepository<BroadcastObservation> observationRepository,
+                                  IWalletBalanceRepository balanceRepository,
+                                  ITxBroadcastRepository broadcastRepository,
+                                  ITxBuildRepository buildRepository)
         {
             _balanceService = balanceService;
             _horizonService = horizonService;

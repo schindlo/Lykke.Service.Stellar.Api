@@ -17,7 +17,8 @@ namespace Lykke.Service.Stellar.Api.Controllers
         private readonly IBalanceService _balanceService;
         private readonly ITransactionHistoryService _txHistoryService;
 
-        public TransactionsHistoryController(IBalanceService balanceService, ITransactionHistoryService txHistoryService)
+        public TransactionsHistoryController(IBalanceService balanceService,
+                                             ITransactionHistoryService txHistoryService)
         {
             _balanceService = balanceService;
             _txHistoryService = txHistoryService;

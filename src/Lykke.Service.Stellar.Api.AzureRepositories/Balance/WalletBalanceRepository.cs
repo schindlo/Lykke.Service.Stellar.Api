@@ -16,7 +16,8 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Balance
 
         private readonly INoSQLTableStorage<WalletBalanceEntity> _table;
 
-        public WalletBalanceRepository(IReloadingManager<string> dataConnStringManager, ILog log)
+        public WalletBalanceRepository(IReloadingManager<string> dataConnStringManager,
+                                       ILog log)
         {
             _table = AzureTableStorage<WalletBalanceEntity>.Create(dataConnStringManager, TableName, log);
         }

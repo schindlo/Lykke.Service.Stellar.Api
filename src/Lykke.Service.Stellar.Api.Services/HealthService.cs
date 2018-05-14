@@ -13,7 +13,9 @@ namespace Lykke.Service.Stellar.Api.Services
         private readonly ITransactionHistoryService _txHistoryService;
         private readonly ITransactionService _transactionService;
 
-        public HealthService(IBalanceService balanceService, ITransactionHistoryService txHistoryService, ITransactionService transactionService)
+        public HealthService(IBalanceService balanceService,
+                             ITransactionHistoryService txHistoryService,
+                             ITransactionService transactionService)
         {
             _balanceService = balanceService;
             _txHistoryService = txHistoryService;
