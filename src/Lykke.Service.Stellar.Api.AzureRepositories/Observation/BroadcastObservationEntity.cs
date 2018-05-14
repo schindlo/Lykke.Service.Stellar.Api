@@ -5,6 +5,8 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Observation
 {
     public class BroadcastObservationEntity : ObservationEntity<BroadcastObservation>
     {
+        public const string TableName = "BroadcastObservation";
+
         public override string GetRowKey(BroadcastObservation observation)
         {
             return TableKey.GetRowKey(observation.OperationId);

@@ -28,35 +28,46 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Modules
             var dataConnStringManager = _settings.ConnectionString(x => x.Db.DataConnString);
             builder.RegisterType<TxBroadcastRepository>()
                    .As<ITxBroadcastRepository>()
-                   .WithParameter(TypedParameter.From(dataConnStringManager));
+                   .WithParameter(TypedParameter.From(dataConnStringManager))
+                   .SingleInstance();
 
             builder.RegisterType<TxBuildRepository>()
                    .As<ITxBuildRepository>()
-                   .WithParameter(TypedParameter.From(dataConnStringManager));
+                   .WithParameter(TypedParameter.From(dataConnStringManager))
+                   .SingleInstance();
 
             builder.RegisterType<TxHistoryRepository>()
                    .As<ITxHistoryRepository>()
-                   .WithParameter(TypedParameter.From(dataConnStringManager));
+                   .WithParameter(TypedParameter.From(dataConnStringManager))
+                   .SingleInstance();
 
             builder.RegisterType<ObservationRepository<BalanceObservationEntity, BalanceObservation>>()
                    .As<IObservationRepository<BalanceObservation>>()
-                   .WithParameter(TypedParameter.From(dataConnStringManager));
+                   .WithParameter("tableName", BalanceObservationEntity.TableName)
+                   .WithParameter(TypedParameter.From(dataConnStringManager))
+                   .SingleInstance();
 
             builder.RegisterType<ObservationRepository<TransactionHistoryObservationEntity, TransactionHistoryObservation>>()
                    .As<IObservationRepository<TransactionHistoryObservation>>()
-                   .WithParameter(TypedParameter.From(dataConnStringManager));
+                   .WithParameter("tableName", TransactionHistoryObservationEntity.TableName)
+                   .WithParameter(TypedParameter.From(dataConnStringManager))
+                   .SingleInstance();
 
             builder.RegisterType<ObservationRepository<BroadcastObservationEntity, BroadcastObservation>>()
-                    .As<IObservationRepository<BroadcastObservation>>()
-                    .WithParameter(TypedParameter.From(dataConnStringManager));
+                   .As<IObservationRepository<BroadcastObservation>>()
+                   .WithParameter("tableName", BroadcastObservationEntity.TableName)
+                   .WithParameter(TypedParameter.From(dataConnStringManager))
+                   .SingleInstance();
 
             builder.RegisterType<WalletBalanceRepository>()
                    .As<IWalletBalanceRepository>()
-                   .WithParameter(TypedParameter.From(dataConnStringManager));
+                   .WithParameter(TypedParameter.From(dataConnStringManager))
+                   .SingleInstance();
 
             builder.RegisterType<KeyValueStoreRepository>()
                     .As<IKeyValueStoreRepository>()
-                    .WithParameter(TypedParameter.From(dataConnStringManager));
+                    .WithParameter(TypedParameter.From(dataConnStringManager))
+                    .SingleInstance();
         }
     }
 }

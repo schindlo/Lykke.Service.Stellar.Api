@@ -4,6 +4,8 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Observation
 {
     public class BalanceObservationEntity : ObservationEntity<BalanceObservation>
     {
+        public const string TableName = "BalanceObservation";
+
         public override string GetRowKey(BalanceObservation observation)
         {
             return observation.Address;

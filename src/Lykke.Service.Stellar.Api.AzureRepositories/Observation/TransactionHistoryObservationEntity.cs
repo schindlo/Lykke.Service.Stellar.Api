@@ -4,6 +4,8 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Observation
 {
     public class TransactionHistoryObservationEntity : ObservationEntity<TransactionHistoryObservation>
     {
+        public const string TableName = "TransactionHistoryObservation";
+
         public bool IsIncomingTxObserved { get; set; }
 
         public bool IsOutgoingTxObserved { get; set; }
