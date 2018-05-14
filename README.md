@@ -33,12 +33,12 @@ Available configuration variables are documented below. See [developing](https:/
     "ExplorerUrlFormats": [ "https://stellar.expert/explorer/testnet/account/{0}", "http://testnet.stellarchain.io/address/{0}" ]
   },
   "StellarApiJob": {
-    // Period in seconds of the wallet balance update job
-    "WalletBalanceJobPeriodSeconds": 60,
-    // Period in seconds of the transaction history update job
-    "TransactionHistoryJobPeriodSeconds": 120,
-    // Period in seconds of the broadcasts in progress update job
-    "BroadcastInProgressJobPeriodSeconds": 120,
+    // Period as TimeSpan of the wallet balance update job
+    "WalletBalanceJobPeriod": "00:01:00",
+    // Period as TimeSpan of the transaction history update job
+    "TransactionHistoryJobPeriod": "00:02:00",
+    // Period as TimeSpan of the broadcasts in progress update job
+    "BroadcastInProgressJobPeriod": "00:02:00",
     // Size of batches processed by the broadcasts in progress update job
     "BroadcastInProgressJobBatchSize": 100
   },

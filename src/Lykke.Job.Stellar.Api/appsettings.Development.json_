@@ -10,9 +10,9 @@
     "ExplorerUrlFormats": [ "https://stellar.expert/explorer/testnet/account/{0}", "http://testnet.stellarchain.io/address/{0}" ]
   },
   "StellarApiJob": {
-    "WalletBalanceJobPeriodSeconds": 60,
-    "TransactionHistoryJobPeriodSeconds": 120,
-    "BroadcastInProgressJobPeriodSeconds": 120,
+    "WalletBalanceJobPeriod": "00:01:00",
+    "TransactionHistoryJobPeriod": "00:02:00",
+    "BroadcastInProgressJobPeriod": "00:02:00",
     "BroadcastInProgressJobBatchSize": 100
   },
   "SlackNotifications": {

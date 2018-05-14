@@ -39,19 +39,19 @@ namespace Lykke.Job.Stellar.Api.Modules
             builder.RegisterType<WalletBalanceJob>()
                    .As<IStartable>()
                    .AutoActivate()
-                   .WithParameter("period", _settings.CurrentValue.WalletBalanceJobPeriodSeconds * 1000)
+                   .WithParameter("period", _settings.CurrentValue.WalletBalanceJobPeriod.TotalMilliseconds)
                    .SingleInstance();
 
             builder.RegisterType<TransactionHistoryJob>()
                    .As<IStartable>()
                    .AutoActivate()
-                   .WithParameter("period", _settings.CurrentValue.TransactionHistoryJobPeriodSeconds * 1000)
+                   .WithParameter("period", _settings.CurrentValue.TransactionHistoryJobPeriod.TotalMilliseconds)
                    .SingleInstance();
 
             builder.RegisterType<BroadcastInProgressJob>()
                    .As<IStartable>()
                    .AutoActivate()
-                   .WithParameter("period", _settings.CurrentValue.BroadcastInProgressJobPeriodSeconds * 1000)
+                   .WithParameter("period", _settings.CurrentValue.BroadcastInProgressJobPeriod.TotalMilliseconds)
                    .WithParameter("batchSize", _settings.CurrentValue.BroadcastInProgressJobBatchSize)
                    .SingleInstance();
 

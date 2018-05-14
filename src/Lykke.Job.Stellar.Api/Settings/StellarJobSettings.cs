@@ -1,12 +1,14 @@
+using System;
+
 namespace Lykke.Job.Stellar.Api.Settings
 {
     public class StellarJobSettings
     {
-        public int WalletBalanceJobPeriodSeconds { get; set; }
+        public TimeSpan WalletBalanceJobPeriod { get; set; }
 
-        public int TransactionHistoryJobPeriodSeconds { get; set; }
+        public TimeSpan TransactionHistoryJobPeriod { get; set; }
 
-        public int BroadcastInProgressJobPeriodSeconds { get; set; }
+        public TimeSpan BroadcastInProgressJobPeriod { get; set; }
 
         public int BroadcastInProgressJobBatchSize { get; set; }
     }
