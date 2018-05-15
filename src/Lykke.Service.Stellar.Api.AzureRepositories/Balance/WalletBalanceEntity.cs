@@ -21,11 +21,9 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Balance
             get => _balance;
             set
             {
-                if (_balance != value)
-                {
-                    _balance = value;
-                    MarkValueTypePropertyAsDirty(nameof(Balance));
-                }
+                if (_balance == value) return;
+                _balance = value;
+                MarkValueTypePropertyAsDirty(nameof(Balance));
             }
         }
 
@@ -34,11 +32,9 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Balance
             get => _ledger;
             set
             {
-                if (_ledger != value)
-                {
-                    _ledger = value;
-                    MarkValueTypePropertyAsDirty(nameof(Ledger));
-                }
+                if (_ledger == value) return;
+                _ledger = value;
+                MarkValueTypePropertyAsDirty(nameof(Ledger));
             }
         }
 
@@ -47,11 +43,9 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Balance
             get => _operationIndex;
             set
             {
-                if (_operationIndex != value)
-                {
-                    _operationIndex = value;
-                    MarkValueTypePropertyAsDirty(nameof(OperationIndex));
-                }
+                if (_operationIndex == value) return;
+                _operationIndex = value;
+                MarkValueTypePropertyAsDirty(nameof(OperationIndex));
             }
         }
 
@@ -60,11 +54,9 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Balance
             get => _lastTransactionHash;
             set
             {
-                if (_lastTransactionHash != value)
-                {
-                    _lastTransactionHash = value;
-                    MarkValueTypePropertyAsDirty(nameof(LastTransactionHash));
-                }
+                if (_lastTransactionHash == value) return;
+                _lastTransactionHash = value;
+                MarkValueTypePropertyAsDirty(nameof(LastTransactionHash));
             }
         }
 

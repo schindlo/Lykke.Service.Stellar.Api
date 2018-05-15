@@ -120,13 +120,11 @@ namespace Lykke.Service.Stellar.Api.Services.Horizon
             var merge = txResult.Result.Results[operationIndex];
             var result = merge?.Tr?.AccountMergeResult;
             var resultCode = result?.Discriminant?.InnerValue;
-            if (resultCode != null && resultCode == AccountMergeResultCode.AccountMergeResultCodeEnum.ACCOUNT_MERGE_SUCCESS)
-            {
-                long amount = result.SourceAccountBalance.InnerValue;
-                return amount;
-            }
+            if (resultCode == null ||
+                resultCode != AccountMergeResultCode.AccountMergeResultCodeEnum.ACCOUNT_MERGE_SUCCESS) return 0;
 
-            return 0;
+            var amount = result.SourceAccountBalance.InnerValue;
+            return amount;
         }
 
         public PaymentOp GetFirstPaymentFromTransaction(TransactionDetails tx)

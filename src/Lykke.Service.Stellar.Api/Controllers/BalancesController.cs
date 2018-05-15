@@ -72,7 +72,7 @@ namespace Lykke.Service.Stellar.Api.Controllers
         [ProducesResponseType(typeof(ErrorResponse), (int)HttpStatusCode.BadRequest)]
         public async Task<IActionResult> AddObservation([Required] string address)
         {
-            if (!_balanceService.IsAddressValid(address, out bool hasExtension))
+            if (!_balanceService.IsAddressValid(address, out var hasExtension))
             {
                 return BadRequest(ErrorResponse.Create("Invalid parameter").AddModelError("address", "Address must be valid"));
             }

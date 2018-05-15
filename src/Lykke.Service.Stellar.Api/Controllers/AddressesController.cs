@@ -40,7 +40,7 @@ namespace Lykke.Service.Stellar.Api.Controllers
                 return BadRequest(ErrorResponse.Create("Invalid parameter").AddModelError("address", "Address must be valid"));
             }
 
-            string baseAddress = _balanceService.GetBaseAddress(address);
+            var baseAddress = _balanceService.GetBaseAddress(address);
             var urls = _balanceService.GetExplorerUrls(baseAddress);
             return Ok(urls);
         }

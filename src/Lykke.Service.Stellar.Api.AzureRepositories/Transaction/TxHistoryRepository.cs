@@ -27,12 +27,7 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Transaction
 
         private INoSQLTableStorage<TxHistoryEntity> GetTable(TxDirectionType direction)
         {
-            if (direction == TxDirectionType.Incoming)
-            {
-                return _tableIn;
-            }
-
-            return _tableOut;
+            return direction == TxDirectionType.Incoming ? _tableIn : _tableOut;
         }
 
         public async Task<List<TxHistory>> GetAllAfterHashAsync(TxDirectionType direction, string memo, int take, string afterKey)

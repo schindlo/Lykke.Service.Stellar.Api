@@ -46,11 +46,11 @@ namespace Lykke.Service.Stellar.Api.Controllers
             {
                 string memo = null;
 
-                if (!_balanceService.IsAddressValid(request.FromAddress, out bool fromAddressHasExtension))
+                if (!_balanceService.IsAddressValid(request.FromAddress, out var fromAddressHasExtension))
                 {
                     return BadRequest(ErrorResponse.Create($"{nameof(request.FromAddress)} is not a valid"));
                 }
-                if (!_balanceService.IsAddressValid(request.ToAddress, out bool toAddressHasExtension))
+                if (!_balanceService.IsAddressValid(request.ToAddress, out var toAddressHasExtension))
                 {
                     return BadRequest(ErrorResponse.Create($"{nameof(request.ToAddress)} is not a valid"));
                 }
@@ -80,10 +80,10 @@ namespace Lykke.Service.Stellar.Api.Controllers
                     return BadRequest(ErrorResponse.Create($"{nameof(request.AssetId)} was not found"));
                 }
 
-                Int64 amount;
+                long amount;
                 try
                 {
-                    amount = Int64.Parse(request.Amount);
+                    amount = long.Parse(request.Amount);
                 }
                 catch (FormatException)
                 {
@@ -98,7 +98,7 @@ namespace Lykke.Service.Stellar.Api.Controllers
                 }
                 var fromAddressBalance = await _balanceService.GetAddressBalanceAsync(request.FromAddress, fees);
 
-                Int64 requiredBalance;
+                long requiredBalance;
                 if (request.IncludeFee)
                 {
                     requiredBalance = amount;
@@ -149,13 +149,11 @@ namespace Lykke.Service.Stellar.Api.Controllers
             }
             catch (BusinessException ex)
             {
-                if (!string.IsNullOrWhiteSpace(ex.ErrorCode))
-                {
-                    var errorResponse = StellarErrorResponse.Create(ex.Message, (BlockchainErrorCode)Enum.Parse(typeof(BlockchainErrorCode), ex.ErrorCode));
-                    return BadRequest(errorResponse);
-                }
                 // technical / unknown problem
-                throw;
+                if (string.IsNullOrWhiteSpace(ex.ErrorCode)) throw;
+
+                var errorResponse = StellarErrorResponse.Create(ex.Message, (BlockchainErrorCode)Enum.Parse(typeof(BlockchainErrorCode), ex.ErrorCode));
+                return BadRequest(errorResponse);
             }
 
             return Ok();

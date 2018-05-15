@@ -44,7 +44,7 @@ namespace Lykke.Service.Stellar.Api.Services.Balance
 
         public bool IsAddressValid(string address)
         {
-            return IsAddressValid(address, out bool unused);
+            return IsAddressValid(address, out _);
         }
 
         public bool IsAddressValid(string address, out bool hasExtension)
@@ -117,7 +117,7 @@ namespace Lykke.Service.Stellar.Api.Services.Balance
             if (string.IsNullOrEmpty(addressExtension))
             {
                 var nativeBalance = accountDetails.Balances.Single(b => Core.Domain.Asset.Stellar.TypeName.Equals(b.AssetType, StringComparison.OrdinalIgnoreCase));
-                result.Balance = Convert.ToInt64(Decimal.Parse(nativeBalance.Balance) * One.Value);
+                result.Balance = Convert.ToInt64(decimal.Parse(nativeBalance.Balance) * One.Value);
             }
             else
             {
@@ -128,12 +128,11 @@ namespace Lykke.Service.Stellar.Api.Services.Balance
                 }
             }
 
-            if (fees != null)
-            {
-                long entries = accountDetails.Signers.Length + accountDetails.SubentryCount;
-                var minBalance = (2 + entries) * fees.BaseReserve;
-                result.MinBalance = Convert.ToInt64(minBalance);
-            }
+            if (fees == null) return result;
+
+            var entries = accountDetails.Signers.Length + accountDetails.SubentryCount;
+            var minBalance = (2 + entries) * fees.BaseReserve;
+            result.MinBalance = Convert.ToInt64(minBalance);
 
             return result;
         }
@@ -165,25 +164,18 @@ namespace Lykke.Service.Stellar.Api.Services.Balance
 
         public List<string> GetExplorerUrls(string address)
         {
-            var results = new List<string>();
-            foreach (var format in _explorerUrlFormats)
-            {
-                var url = string.Format(format, address);
-                results.Add(url);
-            }
-
-            return results;
+            return _explorerUrlFormats.Select(format => string.Format(format, address)).ToList();
         }
 
         private string GetPagingTokenKey => $"TransactionPagingToken:{_depositBaseAddress}";
 
         public async Task<int> UpdateWalletBalances()
         {
-            int count = 0;
+            var count = 0;
 
             try
             {
-                string cursor = await _keyValueStoreRepository.GetAsync(GetPagingTokenKey);
+                var cursor = await _keyValueStoreRepository.GetAsync(GetPagingTokenKey);
 
                 do
                 {
@@ -208,7 +200,7 @@ namespace Lykke.Service.Stellar.Api.Services.Balance
         {
             var transactions = await _horizonService.GetTransactions(_depositBaseAddress, StellarSdkConstants.OrderAsc, cursor);
 
-            int count = 0;
+            var count = 0;
             cursor = null;
             foreach (var transaction in transactions)
             {
@@ -218,7 +210,7 @@ namespace Lykke.Service.Stellar.Api.Services.Balance
                     count++;
 
                     // skip outgoing transactions and transactions without memo
-                    string memo = _horizonService.GetMemo(transaction);
+                    var memo = _horizonService.GetMemo(transaction);
                     if (_depositBaseAddress.Equals(transaction.SourceAccount, StringComparison.OrdinalIgnoreCase) ||
                         string.IsNullOrWhiteSpace(memo))
                     {
@@ -237,36 +229,41 @@ namespace Lykke.Service.Stellar.Api.Services.Balance
 
                         string toAddress = null;
                         long amount = 0;
-                        if (operationType == OperationType.OperationTypeEnum.PAYMENT)
+                        // ReSharper disable once SwitchStatementMissingSomeCases
+                        switch (operationType)
                         {
-                            var op = operation.Body.PaymentOp;
-                            if (op.Asset.Discriminant.InnerValue == AssetType.AssetTypeEnum.ASSET_TYPE_NATIVE)
+                            case OperationType.OperationTypeEnum.PAYMENT:
                             {
+                                var op = operation.Body.PaymentOp;
+                                if (op.Asset.Discriminant.InnerValue == AssetType.AssetTypeEnum.ASSET_TYPE_NATIVE)
+                                {
+                                    var keyPair = KeyPair.FromXdrPublicKey(op.Destination.InnerValue);
+                                    toAddress = keyPair.Address;
+                                    amount = op.Amount.InnerValue;
+                                }
+                                break;
+                            }
+                            case OperationType.OperationTypeEnum.ACCOUNT_MERGE:
+                            {
+                                var op = operation.Body;
                                 var keyPair = KeyPair.FromXdrPublicKey(op.Destination.InnerValue);
                                 toAddress = keyPair.Address;
-                                amount = op.Amount.InnerValue;
+                                amount = _horizonService.GetAccountMergeAmount(transaction.ResultXdr, i);
+                                break;
                             }
-                        }
-                        else if (operationType == OperationType.OperationTypeEnum.ACCOUNT_MERGE)
-                        {
-                            var op = operation.Body;
-                            var keyPair = KeyPair.FromXdrPublicKey(op.Destination.InnerValue);
-                            toAddress = keyPair.Address;
-                            amount = _horizonService.GetAccountMergeAmount(transaction.ResultXdr, i);
+                            default:
+                                continue;
                         }
 
-                        if (toAddress != null && amount > 0)
+                        var addressWithExtension = $"{toAddress}{Constants.PublicAddressExtension.Separator}{memo.ToLower()}";
+                        var observation = await _observationRepository.GetAsync(addressWithExtension);
+                        if (observation == null)
                         {
-                            var addressWithExtension = $"{toAddress}{Constants.PublicAddressExtension.Separator}{memo.ToLower()}";
-                            var observation = await _observationRepository.GetAsync(addressWithExtension);
-                            if (observation == null)
-                            {
-                                continue;    
-                            }
-
-                            var assetId = Core.Domain.Asset.Stellar.Id;
-                            await _walletBalanceRepository.IncreaseBalanceAsync(assetId, addressWithExtension, transaction.Ledger * 10, i, transaction.Hash, amount);
+                            continue;    
                         }
+
+                        var assetId = Core.Domain.Asset.Stellar.Id;
+                        await _walletBalanceRepository.IncreaseBalanceAsync(assetId, addressWithExtension, transaction.Ledger * 10, i, transaction.Hash, amount);
                     }
                 }
                 catch (Exception ex)

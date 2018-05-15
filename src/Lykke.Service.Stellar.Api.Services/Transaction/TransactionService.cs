@@ -100,52 +100,50 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
         private async Task<bool> ProcessDwToHwTransaction(Guid operationId, StellarBase.Generated.Transaction tx)
         {
             var fromKeyPair = KeyPair.FromXdrPublicKey(tx.SourceAccount.InnerValue);
-            if (_balanceService.IsDepositBaseAddress(fromKeyPair.Address) && tx.Operations.Length == 1 &&
-                tx.Operations[0].Body.PaymentOp != null && !string.IsNullOrWhiteSpace(tx.Memo.Text))
+            if (!_balanceService.IsDepositBaseAddress(fromKeyPair.Address) || tx.Operations.Length != 1 ||
+                tx.Operations[0].Body.PaymentOp == null || string.IsNullOrWhiteSpace(tx.Memo.Text)) return false;
+
+            var toKeyPair = KeyPair.FromXdrPublicKey(tx.Operations[0].Body.PaymentOp.Destination.InnerValue);
+            if (!_balanceService.IsDepositBaseAddress(toKeyPair.Address)) return false;
+
+            var fromAddress = $"{fromKeyPair.Address}{Constants.PublicAddressExtension.Separator}{tx.Memo.Text}";
+            var amount = tx.Operations[0].Body.PaymentOp.Amount.InnerValue;
+            var hash = _horizonService.GetTransactionHash(tx);
+            var ledger = await _horizonService.GetLatestLedger();
+
+            var broadcast = new TxBroadcast
             {
-                var toKeyPair = KeyPair.FromXdrPublicKey(tx.Operations[0].Body.PaymentOp.Destination.InnerValue);
-                if (_balanceService.IsDepositBaseAddress(toKeyPair.Address))
-                {
-                    var fromAddress = $"{fromKeyPair.Address}{Constants.PublicAddressExtension.Separator}{tx.Memo.Text}";
-                    var amount = tx.Operations[0].Body.PaymentOp.Amount.InnerValue;
-                    var hash = _horizonService.GetTransactionHash(tx);
-                    var ledger = await _horizonService.GetLatestLedger();
+                OperationId = operationId,
+                Amount = amount,
+                Fee = 0,
+                Hash = hash,
+                // ReSharper disable once ArrangeRedundantParentheses
+                Ledger = (ledger.Sequence * 10) + 1,
+                CreatedAt = DateTime.UtcNow
+            };
 
-                    var broadcast = new TxBroadcast
-                    {
-                        OperationId = operationId,
-                        Amount = amount,
-                        Fee = 0,
-                        Hash = hash,
-                        Ledger = (ledger.Sequence * 10) + 1,
-                        CreatedAt = DateTime.UtcNow
-                    };
-
-                    var assetId = Core.Domain.Asset.Stellar.Id;
-                    if (await _balanceRepository.DecreaseBalanceAsync(assetId, fromAddress, hash, amount))
-                    {
-                        broadcast.State = TxBroadcastState.Completed;
-                    }
-                    else
-                    {
-                        broadcast.State = TxBroadcastState.Failed;
-                        broadcast.Error = "Not enough balance!";
-                        broadcast.ErrorCode = TxExecutionError.NotEnoughBalance;
-                    }
-
-                    await _broadcastRepository.InsertOrReplaceAsync(broadcast);
-                    await _balanceRepository.DeleteIfBalanceIsZero(assetId, fromAddress);
-                    return true;   
-                }
+            var assetId = Core.Domain.Asset.Stellar.Id;
+            if (await _balanceRepository.DecreaseBalanceAsync(assetId, fromAddress, hash, amount))
+            {
+                broadcast.State = TxBroadcastState.Completed;
+            }
+            else
+            {
+                broadcast.State = TxBroadcastState.Failed;
+                broadcast.Error = "Not enough balance!";
+                broadcast.ErrorCode = TxExecutionError.NotEnoughBalance;
             }
 
-            return false;
+            await _broadcastRepository.InsertOrReplaceAsync(broadcast);
+            await _balanceRepository.DeleteIfBalanceIsZero(assetId, fromAddress);
+            return true;
+
         }
 
-        private string GetErrorMessage(Exception ex)
+        private static string GetErrorMessage(Exception ex)
         {
             var errorMessage = ex.Message;
-            // handle bad request
+            // ReSharper disable once InvertIf
             if (ex is BadRequestException badRequest)
             {
                 var resultCodes = JsonConvert.SerializeObject(badRequest.ErrorDetails.Extras.ResultCodes);
@@ -154,7 +152,7 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
             return errorMessage;
         }
 
-        private TxExecutionError GetErrorCode(Exception ex)
+        private static TxExecutionError GetErrorCode(Exception ex)
         {
             var bre = ex as BadRequestException;
             var ops = bre?.ErrorDetails?.Extras?.ResultCodes?.Operations;
@@ -262,7 +260,7 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
 
         public async Task<int> UpdateBroadcastsInProgress(int batchSize)
         {
-            int count = 0;
+            var count = 0;
 
             try
             {

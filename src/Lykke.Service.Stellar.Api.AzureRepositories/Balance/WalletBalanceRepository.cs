@@ -69,8 +69,9 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Balance
             // ReSharper disable once ImplicitlyCapturedClosure
             bool ModifyEntity(WalletBalanceEntity entity)
             {
+                // ReSharper disable once InvertIf
                 if (ledger > entity.Ledger ||
-                    (ledger == entity.Ledger && operationIndex > entity.OperationIndex))
+                    ledger == entity.Ledger && operationIndex > entity.OperationIndex)
                 {
                     entity.Balance += amount;
                     entity.Ledger = ledger;
@@ -94,6 +95,7 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Balance
             // ReSharper disable once ImplicitlyCapturedClosure
             WalletBalanceEntity ModifyEntity(WalletBalanceEntity entity)
             {
+                // ReSharper disable once InvertIf
                 if (!hash.Equals(entity.LastTransactionHash, System.StringComparison.OrdinalIgnoreCase))
                 {
                     if (entity.Balance < amount)
@@ -118,6 +120,7 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Balance
             var partitionKey = TableKey.GetHashedRowKey(rowKey);
 
             var entity = await _table.GetDataAsync(partitionKey, rowKey);
+            // ReSharper disable once InvertIf
             if (entity != null && entity.Balance == 0)
             {
                 await _table.DeleteAsync(entity);

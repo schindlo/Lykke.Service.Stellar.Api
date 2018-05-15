@@ -30,7 +30,7 @@ namespace Lykke.Service.Stellar.Api.Controllers
         [ProducesResponseType(typeof(ErrorResponse), (int)HttpStatusCode.BadRequest)]
         public async Task<IActionResult> AddAddressToIncomingObservationList(string address)
         {
-            if (!_balanceService.IsAddressValid(address, out bool hasExtension))
+            if (!_balanceService.IsAddressValid(address, out var hasExtension))
             {
                 return BadRequest(ErrorResponse.Create("Invalid parameter").AddModelError("address", "Address must be valid"));
             }
@@ -53,7 +53,7 @@ namespace Lykke.Service.Stellar.Api.Controllers
         [ProducesResponseType(typeof(ErrorResponse), (int)HttpStatusCode.BadRequest)]
         public async Task<IActionResult> AddAddressToOutgoingObservationList(string address)
         {
-            if (!_balanceService.IsAddressValid(address, out bool hasExtension))
+            if (!_balanceService.IsAddressValid(address, out var hasExtension))
             {
                 return BadRequest(ErrorResponse.Create("Invalid parameter").AddModelError("address", "Address must be valid"));
             }
@@ -152,7 +152,7 @@ namespace Lykke.Service.Stellar.Api.Controllers
             return Ok(HistoryToModel(transactions));
         }
 
-        private List<StellarHistoricalTransactionContract> HistoryToModel(List<TxHistory> transactions)
+        private static List<StellarHistoricalTransactionContract> HistoryToModel(IEnumerable<TxHistory> transactions)
         {
             var ret = new List<StellarHistoricalTransactionContract>();
             foreach (var tx in transactions)

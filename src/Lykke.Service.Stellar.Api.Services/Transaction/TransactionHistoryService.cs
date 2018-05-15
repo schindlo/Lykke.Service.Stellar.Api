@@ -195,7 +195,7 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
 
         public async Task<int> UpdateDepositBaseTransactionHistory()
         {
-            int count = 0;
+            var count = 0;
 
             try
             {
@@ -244,7 +244,7 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
         {
             var transactions = await _horizonService.GetTransactions(address, StellarSdkConstants.OrderAsc, context.Cursor);
 
-            int count = 0;
+            var count = 0;
             context.Cursor = null;
             foreach (var transaction in transactions)
             {
@@ -274,35 +274,44 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
                             Memo = _horizonService.GetMemo(transaction)
                         };
 
-                        if (operationType == OperationType.OperationTypeEnum.CREATE_ACCOUNT)
+                        // ReSharper disable once SwitchStatementMissingSomeCases
+                        switch (operationType)
                         {
-                            var op = operation.Body.CreateAccountOp;
-                            var keyPair = KeyPair.FromXdrPublicKey(op.Destination.InnerValue);
-                            history.ToAddress = keyPair.Address;
-                            history.Amount = op.StartingBalance.InnerValue;
-                            history.PaymentType = PaymentType.CreateAccount;
-                        }
-                        else if (operationType == OperationType.OperationTypeEnum.PAYMENT)
-                        {
-                            var op = operation.Body.PaymentOp;
-                            if (op.Asset.Discriminant.InnerValue == AssetType.AssetTypeEnum.ASSET_TYPE_NATIVE)
+                            case OperationType.OperationTypeEnum.CREATE_ACCOUNT:
                             {
+                                var op = operation.Body.CreateAccountOp;
                                 var keyPair = KeyPair.FromXdrPublicKey(op.Destination.InnerValue);
                                 history.ToAddress = keyPair.Address;
-                                history.Amount = op.Amount.InnerValue;
-                                history.PaymentType = PaymentType.Payment;
+                                history.Amount = op.StartingBalance.InnerValue;
+                                history.PaymentType = PaymentType.CreateAccount;
+                                break;
                             }
-                        }
-                        else if (operationType == OperationType.OperationTypeEnum.ACCOUNT_MERGE)
-                        {
-                            var op = operation.Body;
-                            var keyPair = KeyPair.FromXdrPublicKey(op.Destination.InnerValue);
-                            history.ToAddress = keyPair.Address;
-                            history.Amount = _horizonService.GetAccountMergeAmount(transaction.ResultXdr, i);
-                            history.PaymentType = PaymentType.AccountMerge;
+                            case OperationType.OperationTypeEnum.PAYMENT:
+                            {
+                                var op = operation.Body.PaymentOp;
+                                if (op.Asset.Discriminant.InnerValue == AssetType.AssetTypeEnum.ASSET_TYPE_NATIVE)
+                                {
+                                    var keyPair = KeyPair.FromXdrPublicKey(op.Destination.InnerValue);
+                                    history.ToAddress = keyPair.Address;
+                                    history.Amount = op.Amount.InnerValue;
+                                    history.PaymentType = PaymentType.Payment;
+                                }
+                                break;
+                            }
+                            case OperationType.OperationTypeEnum.ACCOUNT_MERGE:
+                            {
+                                var op = operation.Body;
+                                var keyPair = KeyPair.FromXdrPublicKey(op.Destination.InnerValue);
+                                history.ToAddress = keyPair.Address;
+                                history.Amount = _horizonService.GetAccountMergeAmount(transaction.ResultXdr, i);
+                                history.PaymentType = PaymentType.AccountMerge;
+                                break;
+                            }
+                            default:
+                                continue;
                         }
 
-                        bool cancel = false;
+                        var cancel = false;
                         if (address.Equals(history.ToAddress, StringComparison.OrdinalIgnoreCase))
                         {
                             cancel = await process(TxDirectionType.Incoming, history);

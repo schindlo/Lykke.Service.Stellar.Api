@@ -33,7 +33,7 @@ namespace Lykke.Job.Stellar.Api.Jobs
 
             try
             {
-                int count = await _transactionService.UpdateBroadcastsInProgress(_batchSize);
+                var count = await _transactionService.UpdateBroadcastsInProgress(_batchSize);
 
                 watch.Stop();
                 await _log.WriteInfoAsync(nameof(BroadcastInProgressJob), nameof(Execute), $"Job finished. dt={watch.ElapsedMilliseconds}ms, records={count}");

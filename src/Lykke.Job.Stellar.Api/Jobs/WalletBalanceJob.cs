@@ -30,7 +30,7 @@ namespace Lykke.Job.Stellar.Api.Jobs
 
             try
             {
-                int count = await _balanceService.UpdateWalletBalances();
+                var count = await _balanceService.UpdateWalletBalances();
 
                 watch.Stop();
                 await _log.WriteInfoAsync(nameof(WalletBalanceJob), nameof(Execute), $"Job finished. dt={watch.ElapsedMilliseconds}ms, records={count}");

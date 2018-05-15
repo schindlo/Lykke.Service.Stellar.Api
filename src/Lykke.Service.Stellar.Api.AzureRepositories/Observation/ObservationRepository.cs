@@ -42,9 +42,9 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Observation
 
         public async Task InsertOrReplaceAsync(TU observation)
         {
-            var entity = new T()
+            var entity = new T
             {
-                Timestamp = DateTimeOffset.UtcNow,
+                Timestamp = DateTimeOffset.UtcNow
             };
             entity.ToEntity(observation);
             entity.PartitionKey = TableKey.GetHashedRowKey(entity.RowKey);

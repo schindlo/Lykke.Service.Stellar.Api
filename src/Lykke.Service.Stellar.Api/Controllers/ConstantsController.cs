@@ -20,7 +20,7 @@ namespace Lykke.Service.Stellar.Api.Controllers
                 {
                     Separator = Constants.PublicAddressExtension.Separator,
                     DisplayName = Constants.PublicAddressExtension.DisplayName,
-                    BaseDisplayName = string.Empty,
+                    BaseDisplayName = string.Empty
                 }
             };
             return Ok(contants);

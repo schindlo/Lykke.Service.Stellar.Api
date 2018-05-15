@@ -30,7 +30,7 @@ namespace Lykke.Job.Stellar.Api.Jobs
 
             try 
             {
-                int count = await _txHistoryService.UpdateDepositBaseTransactionHistory();
+                var count = await _txHistoryService.UpdateDepositBaseTransactionHistory();
 
                 watch.Stop();
                 await _log.WriteInfoAsync(nameof(TransactionHistoryJob), nameof(Execute), $"Job finished. dt={watch.ElapsedMilliseconds}ms, records={count}");

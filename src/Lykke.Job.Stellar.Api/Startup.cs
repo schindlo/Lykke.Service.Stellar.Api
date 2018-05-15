@@ -166,6 +166,7 @@ namespace Lykke.Job.Stellar.Api
             }
             catch (Exception ex)
             {
+                // ReSharper disable once InvertIf
                 if (Log != null)
                 {
                     await Log.WriteFatalErrorAsync(nameof(Startup), nameof(CleanUp), "", ex);

@@ -26,7 +26,7 @@ namespace Lykke.Service.Stellar.Api.Core.Domain.Transaction
 
         public static string GetKey(string pagingToken, int operationIndex)
         {
-            return UInt64.Parse(pagingToken).ToString("D20") + operationIndex.ToString("D3");
+            return ulong.Parse(pagingToken).ToString("D20") + operationIndex.ToString("D3");
         }
     }
 }

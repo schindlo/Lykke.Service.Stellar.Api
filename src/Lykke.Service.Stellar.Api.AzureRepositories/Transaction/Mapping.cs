@@ -23,7 +23,7 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Transaction
                 Hash = entity.Hash,
                 CreatedAt = entity.CreatedAt,
                 PaymentType = entity.PaymentType,
-                Memo = entity.Memo,
+                Memo = entity.Memo
             };
             return domain;
         }

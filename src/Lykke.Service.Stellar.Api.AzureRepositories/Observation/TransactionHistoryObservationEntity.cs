@@ -21,7 +21,7 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Observation
             {
                 Address = RowKey,
                 IsIncomingObserved = IsIncomingTxObserved,
-                IsOutgoingObserved = IsOutgoingTxObserved,
+                IsOutgoingObserved = IsOutgoingTxObserved
 
             };
             return observation;

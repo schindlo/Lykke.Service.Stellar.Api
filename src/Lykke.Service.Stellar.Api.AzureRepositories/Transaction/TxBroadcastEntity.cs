@@ -24,11 +24,9 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Transaction
             get => _state;
             set
             {
-                if (_state != value)
-                {
-                    _state = value;
-                    MarkValueTypePropertyAsDirty(nameof(State));
-                }
+                if (_state == value) return;
+                _state = value;
+                MarkValueTypePropertyAsDirty(nameof(State));
             }
         }
 
@@ -37,11 +35,9 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Transaction
             get => _amount;
             set
             {
-                if (_amount != value)
-                {
-                    _amount = value;
-                    MarkValueTypePropertyAsDirty(nameof(Amount));
-                }
+                if (_amount == value) return;
+                _amount = value;
+                MarkValueTypePropertyAsDirty(nameof(Amount));
             }
         }
 
@@ -50,11 +46,9 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Transaction
             get => _fee;
             set
             {
-                if (_fee != value)
-                {
-                    _fee = value;
-                    MarkValueTypePropertyAsDirty(nameof(Fee));
-                }
+                if (_fee == value) return;
+                _fee = value;
+                MarkValueTypePropertyAsDirty(nameof(Fee));
             }
         }
 
@@ -65,11 +59,9 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Transaction
             get => _ledger;
             set
             {
-                if (_ledger != value)
-                {
-                    _ledger = value;
-                    MarkValueTypePropertyAsDirty(nameof(Ledger));
-                }
+                if (_ledger == value) return;
+                _ledger = value;
+                MarkValueTypePropertyAsDirty(nameof(Ledger));
             }
         }
 
@@ -78,11 +70,9 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Transaction
             get => _createdAt;
             set
             {
-                if (_createdAt != value)
-                {
-                    _createdAt = value;
-                    MarkValueTypePropertyAsDirty(nameof(CreatedAt));
-                }
+                if (_createdAt == value) return;
+                _createdAt = value;
+                MarkValueTypePropertyAsDirty(nameof(CreatedAt));
             }
         }
 
@@ -91,11 +81,9 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Transaction
             get => _error;
             set
             {
-                if (_error != value)
-                {
-                    _error = value;
-                    MarkValueTypePropertyAsDirty(nameof(Error));
-                }
+                if (_error == value) return;
+                _error = value;
+                MarkValueTypePropertyAsDirty(nameof(Error));
             }
         }
 
@@ -104,11 +92,9 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Transaction
             get => _errorCode;
             set
             {
-                if (_errorCode != value)
-                {
-                    _errorCode = value;
-                    MarkValueTypePropertyAsDirty(nameof(ErrorCode));
-                }
+                if (_errorCode == value) return;
+                _errorCode = value;
+                MarkValueTypePropertyAsDirty(nameof(ErrorCode));
             }
         }
     }
