@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using JetBrains.Annotations;
 using StellarBase;
 using StellarBase.Generated;
 using Lykke.Service.Stellar.Api.Core.Domain.Observation;
@@ -22,6 +23,7 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
         private readonly IObservationRepository<TransactionHistoryObservation> _observationRepository;
         private readonly ITxHistoryRepository _txHistoryRepository;
 
+        [UsedImplicitly]
         public TransactionHistoryService(IBalanceService balanceService,
                                          IHorizonService horizonService,
                                          IKeyValueStoreRepository keyValueStoreRepository,
@@ -50,6 +52,7 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
         public async Task AddIncomingTransactionObservationAsync(string address)
         {
             var observation = await _observationRepository.GetAsync(address);
+            // ReSharper disable once ConvertIfStatementToNullCoalescingExpression
             if (observation == null)
             {
                 observation = new TransactionHistoryObservation
@@ -65,6 +68,7 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
         public async Task AddOutgoingTransactionObservationAsync(string address)
         {
             var observation = await _observationRepository.GetAsync(address);
+            // ReSharper disable once ConvertIfStatementToNullCoalescingExpression
             if (observation == null)
             {
                 observation = new TransactionHistoryObservation
@@ -163,23 +167,26 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
         private async Task<List<TxHistory>> GetBaseAddressHistory(TxDirectionType direction, string address, int take, string afterPagingToken)
         {
             var result = new List<TxHistory>();
-            var context = new TransactionContext();
-            context.Cursor = afterPagingToken;
+            var context = new TransactionContext
+            {
+                Cursor = afterPagingToken
+            };
 
-            #pragma warning disable 1998
-            Func<TxDirectionType, TxHistory, Task<bool>> process = async (type, history) =>
+#pragma warning disable 1998
+            async Task<bool> Process(TxDirectionType type, TxHistory history)
             {
                 if (direction == type)
                 {
                     result.Add(history);
                 }
+
                 return result.Count >= take;
-            };
-            #pragma warning restore 1998
+            }
+#pragma warning restore 1998
 
             do
             {
-                await QueryAndProcessTransactions(address, context, process);
+                await QueryAndProcessTransactions(address, context, Process);
             }
             while (!string.IsNullOrEmpty(context.Cursor) && result.Count < take);
 
@@ -193,9 +200,10 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
             try
             {
                 var depositBase = _balanceService.GetDepositBaseAddress();
-
-                var context = new TransactionContext();
-                context.Cursor = await _keyValueStoreRepository.GetAsync(GetPagingTokenKey);
+                var context = new TransactionContext
+                {
+                    Cursor = await _keyValueStoreRepository.GetAsync(GetPagingTokenKey)
+                };
 
                 do
                 {

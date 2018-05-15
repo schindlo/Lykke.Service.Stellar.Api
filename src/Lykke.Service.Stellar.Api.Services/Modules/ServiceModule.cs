@@ -1,5 +1,4 @@
 ﻿using Autofac;
-using Common.Log;
 using Lykke.Service.Stellar.Api.Core.Services;
 using Lykke.Service.Stellar.Api.Core.Settings.ServiceSettings;
 using Lykke.SettingsReader;
@@ -12,13 +11,10 @@ namespace Lykke.Service.Stellar.Api.Services.Modules
     public class ServiceModule : Module
     {
         private readonly IReloadingManager<StellarApiSettings> _settings;
-        private readonly ILog _log;
 
-        public ServiceModule(IReloadingManager<StellarApiSettings> settings,
-                             ILog log)
+        public ServiceModule(IReloadingManager<StellarApiSettings> settings)
         {
             _settings = settings;
-            _log = log;
         }
 
         protected override void Load(ContainerBuilder builder)

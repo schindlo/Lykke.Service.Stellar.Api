@@ -1,6 +1,7 @@
 ﻿using System;
 using Autofac;
 using Common.Log;
+using JetBrains.Annotations;
 
 namespace Lykke.Service.Stellar.Api.Client
 {
@@ -20,6 +21,7 @@ namespace Lykke.Service.Stellar.Api.Client
                 .SingleInstance();
         }
 
+        [UsedImplicitly]
         public static void RegisterStellarApiClient(this ContainerBuilder builder, StellarApiServiceClientSettings settings, ILog log)
         {
             builder.RegisterStellarApiClient(settings?.ServiceUrl, log);

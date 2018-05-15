@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
+using JetBrains.Annotations;
 using StellarBase;
 using StellarBase.Generated;
 using StellarSdk.Exceptions;
@@ -27,6 +28,7 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
         private readonly ITxBroadcastRepository _broadcastRepository;
         private readonly ITxBuildRepository _buildRepository;
 
+        [UsedImplicitly]
         public TransactionService(IBalanceService balanceService,
                                   IHorizonService horizonService,
                                   IObservationRepository<BroadcastObservation> observationRepository,
@@ -144,8 +146,7 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
         {
             var errorMessage = ex.Message;
             // handle bad request
-            var badRequest = ex as BadRequestException;
-            if (badRequest != null)
+            if (ex is BadRequestException badRequest)
             {
                 var resultCodes = JsonConvert.SerializeObject(badRequest.ErrorDetails.Extras.ResultCodes);
                 errorMessage += $". ResultCodes={resultCodes}";
@@ -155,15 +156,12 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
 
         private TxExecutionError GetErrorCode(Exception ex)
         {
-            if (ex.GetType() == typeof(BadRequestException))
+            var bre = ex as BadRequestException;
+            var ops = bre?.ErrorDetails?.Extras?.ResultCodes?.Operations;
+            if (bre?.ErrorDetails != null && bre.ErrorDetails.Status == (int)HttpStatusCode.BadRequest &&
+                ops != null && ops.Length > 0 && ops[0].Equals(StellarSdkConstants.OperationUnderfunded))
             {
-                var bre = (BadRequestException)ex;
-                var ops = bre.ErrorDetails?.Extras?.ResultCodes?.Operations;
-                if (bre.ErrorDetails.Status == (int)HttpStatusCode.BadRequest &&
-                    ops != null && ops.Length > 0 && ops[0].Equals(StellarSdkConstants.OperationUnderfunded))
-                {
-                    return TxExecutionError.NotEnoughBalance;
-                }
+                return TxExecutionError.NotEnoughBalance;
             }
             return TxExecutionError.Unknown;
         }

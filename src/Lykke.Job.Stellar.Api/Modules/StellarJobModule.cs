@@ -1,8 +1,6 @@
 ﻿using Autofac;
-using Autofac.Extensions.DependencyInjection;
 using Common.Log;
 using Lykke.SettingsReader;
-using Microsoft.Extensions.DependencyInjection;
 using Lykke.Job.Stellar.Api.Jobs;
 using Lykke.Job.Stellar.Api.Settings;
 
@@ -12,16 +10,12 @@ namespace Lykke.Job.Stellar.Api.Modules
     {
         private readonly IReloadingManager<StellarJobSettings> _settings;
         private readonly ILog _log;
-        // NOTE: you can remove it if you don't need to use IServiceCollection extensions to register service specific dependencies
-        private readonly IServiceCollection _services;
 
         public StellarJobModule(IReloadingManager<StellarJobSettings> settings,
                                 ILog log)
         {
             _settings = settings;
             _log = log;
-
-            _services = new ServiceCollection();
         }
 
         protected override void Load(ContainerBuilder builder)
@@ -54,8 +48,6 @@ namespace Lykke.Job.Stellar.Api.Modules
                    .WithParameter("period", _settings.CurrentValue.BroadcastInProgressJobPeriod.TotalMilliseconds)
                    .WithParameter("batchSize", _settings.CurrentValue.BroadcastInProgressJobBatchSize)
                    .SingleInstance();
-
-            builder.Populate(_services);
         }
     }
 }

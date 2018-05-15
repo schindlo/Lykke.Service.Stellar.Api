@@ -13,15 +13,11 @@ namespace Lykke.Service.Stellar.Api.Core.Services
 
         Task<List<TransactionDetails>> GetTransactions(string address, string order = StellarSdkConstants.OrderAsc, string cursor = "", int limit = 100);
 
-        Task<Payments> GetPayments(string address, string order = StellarSdkConstants.OrderAsc, string cursor = "");
-
         Task<LedgerDetails> GetLatestLedger();
 
         Task<AccountDetails> GetAccountDetails(string address);
 
         Task<bool> AccountExists(string address);
-
-        Task<long> GetLedgerNoOfLastPayment(string address);
 
         long GetAccountMergeAmount(string resultXdrBase64, int operationIndex);
 

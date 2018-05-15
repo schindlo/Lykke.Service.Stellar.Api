@@ -10,6 +10,7 @@ using Lykke.Service.Stellar.Api.Core.Exceptions;
 using Lykke.Service.Stellar.Api.Core.Services;
 using Lykke.Service.Stellar.Api.Core;
 using Chaos.NaCl;
+using JetBrains.Annotations;
 
 namespace Lykke.Service.Stellar.Api.Services.Horizon
 {
@@ -17,6 +18,7 @@ namespace Lykke.Service.Stellar.Api.Services.Horizon
     {
         private readonly string _horizonUrl;
 
+        [UsedImplicitly]
         public HorizonService(string network,
                               string horizonUrl)
         {
@@ -32,7 +34,7 @@ namespace Lykke.Service.Stellar.Api.Services.Horizon
             var tx = await builder.Call();
             if (tx == null || string.IsNullOrEmpty(tx.Hash))
             {
-                throw new HorizonApiException($"Submitting transaction failed. No valid transaction was returned.");
+                throw new HorizonApiException("Submitting transaction failed. No valid transaction was returned.");
             }
             return tx.Hash;
         }
@@ -75,31 +77,14 @@ namespace Lykke.Service.Stellar.Api.Services.Horizon
             return new List<TransactionDetails>();
         }
 
-        public async Task<Payments> GetPayments(string address, string order = StellarSdkConstants.OrderAsc, string cursor = "")
-        {
-            try
-            {
-                var builder = new PaymentCallBuilder(_horizonUrl);
-                builder.accountId(address);
-                builder.order(order).cursor(cursor);
-                var payments = await builder.Call();
-                return payments;
-            }
-            catch (ResourceNotFoundException)
-            {
-                // address not found
-                return null;
-            }
-        }
-
         public async Task<LedgerDetails> GetLatestLedger()
         {
             var builder = new LedgerCallBuilder(_horizonUrl);
             builder.order(StellarSdkConstants.OrderDesc).limit(1);
             var ledgers = await builder.Call();
-            if (ledgers?.Embedded?.Records == null || ledgers?.Embedded?.Records.Length < 1)
+            if (ledgers?.Embedded?.Records == null || ledgers.Embedded?.Records.Length < 1)
             {
-                throw new HorizonApiException($"Latest ledger missing from query result.");
+                throw new HorizonApiException("Latest ledger missing from query result.");
             }
             return ledgers.Embedded.Records[0];
         }
@@ -124,25 +109,6 @@ namespace Lykke.Service.Stellar.Api.Services.Horizon
         {
             var accountDetails = await GetAccountDetails(address);
             return accountDetails != null;
-        }
-
-        public async Task<long> GetLedgerNoOfLastPayment(string address)
-        {
-            var builder = new PaymentCallBuilder(_horizonUrl);
-            builder.accountId(address);
-            builder.order(StellarSdkConstants.OrderDesc).limit(1);
-            var payments = await builder.Call();
-            if (payments?.Embedded?.Records == null || payments?.Embedded?.Records.Length < 1)
-            {
-                throw new HorizonApiException($"Latest ledger missing from query result.");
-            }
-            var hash = payments.Embedded.Records[0].TransactionHash;
-            var tx = await GetTransactionDetails(hash);
-            if (tx == null)
-            {
-                throw new HorizonApiException($"Transaction not found. hash={hash}");
-            }
-            return tx.Ledger;
         }
 
         public long GetAccountMergeAmount(string resultXdrBase64, int operationIndex)

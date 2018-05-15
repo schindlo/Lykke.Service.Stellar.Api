@@ -2,6 +2,7 @@
 using System.Threading.Tasks;
 using Common;
 using Common.Log;
+using JetBrains.Annotations;
 using Lykke.Service.Stellar.Api.Core.Exceptions;
 using Lykke.Service.Stellar.Api.Core.Services;
 
@@ -13,6 +14,7 @@ namespace Lykke.Job.Stellar.Api.Jobs
         private readonly ILog _log;
         private readonly int _batchSize;
 
+        [UsedImplicitly]
         public BroadcastInProgressJob(ITransactionService transactionService,
                                       ILog log,
                                       int period,

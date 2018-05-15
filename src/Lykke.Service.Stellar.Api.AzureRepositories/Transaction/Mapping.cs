@@ -1,5 +1,4 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 using System.Collections.Generic;
 using Lykke.Service.Stellar.Api.Core.Domain.Transaction;
 

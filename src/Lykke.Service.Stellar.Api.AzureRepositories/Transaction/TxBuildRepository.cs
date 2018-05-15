@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using Common.Log;
 using AzureStorage;
 using AzureStorage.Tables;
+using JetBrains.Annotations;
 using Lykke.SettingsReader;
 using Lykke.Service.Stellar.Api.Core.Domain.Transaction;
 
@@ -16,6 +17,7 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Transaction
 
         private readonly INoSQLTableStorage<TxBuildEntity> _table;
 
+        [UsedImplicitly]
         public TxBuildRepository(IReloadingManager<string> dataConnStringManager,
                                  ILog log)
         {
@@ -34,12 +36,6 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Transaction
         {
             var entity = build.ToEntity();
             await _table.InsertAsync(entity);
-        }
-
-        public async Task DeleteAsync(Guid operationId)
-        {
-            var rowKey = GetRowKey(operationId);
-            await _table.DeleteAsync(TableKey.GetHashedRowKey(rowKey), rowKey);
         }
     }
 }

@@ -2,6 +2,7 @@
 using Common.Log;
 using AzureStorage;
 using AzureStorage.Tables;
+using JetBrains.Annotations;
 using Lykke.SettingsReader;
 using Lykke.Service.Stellar.Api.Core.Domain;
 
@@ -13,6 +14,7 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories
 
         private readonly INoSQLTableStorage<KeyValueEntity> _table;
 
+        [UsedImplicitly]
         public KeyValueStoreRepository(IReloadingManager<string> dataConnStringManager,
                                        ILog log)
         {

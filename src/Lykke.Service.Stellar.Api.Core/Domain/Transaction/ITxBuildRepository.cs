@@ -8,7 +8,5 @@ namespace Lykke.Service.Stellar.Api.Core.Domain.Transaction
         Task<TxBuild> GetAsync(Guid operationId);
 
         Task AddAsync(TxBuild build);
-
-        Task DeleteAsync(Guid operationId);
     }
 }

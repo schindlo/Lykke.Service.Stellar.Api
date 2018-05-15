@@ -1,5 +1,4 @@
-﻿using System;
-using System.Net;
+﻿using System.Net;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.ComponentModel.DataAnnotations;
@@ -11,7 +10,6 @@ using Common;
 using Lykke.Service.BlockchainApi.Contract;
 using Lykke.Service.BlockchainApi.Contract.Balances;
 using Lykke.Service.Stellar.Api.Core.Services;
-using Lykke.Service.Stellar.Api.Core.Domain.Balance;
 using Lykke.Common.Api.Contract.Responses;
 using Newtonsoft.Json;
 
@@ -101,7 +99,7 @@ namespace Lykke.Service.Stellar.Api.Controllers
         [ProducesResponseType(typeof(ErrorResponse), (int)HttpStatusCode.BadRequest)]
         public async Task<IActionResult> DeleteObservation([Required] string address)
         {
-            if (!_balanceService.IsAddressValid(address, out bool hasExtension))
+            if (!_balanceService.IsAddressValid(address))
             {
                 return BadRequest(ErrorResponse.Create("Invalid parameter").AddModelError("address", "Address must be valid"));
             }

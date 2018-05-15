@@ -4,6 +4,7 @@ using Microsoft.WindowsAzure.Storage.Table;
 using Common.Log;
 using AzureStorage;
 using AzureStorage.Tables;
+using JetBrains.Annotations;
 using Lykke.SettingsReader;
 using Lykke.Service.Stellar.Api.Core.Domain.Transaction;
 
@@ -16,6 +17,7 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Transaction
         private readonly INoSQLTableStorage<TxHistoryEntity> _tableIn;
         private readonly INoSQLTableStorage<TxHistoryEntity> _tableOut;
 
+        [UsedImplicitly]
         public TxHistoryRepository(IReloadingManager<string> dataConnStringManager,
                                    ILog log)
         {
@@ -31,16 +33,6 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Transaction
             }
 
             return _tableOut;
-        }
-
-        public async Task<(List<TxHistory> Items, string ContinuationToken)> GetAllAsync(TxDirectionType direction, int take, string continuationToken)
-        {
-            var table = GetTable(direction);
-            var filter = TableQuery.GenerateFilterCondition(nameof(ITableEntity.PartitionKey), QueryComparisons.Equal, direction.ToString());
-            var query = new TableQuery<TxHistoryEntity>().Where(filter).Take(take);
-            var data = await table.GetDataWithContinuationTokenAsync(query, continuationToken);
-            var items = data.Entities.ToDomain();
-            return (items, data.ContinuationToken);
         }
 
         public async Task<List<TxHistory>> GetAllAfterHashAsync(TxDirectionType direction, string memo, int take, string afterKey)
@@ -62,14 +54,7 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Transaction
             if (!string.IsNullOrEmpty(memo))
             {
                 var rkFilter = TableQuery.GenerateFilterCondition(nameof(ITableEntity.RowKey), QueryComparisons.Equal, memo);
-                if (filter != null)
-                {
-                    filter = TableQuery.CombineFilters(filter, TableOperators.And, rkFilter);
-                }
-                else
-                {
-                    filter = rkFilter;
-                }
+                filter = filter != null ? TableQuery.CombineFilters(filter, TableOperators.And, rkFilter) : rkFilter;
             }
 
             var query = new TableQuery<TxHistoryEntity>();

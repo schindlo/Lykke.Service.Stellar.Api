@@ -7,13 +7,6 @@ namespace Lykke.Service.Stellar.Api.Core.Exceptions
         private const string ProcessedDataKey = "Processed";
 
         public JobExecutionException(string message,
-                                     int processed)
-            : base(message)
-        {
-            Data.Add(ProcessedDataKey, processed);
-        }
-
-        public JobExecutionException(string message,
                                      Exception inner,
                                      int processed)
             : base(message, inner)
@@ -21,9 +14,6 @@ namespace Lykke.Service.Stellar.Api.Core.Exceptions
             Data.Add(ProcessedDataKey, processed);
         }
 
-        public int Processed
-        {
-            get => Data.Contains(ProcessedDataKey) ? (int)Data[ProcessedDataKey] : 0;
-        }
+        public int Processed => Data.Contains(ProcessedDataKey) ? (int)Data[ProcessedDataKey] : 0;
     }
 }

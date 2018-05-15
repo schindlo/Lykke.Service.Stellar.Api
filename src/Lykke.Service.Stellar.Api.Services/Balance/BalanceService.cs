@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using JetBrains.Annotations;
 using Lykke.Service.Stellar.Api.Core;
 using Lykke.Service.Stellar.Api.Core.Domain;
 using Lykke.Service.Stellar.Api.Core.Domain.Balance;
@@ -25,6 +26,7 @@ namespace Lykke.Service.Stellar.Api.Services.Balance
         private readonly string _depositBaseAddress;
         private readonly string[] _explorerUrlFormats;
 
+        [UsedImplicitly]
         public BalanceService(IHorizonService horizonService,
                               IKeyValueStoreRepository keyValueStoreRepository,
                               IObservationRepository<BalanceObservation> observationRepository, 
@@ -38,6 +40,11 @@ namespace Lykke.Service.Stellar.Api.Services.Balance
             _walletBalanceRepository = walletBalanceRepository;
             _depositBaseAddress = depositBaseAddress;
             _explorerUrlFormats = explorerUrlFormats;
+        }
+
+        public bool IsAddressValid(string address)
+        {
+            return IsAddressValid(address, out bool unused);
         }
 
         public bool IsAddressValid(string address, out bool hasExtension)
@@ -62,7 +69,6 @@ namespace Lykke.Service.Stellar.Api.Services.Balance
 
             if (parts.Length > 1 && !string.IsNullOrWhiteSpace(parts[1]))
             {
-                var extension = parts[1];
                 hasExtension = true;
             }
 

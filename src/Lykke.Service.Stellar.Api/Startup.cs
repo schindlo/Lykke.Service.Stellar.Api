@@ -4,6 +4,7 @@ using Autofac;
 using Autofac.Extensions.DependencyInjection;
 using AzureStorage.Tables;
 using Common.Log;
+using JetBrains.Annotations;
 using Lykke.AzureStorage.Tables.Entity.Metamodel;
 using Lykke.AzureStorage.Tables.Entity.Metamodel.Providers;
 using Lykke.Common.ApiLibrary.Middleware;
@@ -31,6 +32,7 @@ namespace Lykke.Service.Stellar.Api
         public IConfigurationRoot Configuration { get; }
         public ILog Log { get; private set; }
 
+        [UsedImplicitly]
         public Startup(IHostingEnvironment env)
         {
             var builder = new ConfigurationBuilder()
@@ -64,9 +66,9 @@ namespace Lykke.Service.Stellar.Api
 
                 Log = CreateLogWithSlack(services, appSettings);
 
-                builder.RegisterModule(new StellarApiModule(appSettings.Nested(x => x.StellarApiService), Log));
-                builder.RegisterModule(new RepositoryModule(appSettings.Nested(x => x.StellarApiService), Log));
-                builder.RegisterModule(new ServiceModule(appSettings.Nested(x => x.StellarApiService), Log));
+                builder.RegisterModule(new StellarApiModule(Log));
+                builder.RegisterModule(new RepositoryModule(appSettings.Nested(x => x.StellarApiService)));
+                builder.RegisterModule(new ServiceModule(appSettings.Nested(x => x.StellarApiService)));
                 builder.Populate(services);
                 ApplicationContainer = builder.Build();
 

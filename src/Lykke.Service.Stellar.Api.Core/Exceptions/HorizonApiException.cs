@@ -8,11 +8,5 @@ namespace Lykke.Service.Stellar.Api.Core.Exceptions
             : base(message)
         {
         }
-
-        public HorizonApiException(string message,
-                                   Exception inner)
-            : base(message, inner)
-        {
-        }
     }
 }

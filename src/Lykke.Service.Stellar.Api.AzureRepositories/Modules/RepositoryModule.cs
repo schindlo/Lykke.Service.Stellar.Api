@@ -1,5 +1,4 @@
 ﻿using Autofac;
-using Common.Log;
 using Lykke.SettingsReader;
 using Lykke.Service.Stellar.Api.AzureRepositories.Transaction;
 using Lykke.Service.Stellar.Api.AzureRepositories.Balance;
@@ -15,13 +14,10 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Modules
     public class RepositoryModule : Module
     {
         private readonly IReloadingManager<StellarApiSettings> _settings;
-        private readonly ILog _log;
 
-        public RepositoryModule(IReloadingManager<StellarApiSettings> settings,
-                                ILog log)
+        public RepositoryModule(IReloadingManager<StellarApiSettings> settings)
         {
             _settings = settings;
-            _log = log;
         }
 
         protected override void Load(ContainerBuilder builder)

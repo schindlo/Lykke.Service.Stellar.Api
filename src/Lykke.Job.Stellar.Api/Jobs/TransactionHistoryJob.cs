@@ -2,6 +2,7 @@
 using System.Threading.Tasks;
 using Common;
 using Common.Log;
+using JetBrains.Annotations;
 using Lykke.Service.Stellar.Api.Core.Exceptions;
 using Lykke.Service.Stellar.Api.Core.Services;
 
@@ -12,6 +13,7 @@ namespace Lykke.Job.Stellar.Api.Jobs
         private readonly ITransactionHistoryService _txHistoryService;
         private readonly ILog _log;
 
+        [UsedImplicitly]
         public TransactionHistoryJob(ITransactionHistoryService txHistoryService,
                                      ILog log,
                                      int period)

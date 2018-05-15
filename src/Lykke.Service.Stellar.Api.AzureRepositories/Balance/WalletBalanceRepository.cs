@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Common.Log;
 using AzureStorage;
 using AzureStorage.Tables;
+using JetBrains.Annotations;
 using Lykke.SettingsReader;
 using Lykke.Service.Stellar.Api.Core.Domain.Balance;
 using Microsoft.WindowsAzure.Storage.Table;
@@ -16,6 +17,7 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Balance
 
         private readonly INoSQLTableStorage<WalletBalanceEntity> _table;
 
+        [UsedImplicitly]
         public WalletBalanceRepository(IReloadingManager<string> dataConnStringManager,
                                        ILog log)
         {
@@ -36,19 +38,8 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Balance
         {
             var rowKey = WalletBalanceEntity.GetRowKey(assetId, address);
             var entity = await _table.GetDataAsync(TableKey.GetHashedRowKey(rowKey), rowKey);
-            if (entity != null)
-            {
-                var wallet = entity.ToDomain();
-                return wallet;
-            }
-
-            return null;
-        }
-
-        public async Task InsertOrReplaceAsync(WalletBalance balance)
-        {
-            var entity = balance.ToEntity();
-            await _table.InsertOrReplaceAsync(entity);
+            var wallet = entity?.ToDomain();
+            return wallet;
         }
 
         public async Task DeleteIfExistAsync(string assetId, string address)
