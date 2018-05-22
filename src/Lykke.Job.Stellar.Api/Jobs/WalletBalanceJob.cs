@@ -10,6 +10,7 @@ namespace Lykke.Job.Stellar.Api.Jobs
 {
     public class WalletBalanceJob : TimerPeriod
     {
+        private readonly Stopwatch _watch = Stopwatch.StartNew();
         private readonly IBalanceService _balanceService;
         private readonly ILog _log;
 
@@ -26,19 +27,19 @@ namespace Lykke.Job.Stellar.Api.Jobs
         public override async Task Execute()
         {
             await _log.WriteInfoAsync(nameof(WalletBalanceJob), nameof(Execute), "Job started");
-            var watch = Stopwatch.StartNew();
+            _watch.Restart();
 
             try
             {
                 var count = await _balanceService.UpdateWalletBalances();
 
-                watch.Stop();
-                await _log.WriteInfoAsync(nameof(WalletBalanceJob), nameof(Execute), $"Job finished. dt={watch.ElapsedMilliseconds}ms, records={count}");
+                _watch.Stop();
+                await _log.WriteInfoAsync(nameof(WalletBalanceJob), nameof(Execute), $"Job finished. dt={_watch.ElapsedMilliseconds}ms, records={count}");
             }
             catch (JobExecutionException ex)
             {
-                watch.Stop();
-                await _log.WriteInfoAsync(nameof(WalletBalanceJob), nameof(Execute), $"Job aborted with exception. dt={watch.ElapsedMilliseconds}ms, records={ex.Processed}");
+                _watch.Stop();
+                await _log.WriteWarningAsync(nameof(WalletBalanceJob), nameof(Execute), $"Job aborted with exception. dt={_watch.ElapsedMilliseconds}ms, records={ex.Processed}");
 
                 throw;
             }

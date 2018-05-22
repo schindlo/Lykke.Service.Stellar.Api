@@ -10,6 +10,7 @@ namespace Lykke.Job.Stellar.Api.Jobs
 {
     public class BroadcastInProgressJob : TimerPeriod
     {
+        private readonly Stopwatch _watch = Stopwatch.StartNew();
         private readonly ITransactionService _transactionService;
         private readonly ILog _log;
         private readonly int _batchSize;
@@ -29,19 +30,19 @@ namespace Lykke.Job.Stellar.Api.Jobs
         public override async Task Execute()
         {
             await _log.WriteInfoAsync(nameof(BroadcastInProgressJob), nameof(Execute), "Job started");
-            var watch = Stopwatch.StartNew();
+            _watch.Restart();
 
             try
             {
                 var count = await _transactionService.UpdateBroadcastsInProgress(_batchSize);
 
-                watch.Stop();
-                await _log.WriteInfoAsync(nameof(BroadcastInProgressJob), nameof(Execute), $"Job finished. dt={watch.ElapsedMilliseconds}ms, records={count}");
+                _watch.Stop();
+                await _log.WriteInfoAsync(nameof(BroadcastInProgressJob), nameof(Execute), $"Job finished. dt={_watch.ElapsedMilliseconds}ms, records={count}");
             }
             catch (JobExecutionException ex)
             {
-                watch.Stop();
-                await _log.WriteInfoAsync(nameof(BroadcastInProgressJob), nameof(Execute), $"Job aborted with exception. dt={watch.ElapsedMilliseconds}ms, records={ex.Processed}");
+                _watch.Stop();
+                await _log.WriteWarningAsync(nameof(BroadcastInProgressJob), nameof(Execute), $"Job aborted with exception. dt={_watch.ElapsedMilliseconds}ms, records={ex.Processed}");
 
                 throw;
             }
