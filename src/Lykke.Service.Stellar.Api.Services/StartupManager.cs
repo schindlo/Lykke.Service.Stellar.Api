@@ -14,8 +14,6 @@ namespace Lykke.Service.Stellar.Api.Services
     {
         public async Task StartAsync()
         {
-            // TODO: Implement your startup logic here. Good idea is to log every step
-
             await Task.CompletedTask;
         }
     }

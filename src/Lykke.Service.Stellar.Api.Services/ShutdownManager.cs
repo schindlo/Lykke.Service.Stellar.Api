@@ -12,8 +12,6 @@ namespace Lykke.Service.Stellar.Api.Services
     {
         public async Task StopAsync()
         {
-            // TODO: Implement your shutdown logic here. Good idea is to log every step
-
             await Task.CompletedTask;
         }
     }
