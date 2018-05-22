@@ -21,7 +21,7 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Observation
                                      IReloadingManager<string> dataConnStringManager,
                                      ILog log)
         {
-            _table = AzureTableStorage<T>.Create(dataConnStringManager, typeof(TU).Name, log);
+            _table = AzureTableStorage<T>.Create(dataConnStringManager, tableName, log);
         }
 
         public async Task<(List<TU> Items, string ContinuationToken)> GetAllAsync(int take, string continuationToken)
