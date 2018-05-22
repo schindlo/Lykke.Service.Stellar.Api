@@ -24,8 +24,8 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Transaction
 
         public async Task<TxBroadcast> GetAsync(Guid operationId)
         {
-            var rowKey = TableKey.GetRowKey(operationId);
-            var entity = await _table.GetDataAsync(TableKey.GetHashedRowKey(rowKey), rowKey);
+            var rowKey = TableKeyHelper.GetRowKey(operationId);
+            var entity = await _table.GetDataAsync(TableKeyHelper.GetHashedRowKey(rowKey), rowKey);
             var broadcast = entity?.ToDomain();
             return broadcast;
         }
@@ -51,14 +51,14 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Transaction
                 return entity;
             }
 
-            var rowKey = TableKey.GetRowKey(broadcast.OperationId);
-            await _table.MergeAsync(TableKey.GetHashedRowKey(rowKey), rowKey, MergeAction);
+            var rowKey = TableKeyHelper.GetRowKey(broadcast.OperationId);
+            await _table.MergeAsync(TableKeyHelper.GetHashedRowKey(rowKey), rowKey, MergeAction);
         }
 
         public async Task DeleteAsync(Guid operationId)
         {
-            var rowKey = TableKey.GetRowKey(operationId);
-            await _table.DeleteAsync(TableKey.GetHashedRowKey(rowKey), rowKey);
+            var rowKey = TableKeyHelper.GetRowKey(operationId);
+            await _table.DeleteAsync(TableKeyHelper.GetHashedRowKey(rowKey), rowKey);
         }
     }
 }

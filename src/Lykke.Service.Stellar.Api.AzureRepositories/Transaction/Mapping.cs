@@ -58,10 +58,10 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Transaction
 
         public static TxBuildEntity ToEntity(this TxBuild domain)
         {
-            var rowKey = TableKey.GetRowKey(domain.OperationId);
+            var rowKey = TableKeyHelper.GetRowKey(domain.OperationId);
             var entity = new TxBuildEntity
             {
-                PartitionKey = TableKey.GetHashedRowKey(rowKey),
+                PartitionKey = TableKeyHelper.GetHashedRowKey(rowKey),
                 RowKey = rowKey,
                 Timestamp = domain.Timestamp,
                 XdrBase64 = domain.XdrBase64
@@ -88,10 +88,10 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Transaction
 
         public static TxBroadcastEntity ToEntity(this TxBroadcast domain)
         {
-            var rowKey = TableKey.GetRowKey(domain.OperationId);
+            var rowKey = TableKeyHelper.GetRowKey(domain.OperationId);
             var entity = new TxBroadcastEntity
             {
-                PartitionKey = TableKey.GetHashedRowKey(rowKey),
+                PartitionKey = TableKeyHelper.GetHashedRowKey(rowKey),
                 RowKey = rowKey,
                 State = domain.State,
                 Amount = domain.Amount,

@@ -27,7 +27,7 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Transaction
         public async Task<TxBuild> GetAsync(Guid operationId)
         {
             var rowKey = GetRowKey(operationId);
-            var entity = await _table.GetDataAsync(TableKey.GetHashedRowKey(rowKey), rowKey);
+            var entity = await _table.GetDataAsync(TableKeyHelper.GetHashedRowKey(rowKey), rowKey);
             var build = entity?.ToDomain();
             return build;
         }

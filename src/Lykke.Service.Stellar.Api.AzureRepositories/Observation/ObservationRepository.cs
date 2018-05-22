@@ -35,7 +35,7 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Observation
 
         public async Task<TU> GetAsync(string key)
         {
-            var entity = await _table.GetDataAsync(TableKey.GetHashedRowKey(key), key);
+            var entity = await _table.GetDataAsync(TableKeyHelper.GetHashedRowKey(key), key);
             var result = entity?.ToDomain();
             return result;
         }
@@ -47,13 +47,13 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Observation
                 Timestamp = DateTimeOffset.UtcNow
             };
             entity.ToEntity(observation);
-            entity.PartitionKey = TableKey.GetHashedRowKey(entity.RowKey);
+            entity.PartitionKey = TableKeyHelper.GetHashedRowKey(entity.RowKey);
             await _table.InsertOrReplaceAsync(entity);
         }
 
         public async Task DeleteIfExistAsync(string key)
         {
-            await _table.DeleteIfExistAsync(TableKey.GetHashedRowKey(key), key);
+            await _table.DeleteIfExistAsync(TableKeyHelper.GetHashedRowKey(key), key);
         }
     }
 }
