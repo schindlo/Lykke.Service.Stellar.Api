@@ -206,11 +206,15 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
                                                     .SetSourceAccount(fromKeyPair)
                                                     .Build();
                 }
-                else
+                else if (!_balanceService.IsDepositBaseAddress(from.Address))
                 {
                     operation = new AccountMergeOperation.Builder(toKeyPair)
                                                          .SetSourceAccount(fromKeyPair)
                                                          .Build();
+                }
+                else
+                {
+                    throw new BusinessException($"It isn't allowed to merge the entire balance from the deposit base into another account! Transfer less funds. transferable={transferableBalance}");
                 }
             }
             else
@@ -223,7 +227,7 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
                 }
                 else
                 {
-                    throw new BusinessException($"Currently not possible to transfer entire balance to an unused account! Use a destination in existance. transferable={transferableBalance}");
+                    throw new BusinessException($"It isn't possible to merge the entire balance into an unused account! Use a destination in existance. transferable={transferableBalance}");
                 }
             }
 
