@@ -56,7 +56,7 @@ namespace Lykke.Service.Stellar.Api.Services.Balance
                 return false;
             }
 
-            var parts = address.Split(Constants.PublicAddressExtension.Separator);
+            var parts = address.Split(Constants.PublicAddressExtension.Separator, 2);
             try
             {
                 var baseAddress = parts[0];
