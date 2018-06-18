@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
 using Lykke.Service.Stellar.Api.Core;
@@ -67,12 +68,28 @@ namespace Lykke.Service.Stellar.Api.Services.Balance
                 return false;
             }
 
-            if (parts.Length > 1 && !string.IsNullOrWhiteSpace(parts[1]))
+            if (parts.Length > 1)
             {
+                if (!IsValidMemo(parts[1])) 
+                {
+                    return false;   
+                }
+
                 hasExtension = true;
             }
 
             return true;
+        }
+
+        private bool IsValidMemo(string memo)
+        {
+            if (string.IsNullOrWhiteSpace(memo)) 
+            {
+                return false; 
+            }
+
+            var length = Encoding.UTF8.GetByteCount(memo);
+            return length <= StellarSdkConstants.MaxMemoLength;
         }
 
         public string GetDepositBaseAddress()
