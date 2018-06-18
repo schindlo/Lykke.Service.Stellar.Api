@@ -88,12 +88,12 @@ namespace Lykke.Service.Stellar.Api.Services.Balance
 
         public string GetBaseAddress(string address)
         {
-            return address.Split(Constants.PublicAddressExtension.Separator)[0];
+            return address.Split(Constants.PublicAddressExtension.Separator, 2)[0];
         }
 
         public string GetPublicAddressExtension(string address)
         {
-            var parts = address.Split(Constants.PublicAddressExtension.Separator);
+            var parts = address.Split(Constants.PublicAddressExtension.Separator, 2);
             return parts.Length > 1 ? parts[1] : null;
         }
 
