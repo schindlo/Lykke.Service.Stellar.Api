@@ -268,6 +268,17 @@ namespace Lykke.Service.Stellar.Api.Services.Balance
                                 amount = _horizonService.GetAccountMergeAmount(transaction.ResultXdr, i);
                                 break;
                             }
+                            case OperationType.OperationTypeEnum.PATH_PAYMENT:
+                            {
+                                var op = operation.Body.PathPaymentOp;
+                                if (op.DestAsset.Discriminant.InnerValue == AssetType.AssetTypeEnum.ASSET_TYPE_NATIVE)
+                                {
+                                   var keyPair = KeyPair.FromXdrPublicKey(op.Destination.InnerValue);
+                                   toAddress = keyPair.Address;
+                                   amount = op.DestAmount.InnerValue;
+                                }
+                                break;
+                            }
                             default:
                                 continue;
                         }
