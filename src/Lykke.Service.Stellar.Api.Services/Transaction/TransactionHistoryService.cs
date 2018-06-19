@@ -307,6 +307,18 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
                                 history.PaymentType = PaymentType.AccountMerge;
                                 break;
                             }
+                            case OperationType.OperationTypeEnum.PATH_PAYMENT:
+                            {
+                                var op = operation.Body.PathPaymentOp;
+                                if (op.DestAsset.Discriminant.InnerValue == AssetType.AssetTypeEnum.ASSET_TYPE_NATIVE)
+                                {
+                                    var keyPair = KeyPair.FromXdrPublicKey(op.Destination.InnerValue);
+                                    history.ToAddress = keyPair.Address;
+                                    history.Amount = op.DestAmount.InnerValue;
+                                    history.PaymentType = PaymentType.PathPayment;
+                                }
+                                break;
+                            }
                             default:
                                 continue;
                         }

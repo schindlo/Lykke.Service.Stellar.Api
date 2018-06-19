@@ -4,6 +4,7 @@
     {
         CreateAccount = 0,
         Payment = 1,
-        AccountMerge = 3
+        AccountMerge = 3,
+        PathPayment = 4
     }
 }
