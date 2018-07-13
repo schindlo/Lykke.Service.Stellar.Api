@@ -58,11 +58,34 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
                 var xdr = Convert.FromBase64String(xdrBase64);
                 var reader = new ByteReader(xdr);
                 var txEnvelope = TransactionEnvelope.Decode(reader);
-                var tx = txEnvelope.Tx;
 
-                if (!await ProcessDwToHwTransaction(operationId, tx))
+                if (!await ProcessDwToHwTransaction(operationId, txEnvelope.Tx))
                 {
-                    amount = tx?.Operations?.FirstOrDefault()?.Body?.PaymentOp?.Amount?.InnerValue ?? 0;
+                    var operation = _horizonService.GetFirstOperationFromTxEnvelope(txEnvelope);
+                    var operationType = operation.Discriminant.InnerValue;
+
+                    // ReSharper disable once SwitchStatementMissingSomeCases
+                    switch (operationType)
+                    {
+                        case OperationType.OperationTypeEnum.CREATE_ACCOUNT:
+                        {
+                            amount = operation.CreateAccountOp.StartingBalance.InnerValue;
+                            break;
+                        }
+                        case OperationType.OperationTypeEnum.PAYMENT:
+                        {
+                            amount = operation.PaymentOp.Amount.InnerValue;
+                            break;
+                        }
+                        case OperationType.OperationTypeEnum.ACCOUNT_MERGE:
+                        {
+                            // amount not yet known
+                            break;
+                        }
+                        default:
+                            throw new BusinessException($"Unsupported operation type. type={operationType}");
+                    }
+                    
                     var hash = await _horizonService.SubmitTransactionAsync(xdrBase64);
                     var broadcast = new TxBroadcast
                     {
@@ -293,12 +316,14 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
 
         private async Task ProcessBroadcastInProgress(Guid operationId)
         {
+            TxBroadcast broadcast = null;
             try
             {
-                var broadcast = await _broadcastRepository.GetAsync(operationId);
+                broadcast = await _broadcastRepository.GetAsync(operationId);
                 if (broadcast == null)
                 {
-                    throw new BusinessException($"Broadcast for observed operation not found. operationId={operationId})");
+                    await _observationRepository.DeleteIfExistAsync(operationId.ToString());
+                    throw new BusinessException($"Broadcast for observed operation not found. operationId={operationId}");
                 }
 
                 var tx = await _horizonService.GetTransactionDetails(broadcast.Hash);
@@ -307,26 +332,55 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
                     // transaction still in progress
                     return;
                 }
+                if (!broadcast.Hash.Equals(tx.Hash, StringComparison.OrdinalIgnoreCase))
+                {
+                    throw new BusinessException($"Transaction hash mismatch. actual={tx.Hash}, expected={broadcast.Hash}");
+                }
 
-                var paymentOp = _horizonService.GetFirstPaymentFromTransaction(tx);
+                var operation = _horizonService.GetFirstOperationFromTxEnvelopeXdr(tx.EnvelopeXdr);
+                var operationType = operation.Discriminant.InnerValue;
+
+                // ReSharper disable once SwitchStatementMissingSomeCases
+                switch (operationType)
+                {
+                    case OperationType.OperationTypeEnum.CREATE_ACCOUNT:
+                    {
+                        broadcast.Amount = operation.CreateAccountOp.StartingBalance.InnerValue;
+                        break;
+                    }
+                    case OperationType.OperationTypeEnum.PAYMENT:
+                    {
+                        broadcast.Amount = operation.PaymentOp.Amount.InnerValue;
+                        break;
+                    }
+                    case OperationType.OperationTypeEnum.ACCOUNT_MERGE:
+                    {
+                        broadcast.Amount = _horizonService.GetAccountMergeAmount(tx.ResultXdr, 0);
+                        break;
+                    }
+                    default:
+                        throw new BusinessException($"Unsupported operation type. type={operationType}");
+                }
+
                 broadcast.State = TxBroadcastState.Completed;
-                broadcast.Amount = paymentOp.Amount.InnerValue;
                 broadcast.Fee = tx.FeePaid;
                 broadcast.CreatedAt = tx.CreatedAt;
                 broadcast.Ledger = tx.Ledger * 10;
+
                 await _broadcastRepository.MergeAsync(broadcast);
                 await _observationRepository.DeleteIfExistAsync(operationId.ToString());
             }
             catch (Exception ex)
             {
-                var broadcast = new TxBroadcast
+                if (broadcast != null)
                 {
-                    State = TxBroadcastState.Failed,
-                    Error = ex.Message,
-                    ErrorCode = TxExecutionError.Unknown
-                };
-                await _broadcastRepository.MergeAsync(broadcast);
-                await _observationRepository.DeleteIfExistAsync(operationId.ToString());
+                    broadcast.State = TxBroadcastState.Failed;
+                    broadcast.Error = ex.Message;
+                    broadcast.ErrorCode = TxExecutionError.Unknown;
+
+                    await _broadcastRepository.MergeAsync(broadcast);
+                    await _observationRepository.DeleteIfExistAsync(operationId.ToString());
+                }
 
                 throw new BusinessException($"Failed to process in progress broadcast. operationId={operationId}", ex);
             }
