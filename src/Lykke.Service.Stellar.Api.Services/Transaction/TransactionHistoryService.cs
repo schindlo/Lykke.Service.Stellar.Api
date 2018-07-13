@@ -132,7 +132,7 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
             if (!string.IsNullOrEmpty(afterHash))
             {
                 var tx = await _horizonService.GetTransactionDetails(afterHash);
-                if (tx == null)
+                if (tx == null || !afterHash.Equals(tx.Hash, StringComparison.OrdinalIgnoreCase))
                 {
                     throw new BusinessException($"No transaction found. hash={afterHash}");
                 }
