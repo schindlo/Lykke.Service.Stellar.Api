@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Globalization;
 using System.IO;
 using System.Threading.Tasks;
+using Common;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.PlatformAbstractions;
 
@@ -19,6 +21,8 @@ namespace Lykke.Service.Stellar.Api
             Console.WriteLine("Is RELEASE");
 #endif
             Console.WriteLine($"ENV_INFO: {EnvInfo}");
+
+            var hash = "ut_"+ (DateTime.UtcNow.ToUnixTime()).ToString(CultureInfo.InvariantCulture);
 
             try
             {

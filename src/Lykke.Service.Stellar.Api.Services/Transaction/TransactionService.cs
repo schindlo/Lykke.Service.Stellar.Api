@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Globalization;
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
+using Common;
 using JetBrains.Annotations;
 using StellarBase;
 using StellarBase.Generated;
@@ -131,7 +133,7 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
 
             var fromAddress = $"{fromKeyPair.Address}{Constants.PublicAddressExtension.Separator}{tx.Memo.Text}";
             var amount = tx.Operations[0].Body.PaymentOp.Amount.InnerValue;
-            var hash = _horizonService.GetTransactionHash(tx);
+            var hash = "ut_" + (DateTime.UtcNow.ToUnixTime()).ToString(CultureInfo.InvariantCulture);//_horizonService.GetTransactionHash(tx);
             var ledger = await _horizonService.GetLatestLedger();
 
             var broadcast = new TxBroadcast
