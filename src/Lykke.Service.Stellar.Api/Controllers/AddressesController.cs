@@ -27,7 +27,7 @@ namespace Lykke.Service.Stellar.Api.Controllers
         {
             return Ok(new AddressValidationResponse
             {
-                IsValid = _balanceService.IsAddressValid(address, out bool hasExtension)
+                IsValid = _balanceService.IsAddressValid(address)
             });
         }
 
@@ -35,12 +35,12 @@ namespace Lykke.Service.Stellar.Api.Controllers
         [ProducesResponseType(typeof(List<string>), (int)HttpStatusCode.OK)]
         public IActionResult GetExplorerUrl([Required] string address)
         {
-            if (!_balanceService.IsAddressValid(address, out bool hasExtension))
+            if (!_balanceService.IsAddressValid(address))
             {
                 return BadRequest(ErrorResponse.Create("Invalid parameter").AddModelError("address", "Address must be valid"));
             }
 
-            string baseAddress = _balanceService.GetBaseAddress(address);
+            var baseAddress = _balanceService.GetBaseAddress(address);
             var urls = _balanceService.GetExplorerUrls(baseAddress);
             return Ok(urls);
         }

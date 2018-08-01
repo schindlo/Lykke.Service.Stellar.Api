@@ -7,7 +7,5 @@
         public bool IsOutgoingObserved { get; set; }
 
         public string Address { get; set; }
-
-        public string TableId { get; set; }
     }
 }

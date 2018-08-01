@@ -6,21 +6,25 @@ using AzureStorage;
 using AzureStorage.Tables;
 using Lykke.SettingsReader;
 using System.Collections.Generic;
+using JetBrains.Annotations;
 using Microsoft.WindowsAzure.Storage.Table;
 using Lykke.Service.Stellar.Api.Core.Domain.Observation;
 
 namespace Lykke.Service.Stellar.Api.AzureRepositories.Observation
 {
-    public class ObservationRepository<T, U> : IObservationRepository<U> where T : ObservationEntity<U>, new() where U : class
+    public class ObservationRepository<T, TU> : IObservationRepository<TU> where T : ObservationEntity<TU>, new() where TU : class
     {
         private readonly INoSQLTableStorage<T> _table;
 
-        public ObservationRepository(IReloadingManager<string> dataConnStringManager, ILog log)
+        [UsedImplicitly]
+        public ObservationRepository(string tableName,
+                                     IReloadingManager<string> dataConnStringManager,
+                                     ILog log)
         {
-            _table = AzureTableStorage<T>.Create(dataConnStringManager, typeof(U).Name, log);
+            _table = AzureTableStorage<T>.Create(dataConnStringManager, tableName, log);
         }
 
-        public async Task<(List<U> Items, string ContinuationToken)> GetAllAsync(int take, string continuationToken)
+        public async Task<(List<TU> Items, string ContinuationToken)> GetAllAsync(int take, string continuationToken)
         {
             var query = new TableQuery<T>().Take(take);
             var data = await _table.GetDataWithContinuationTokenAsync(query, continuationToken);
@@ -29,32 +33,27 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Observation
             return (observations, data.ContinuationToken);
         }
 
-        public async Task<U> GetAsync(string key)
+        public async Task<TU> GetAsync(string key)
         {
-            var entity = await _table.GetDataAsync(TableKey.GetHashedRowKey(key), key);
-            if (entity != null)
-            {
-                var result = entity.ToDomain();
-                return result;
-            }
-
-            return null;
+            var entity = await _table.GetDataAsync(TableKeyHelper.GetHashedRowKey(key), key);
+            var result = entity?.ToDomain();
+            return result;
         }
 
-        public async Task InsertOrReplaceAsync(U observation)
+        public async Task InsertOrReplaceAsync(TU observation)
         {
-            var entity = new T()
+            var entity = new T
             {
-                Timestamp = DateTimeOffset.UtcNow,
+                Timestamp = DateTimeOffset.UtcNow
             };
             entity.ToEntity(observation);
-            entity.PartitionKey = TableKey.GetHashedRowKey(entity.RowKey);
+            entity.PartitionKey = TableKeyHelper.GetHashedRowKey(entity.RowKey);
             await _table.InsertOrReplaceAsync(entity);
         }
 
         public async Task DeleteIfExistAsync(string key)
         {
-            await _table.DeleteIfExistAsync(TableKey.GetHashedRowKey(key), key);
+            await _table.DeleteIfExistAsync(TableKeyHelper.GetHashedRowKey(key), key);
         }
     }
 }

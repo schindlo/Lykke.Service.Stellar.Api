@@ -10,6 +10,7 @@ Find the `Lykke.Service.Stellar.Sign` module [here](https://github.com/schindlo/
 
 # Configuration
 Available configuration variables are documented below. See [developing](https://github.com/LykkeCity/lykke.dotnettemplates/tree/master/Lykke.Service.LykkeService#developing) for more information on how to work with app and launch settings.
+## Lykke.Job.Stellar.Api
 ```
 "StellarApiService": {
     "Db": {
@@ -26,20 +27,48 @@ Available configuration variables are documented below. See [developing](https:/
     // Test: https://horizon-testnet.stellar.org/
     // Live: https://horizon.stellar.org/
     "HorizonUrl": "",
-    // The public address used as base address during wallet generation
-    "DepositBaseAddress": "",
-    // Period in seconds of the wallet balance update job
-    "WalletBalanceJobPeriodSeconds": 30,
-    // Period in seconds of the transaction history update job
-    "TransactionHistoryJobPeriodSeconds": 120,
-    // Period in seconds of the broadcasts in progress update job
-    "BroadcastInProgressJobPeriodSeconds": 120,
-    // Size of batches processed by the wallet balance update job 
-    "WalletBalanceJobBatchSize": 100,
-    // Size of batches processed by the transaction history update job
-    "TransactionHistoryJobBatchSize": 100,
+    // Array with url formats of blockchain explorers
+    // Test: https://stellar.expert/explorer/testnet/account/{0}, http://testnet.stellarchain.io/address/{0}
+    // Live: https://stellar.expert/explorer/public/account/{0}, https://stellarchain.io/address/{0}
+    "ExplorerUrlFormats": [ "https://stellar.expert/explorer/testnet/account/{0}", "http://testnet.stellarchain.io/address/{0}" ]
+  },
+  "StellarApiJob": {
+    // Period as TimeSpan of the wallet balance update job
+    "WalletBalanceJobPeriod": "00:01:00",
+    // Period as TimeSpan of the transaction history update job
+    "TransactionHistoryJobPeriod": "00:02:00",
+    // Period as TimeSpan of the broadcasts in progress update job
+    "BroadcastInProgressJobPeriod": "00:02:00",
     // Size of batches processed by the broadcasts in progress update job
-    "BroadcastInProgressJobBatchSize": 100,
+    "BroadcastInProgressJobBatchSize": 100
+  },
+  "SlackNotifications": {
+    "AzureQueue": {
+      // Connection string to the Azure storage account where slack notifications are queued
+      "ConnectionString": "",
+      // The name of the queue for the slack notifications
+      "QueueName": ""
+    }
+  }
+}
+```
+## Lykke.Service.Stellar.Api
+```
+"StellarApiService": {
+    "Db": {
+      // Connection string to the Azure storage account where the StellarApiLog table with logs is stored
+      "LogsConnString": "",
+      // Connection string to the Azure storage account where data tables for observations, transactions and balances are stored
+      "DataConnString": ""
+    },
+    // The network passphrase used when signing transactions. The following passphrases are currently in use:
+    // Test: "Test SDF Network ; September 2015"
+    // Live: "Public Global Stellar Network ; September 2015"
+    "NetworkPassphrase": "",
+    // Address of Horizon REST Api endpoint. The following public endpoints are available:
+    // Test: https://horizon-testnet.stellar.org/
+    // Live: https://horizon.stellar.org/
+    "HorizonUrl": "",
     // Array with url formats of blockchain explorers
     // Test: https://stellar.expert/explorer/testnet/account/{0}, http://testnet.stellarchain.io/address/{0}
     // Live: https://stellar.expert/explorer/public/account/{0}, https://stellarchain.io/address/{0}

@@ -31,7 +31,7 @@ namespace Lykke.Service.Stellar.Api.Helpers
                 case TxBroadcastState.Failed:
                     return BroadcastedTransactionState.Failed;
                 default:
-                    throw new ArgumentException($"Failed to convert " +
+                    throw new ArgumentException("Failed to convert " +
                                                 $"{nameof(TxBroadcastState)}.{Enum.GetName(typeof(TxBroadcastState), self)} " +
                                                 $"to {nameof(BroadcastedTransactionState)}");
             }
@@ -48,7 +48,7 @@ namespace Lykke.Service.Stellar.Api.Helpers
                 case TxExecutionError.NotEnoughBalance:
                     return BlockchainErrorCode.NotEnoughtBalance;
                 default:
-                    throw new ArgumentException($"Failed to convert " +
+                    throw new ArgumentException("Failed to convert " +
                                                 $"{nameof(TxExecutionError)}.{Enum.GetName(typeof(TxExecutionError), self)} " +
                                                 $"to {nameof(BlockchainErrorCode)}");
             }

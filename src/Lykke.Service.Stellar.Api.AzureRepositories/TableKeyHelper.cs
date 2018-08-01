@@ -3,7 +3,7 @@ using Common;
 
 namespace Lykke.Service.Stellar.Api.AzureRepositories
 {
-    public class TableKey
+    public static class TableKeyHelper
     {
         public static string GetRowKey(Guid operationId)
         {

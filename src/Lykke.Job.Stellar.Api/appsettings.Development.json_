@@ -1,0 +1,24 @@
+﻿{
+  "StellarApiService": {
+    "Db": {
+      "LogsConnString": "UseDevelopmentStorage=true",
+      "DataConnString": "UseDevelopmentStorage=true"
+    },
+    "NetworkPassphrase": "Test SDF Network ; September 2015",
+    "HorizonUrl": "https://horizon-testnet.stellar.org/",
+    "DepositBaseAddress": "",
+    "ExplorerUrlFormats": [ "https://stellar.expert/explorer/testnet/account/{0}", "http://testnet.stellarchain.io/address/{0}" ]
+  },
+  "StellarApiJob": {
+    "WalletBalanceJobPeriod": "00:01:00",
+    "TransactionHistoryJobPeriod": "00:02:00",
+    "BroadcastInProgressJobPeriod": "00:02:00",
+    "BroadcastInProgressJobBatchSize": 100
+  },
+  "SlackNotifications": {
+    "AzureQueue": {
+      "ConnectionString": "UseDevelopmentStorage=true",
+      "QueueName": "slack-notifications"
+    }
+  }
+}

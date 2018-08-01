@@ -6,8 +6,9 @@ namespace Lykke.Service.Stellar.Api.Core.Exceptions
     {
         private const string ErrorCodeDataKey = "ErrorCode";
 
-        public BusinessException(string message, string errorCode = null)
-        : base(message)
+        public BusinessException(string message,
+                                 string errorCode = null)
+            : base(message)
         {
             if (!string.IsNullOrWhiteSpace(errorCode))
             {
@@ -15,8 +16,10 @@ namespace Lykke.Service.Stellar.Api.Core.Exceptions
             }
         }
 
-        public BusinessException(string message, Exception inner, string errorCode = null)
-        : base(message, inner)
+        public BusinessException(string message,
+                                 Exception inner,
+                                 string errorCode = null)
+            : base(message, inner)
         {
             if (!string.IsNullOrWhiteSpace(errorCode))
             {

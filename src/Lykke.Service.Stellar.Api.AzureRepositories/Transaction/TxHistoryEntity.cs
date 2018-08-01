@@ -20,6 +20,6 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Transaction
 
         public PaymentType PaymentType { get; set; }
 
-        public string Memo { get; set; }
+        public string Memo => RowKey;
     }
 }

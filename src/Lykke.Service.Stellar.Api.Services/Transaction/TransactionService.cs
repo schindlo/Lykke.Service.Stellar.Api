@@ -1,10 +1,13 @@
 ﻿using System;
+using System.Globalization;
+using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
+using Common;
+using JetBrains.Annotations;
 using StellarBase;
 using StellarBase.Generated;
 using StellarSdk.Exceptions;
-using Common.Log;
 using Lykke.Service.Stellar.Api.Core;
 using Lykke.Service.Stellar.Api.Core.Domain.Transaction;
 using Lykke.Service.Stellar.Api.Core.Domain.Balance;
@@ -18,8 +21,6 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
 {
     public class TransactionService : ITransactionService
     {
-        private readonly int _batchSize;
-
         private string _lastJobError;
 
         private readonly IBalanceService _balanceService;
@@ -29,8 +30,13 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
         private readonly ITxBroadcastRepository _broadcastRepository;
         private readonly ITxBuildRepository _buildRepository;
 
-        public TransactionService(IBalanceService balanceService, IHorizonService horizonService, IObservationRepository<BroadcastObservation> observationRepository,
-                                  IWalletBalanceRepository balanceRepository, ITxBroadcastRepository broadcastRepository, ITxBuildRepository buildRepository, int batchSize)
+        [UsedImplicitly]
+        public TransactionService(IBalanceService balanceService,
+                                  IHorizonService horizonService,
+                                  IObservationRepository<BroadcastObservation> observationRepository,
+                                  IWalletBalanceRepository balanceRepository,
+                                  ITxBroadcastRepository broadcastRepository,
+                                  ITxBuildRepository buildRepository)
         {
             _balanceService = balanceService;
             _horizonService = horizonService;
@@ -38,7 +44,6 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
             _balanceRepository = balanceRepository;
             _broadcastRepository = broadcastRepository;
             _buildRepository = buildRepository;
-            _batchSize = batchSize;
         }
 
         public async Task<TxBroadcast> GetTxBroadcastAsync(Guid operationId)
@@ -48,16 +53,49 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
 
         public async Task BroadcastTxAsync(Guid operationId, string xdrBase64)
         {
+            long amount = 0;
+
             try
             {
-                if (!await ProcessDwToHwTransaction(operationId, xdrBase64))
+                var xdr = Convert.FromBase64String(xdrBase64);
+                var reader = new ByteReader(xdr);
+                var txEnvelope = TransactionEnvelope.Decode(reader);
+
+                if (!await ProcessDwToHwTransaction(operationId, txEnvelope.Tx))
                 {
+                    var operation = _horizonService.GetFirstOperationFromTxEnvelope(txEnvelope);
+                    var operationType = operation.Discriminant.InnerValue;
+
+                    // ReSharper disable once SwitchStatementMissingSomeCases
+                    switch (operationType)
+                    {
+                        case OperationType.OperationTypeEnum.CREATE_ACCOUNT:
+                        {
+                            amount = operation.CreateAccountOp.StartingBalance.InnerValue;
+                            break;
+                        }
+                        case OperationType.OperationTypeEnum.PAYMENT:
+                        {
+                            amount = operation.PaymentOp.Amount.InnerValue;
+                            break;
+                        }
+                        case OperationType.OperationTypeEnum.ACCOUNT_MERGE:
+                        {
+                            // amount not yet known
+                            break;
+                        }
+                        default:
+                            throw new BusinessException($"Unsupported operation type. type={operationType}");
+                    }
+                    
                     var hash = await _horizonService.SubmitTransactionAsync(xdrBase64);
                     var broadcast = new TxBroadcast
                     {
                         OperationId = operationId,
                         State = TxBroadcastState.InProgress,
-                        Hash = hash
+                        Amount = amount,
+                        Hash = hash,
+                        CreatedAt = DateTime.UtcNow
                     };
                     await _broadcastRepository.InsertOrReplaceAsync(broadcast);
                     var observation = new BroadcastObservation
@@ -73,6 +111,8 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
                 {
                     OperationId = operationId,
                     State = TxBroadcastState.Failed,
+                    Amount = amount,
+                    CreatedAt = DateTime.UtcNow,
                     Error = GetErrorMessage(ex),
                     ErrorCode = GetErrorCode(ex)
                 };
@@ -82,60 +122,54 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
             }
         }
 
-        private async Task<bool> ProcessDwToHwTransaction(Guid operationId, string xdrBase64)
+        private async Task<bool> ProcessDwToHwTransaction(Guid operationId, StellarBase.Generated.Transaction tx)
         {
-            var xdr = Convert.FromBase64String(xdrBase64);
-            var reader = new ByteReader(xdr);
-            var txEnvelope = TransactionEnvelope.Decode(reader);
-            var tx = txEnvelope.Tx;
-
             var fromKeyPair = KeyPair.FromXdrPublicKey(tx.SourceAccount.InnerValue);
-            if (_balanceService.GetDepositBaseAddress().Equals(fromKeyPair.Address, StringComparison.OrdinalIgnoreCase) &&
-                tx.Operations.Length == 1 && tx.Operations[0].Body.PaymentOp != null && !string.IsNullOrWhiteSpace(tx.Memo.Text))
+            if (!_balanceService.IsDepositBaseAddress(fromKeyPair.Address) || tx.Operations.Length != 1 ||
+                tx.Operations[0].Body.PaymentOp == null || string.IsNullOrWhiteSpace(tx.Memo.Text)) return false;
+
+            var toKeyPair = KeyPair.FromXdrPublicKey(tx.Operations[0].Body.PaymentOp.Destination.InnerValue);
+            if (!_balanceService.IsDepositBaseAddress(toKeyPair.Address)) return false;
+
+            var fromAddress = $"{fromKeyPair.Address}{Constants.PublicAddressExtension.Separator}{tx.Memo.Text}";
+            var amount = tx.Operations[0].Body.PaymentOp.Amount.InnerValue;
+            var hash = "ut_" + (DateTime.UtcNow.ToUnixTime()).ToString(CultureInfo.InvariantCulture);//_horizonService.GetTransactionHash(tx);
+            var ledger = await _horizonService.GetLatestLedger();
+
+            var broadcast = new TxBroadcast
             {
-                var toKeyPair = KeyPair.FromXdrPublicKey(tx.Operations[0].Body.PaymentOp.Destination.InnerValue);
-                if (_balanceService.GetDepositBaseAddress().Equals(toKeyPair.Address, StringComparison.OrdinalIgnoreCase))
-                {
-                    var fromAddress = $"{fromKeyPair.Address}{Constants.PublicAddressExtension.Separator}{tx.Memo.Text}";
-                    var hash = _horizonService.GetTransactionHash(tx);
-                    var amount = tx.Operations[0].Body.PaymentOp.Amount.InnerValue;
+                OperationId = operationId,
+                Amount = amount,
+                Fee = 0,
+                Hash = hash,
+                // ReSharper disable once ArrangeRedundantParentheses
+                Ledger = (ledger.Sequence * 10) + 1,
+                CreatedAt = DateTime.UtcNow
+            };
 
-                    var broadcast = new TxBroadcast
-                    {
-                        OperationId = operationId,
-                        Amount = amount,
-                        Fee = 0,
-                        Hash = hash,
-                        CreatedAt = DateTime.UtcNow
-                    };
-
-                    var assetId = Core.Domain.Asset.Stellar.Id;
-                    if (await _balanceRepository.DecreaseBalanceAsync(assetId, fromAddress, hash, amount))
-                    {
-                        broadcast.State = TxBroadcastState.Completed;
-                    }
-                    else
-                    {
-                        broadcast.State = TxBroadcastState.Failed;
-                        broadcast.Error = "Not enough balance!";
-                        broadcast.ErrorCode = TxExecutionError.NotEnoughBalance;
-                    }
-
-                    await _broadcastRepository.InsertOrReplaceAsync(broadcast);
-                    await _balanceRepository.DeleteIfBalanceIsZero(assetId, fromAddress);
-                    return true;   
-                }
+            var assetId = Core.Domain.Asset.Stellar.Id;
+            if (await _balanceRepository.DecreaseBalanceAsync(assetId, fromAddress, hash, amount))
+            {
+                broadcast.State = TxBroadcastState.Completed;
+            }
+            else
+            {
+                broadcast.State = TxBroadcastState.Failed;
+                broadcast.Error = "Not enough balance!";
+                broadcast.ErrorCode = TxExecutionError.NotEnoughBalance;
             }
 
-            return false;
+            await _broadcastRepository.InsertOrReplaceAsync(broadcast);
+            await _balanceRepository.DeleteIfBalanceIsZero(assetId, fromAddress);
+            return true;
+
         }
 
-        private string GetErrorMessage(Exception ex)
+        private static string GetErrorMessage(Exception ex)
         {
             var errorMessage = ex.Message;
-            // handle bad request
-            var badRequest = ex as BadRequestException;
-            if (badRequest != null)
+            // ReSharper disable once InvertIf
+            if (ex is BadRequestException badRequest)
             {
                 var resultCodes = JsonConvert.SerializeObject(badRequest.ErrorDetails.Extras.ResultCodes);
                 errorMessage += $". ResultCodes={resultCodes}";
@@ -143,17 +177,14 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
             return errorMessage;
         }
 
-        private TxExecutionError GetErrorCode(Exception ex)
+        private static TxExecutionError GetErrorCode(Exception ex)
         {
-            if (ex.GetType() == typeof(BadRequestException))
+            var bre = ex as BadRequestException;
+            var ops = bre?.ErrorDetails?.Extras?.ResultCodes?.Operations;
+            if (bre?.ErrorDetails != null && bre.ErrorDetails.Status == (int)HttpStatusCode.BadRequest &&
+                ops != null && ops.Length > 0 && ops[0].Equals(StellarSdkConstants.OperationUnderfunded))
             {
-                var bre = (BadRequestException)ex;
-                var ops = bre.ErrorDetails?.Extras?.ResultCodes?.Operations;
-                if (bre.ErrorDetails.Status == (int)HttpStatusCode.BadRequest &&
-                    ops != null && ops.Length > 0 && ops[0].Equals(StellarSdkConstants.OperationUnderfunded))
-                {
-                    return TxExecutionError.NotEnoughBalance;
-                }
+                return TxExecutionError.NotEnoughBalance;
             }
             return TxExecutionError.Unknown;
         }
@@ -200,11 +231,15 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
                                                     .SetSourceAccount(fromKeyPair)
                                                     .Build();
                 }
-                else
+                else if (!_balanceService.IsDepositBaseAddress(from.Address))
                 {
                     operation = new AccountMergeOperation.Builder(toKeyPair)
                                                          .SetSourceAccount(fromKeyPair)
                                                          .Build();
+                }
+                else
+                {
+                    throw new BusinessException($"It isn't allowed to merge the entire balance from the deposit base into another account! Transfer less funds. transferable={transferableBalance}");
                 }
             }
             else
@@ -217,7 +252,7 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
                 }
                 else
                 {
-                    throw new BusinessException($"Currently not possible to transfer entire balance to an unused account! Use a destination in existance. transferable={transferableBalance}");
+                    throw new BusinessException($"It isn't possible to merge the entire balance into an unused account! Use a destination in existance. transferable={transferableBalance}");
                 }
             }
 
@@ -252,16 +287,16 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
             return _lastJobError;
         }
 
-        public async Task<int> UpdateBroadcastsInProgress()
+        public async Task<int> UpdateBroadcastsInProgress(int batchSize)
         {
-            int count = 0;
+            var count = 0;
 
             try
             {
                 string continuationToken = null;
                 do
                 {
-                    var observations = await _observationRepository.GetAllAsync(_batchSize, continuationToken);
+                    var observations = await _observationRepository.GetAllAsync(batchSize, continuationToken);
                     foreach (var item in observations.Items)
                     {
                         await ProcessBroadcastInProgress(item.OperationId);
@@ -283,12 +318,14 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
 
         private async Task ProcessBroadcastInProgress(Guid operationId)
         {
+            TxBroadcast broadcast = null;
             try
             {
-                var broadcast = await _broadcastRepository.GetAsync(operationId);
+                broadcast = await _broadcastRepository.GetAsync(operationId);
                 if (broadcast == null)
                 {
-                    throw new BusinessException($"Broadcast for observed operation not found. operationId={operationId})");
+                    await _observationRepository.DeleteIfExistAsync(operationId.ToString());
+                    throw new BusinessException($"Broadcast for observed operation not found. operationId={operationId}");
                 }
 
                 var tx = await _horizonService.GetTransactionDetails(broadcast.Hash);
@@ -297,26 +334,55 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
                     // transaction still in progress
                     return;
                 }
+                if (!broadcast.Hash.Equals(tx.Hash, StringComparison.OrdinalIgnoreCase))
+                {
+                    throw new BusinessException($"Transaction hash mismatch. actual={tx.Hash}, expected={broadcast.Hash}");
+                }
 
-                var paymentOp = _horizonService.GetFirstPaymentFromTransaction(tx);
+                var operation = _horizonService.GetFirstOperationFromTxEnvelopeXdr(tx.EnvelopeXdr);
+                var operationType = operation.Discriminant.InnerValue;
+
+                // ReSharper disable once SwitchStatementMissingSomeCases
+                switch (operationType)
+                {
+                    case OperationType.OperationTypeEnum.CREATE_ACCOUNT:
+                    {
+                        broadcast.Amount = operation.CreateAccountOp.StartingBalance.InnerValue;
+                        break;
+                    }
+                    case OperationType.OperationTypeEnum.PAYMENT:
+                    {
+                        broadcast.Amount = operation.PaymentOp.Amount.InnerValue;
+                        break;
+                    }
+                    case OperationType.OperationTypeEnum.ACCOUNT_MERGE:
+                    {
+                        broadcast.Amount = _horizonService.GetAccountMergeAmount(tx.ResultXdr, 0);
+                        break;
+                    }
+                    default:
+                        throw new BusinessException($"Unsupported operation type. type={operationType}");
+                }
+
                 broadcast.State = TxBroadcastState.Completed;
-                broadcast.Amount = paymentOp.Amount.InnerValue;
                 broadcast.Fee = tx.FeePaid;
                 broadcast.CreatedAt = tx.CreatedAt;
-                broadcast.Ledger = tx.Ledger;
+                broadcast.Ledger = tx.Ledger * 10;
+
                 await _broadcastRepository.MergeAsync(broadcast);
                 await _observationRepository.DeleteIfExistAsync(operationId.ToString());
             }
             catch (Exception ex)
             {
-                var broadcast = new TxBroadcast
+                if (broadcast != null)
                 {
-                    State = TxBroadcastState.Failed,
-                    Error = ex.Message,
-                    ErrorCode = TxExecutionError.Unknown
-                };
-                await _broadcastRepository.MergeAsync(broadcast);
-                await _observationRepository.DeleteIfExistAsync(operationId.ToString());
+                    broadcast.State = TxBroadcastState.Failed;
+                    broadcast.Error = ex.Message;
+                    broadcast.ErrorCode = TxExecutionError.Unknown;
+
+                    await _broadcastRepository.MergeAsync(broadcast);
+                    await _observationRepository.DeleteIfExistAsync(operationId.ToString());
+                }
 
                 throw new BusinessException($"Failed to process in progress broadcast. operationId={operationId}", ex);
             }

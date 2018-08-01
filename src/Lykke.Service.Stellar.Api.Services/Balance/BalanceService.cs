@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
+using JetBrains.Annotations;
 using Lykke.Service.Stellar.Api.Core;
 using Lykke.Service.Stellar.Api.Core.Domain;
 using Lykke.Service.Stellar.Api.Core.Domain.Balance;
@@ -25,8 +27,13 @@ namespace Lykke.Service.Stellar.Api.Services.Balance
         private readonly string _depositBaseAddress;
         private readonly string[] _explorerUrlFormats;
 
-        public BalanceService(IHorizonService horizonService, IKeyValueStoreRepository keyValueStoreRepository, IObservationRepository<BalanceObservation> observationRepository, 
-                              IWalletBalanceRepository walletBalanceRepository, string depositBaseAddress, string[] explorerUrlFormats)
+        [UsedImplicitly]
+        public BalanceService(IHorizonService horizonService,
+                              IKeyValueStoreRepository keyValueStoreRepository,
+                              IObservationRepository<BalanceObservation> observationRepository, 
+                              IWalletBalanceRepository walletBalanceRepository,
+                              string depositBaseAddress,
+                              string[] explorerUrlFormats)
         {
             _horizonService = horizonService;
             _keyValueStoreRepository = keyValueStoreRepository;
@@ -34,6 +41,11 @@ namespace Lykke.Service.Stellar.Api.Services.Balance
             _walletBalanceRepository = walletBalanceRepository;
             _depositBaseAddress = depositBaseAddress;
             _explorerUrlFormats = explorerUrlFormats;
+        }
+
+        public bool IsAddressValid(string address)
+        {
+            return IsAddressValid(address, out _);
         }
 
         public bool IsAddressValid(string address, out bool hasExtension)
@@ -45,7 +57,7 @@ namespace Lykke.Service.Stellar.Api.Services.Balance
                 return false;
             }
 
-            var parts = address.Split(Constants.PublicAddressExtension.Separator);
+            var parts = address.Split(Constants.PublicAddressExtension.Separator, 2);
             try
             {
                 var baseAddress = parts[0];
@@ -56,13 +68,28 @@ namespace Lykke.Service.Stellar.Api.Services.Balance
                 return false;
             }
 
-            if (parts.Length > 1 && !string.IsNullOrWhiteSpace(parts[1]))
+            if (parts.Length > 1)
             {
-                var extension = parts[1];
+                if (!IsValidMemo(parts[1])) 
+                {
+                    return false;   
+                }
+
                 hasExtension = true;
             }
 
             return true;
+        }
+
+        private bool IsValidMemo(string memo)
+        {
+            if (string.IsNullOrWhiteSpace(memo)) 
+            {
+                return false; 
+            }
+
+            var length = Encoding.UTF8.GetByteCount(memo);
+            return length <= StellarSdkConstants.MaxMemoLength;
         }
 
         public string GetDepositBaseAddress()
@@ -70,14 +97,20 @@ namespace Lykke.Service.Stellar.Api.Services.Balance
             return _depositBaseAddress;
         }
 
+        public bool IsDepositBaseAddress(string address)
+        {
+            var baseAddress = GetBaseAddress(address);
+            return GetDepositBaseAddress().Equals(baseAddress, StringComparison.OrdinalIgnoreCase);
+        }
+
         public string GetBaseAddress(string address)
         {
-            return address.Split(Constants.PublicAddressExtension.Separator)[0];
+            return address.Split(Constants.PublicAddressExtension.Separator, 2)[0];
         }
 
         public string GetPublicAddressExtension(string address)
         {
-            var parts = address.Split(Constants.PublicAddressExtension.Separator);
+            var parts = address.Split(Constants.PublicAddressExtension.Separator, 2);
             return parts.Length > 1 ? parts[1] : null;
         }
 
@@ -101,7 +134,7 @@ namespace Lykke.Service.Stellar.Api.Services.Balance
             if (string.IsNullOrEmpty(addressExtension))
             {
                 var nativeBalance = accountDetails.Balances.Single(b => Core.Domain.Asset.Stellar.TypeName.Equals(b.AssetType, StringComparison.OrdinalIgnoreCase));
-                result.Balance = Convert.ToInt64(Decimal.Parse(nativeBalance.Balance) * One.Value);
+                result.Balance = Convert.ToInt64(decimal.Parse(nativeBalance.Balance) * One.Value);
             }
             else
             {
@@ -112,12 +145,11 @@ namespace Lykke.Service.Stellar.Api.Services.Balance
                 }
             }
 
-            if (fees != null)
-            {
-                long entries = accountDetails.Signers.Length + accountDetails.SubentryCount;
-                var minBalance = (2 + entries) * fees.BaseReserve;
-                result.MinBalance = Convert.ToInt64(minBalance);
-            }
+            if (fees == null) return result;
+
+            var entries = accountDetails.Signers.Length + accountDetails.SubentryCount;
+            var minBalance = (2 + entries) * fees.BaseReserve;
+            result.MinBalance = Convert.ToInt64(minBalance);
 
             return result;
         }
@@ -149,25 +181,18 @@ namespace Lykke.Service.Stellar.Api.Services.Balance
 
         public List<string> GetExplorerUrls(string address)
         {
-            var results = new List<string>();
-            foreach (var format in _explorerUrlFormats)
-            {
-                var url = string.Format(format, address);
-                results.Add(url);
-            }
-
-            return results;
+            return _explorerUrlFormats.Select(format => string.Format(format, address)).ToList();
         }
 
         private string GetPagingTokenKey => $"TransactionPagingToken:{_depositBaseAddress}";
 
         public async Task<int> UpdateWalletBalances()
         {
-            int count = 0;
+            var count = 0;
 
             try
             {
-                string cursor = await _keyValueStoreRepository.GetAsync(GetPagingTokenKey);
+                var cursor = await _keyValueStoreRepository.GetAsync(GetPagingTokenKey);
 
                 do
                 {
@@ -192,7 +217,7 @@ namespace Lykke.Service.Stellar.Api.Services.Balance
         {
             var transactions = await _horizonService.GetTransactions(_depositBaseAddress, StellarSdkConstants.OrderAsc, cursor);
 
-            int count = 0;
+            var count = 0;
             cursor = null;
             foreach (var transaction in transactions)
             {
@@ -202,7 +227,7 @@ namespace Lykke.Service.Stellar.Api.Services.Balance
                     count++;
 
                     // skip outgoing transactions and transactions without memo
-                    string memo = _horizonService.GetMemo(transaction);
+                    var memo = _horizonService.GetMemo(transaction);
                     if (_depositBaseAddress.Equals(transaction.SourceAccount, StringComparison.OrdinalIgnoreCase) ||
                         string.IsNullOrWhiteSpace(memo))
                     {
@@ -221,36 +246,52 @@ namespace Lykke.Service.Stellar.Api.Services.Balance
 
                         string toAddress = null;
                         long amount = 0;
-                        if (operationType == OperationType.OperationTypeEnum.PAYMENT)
+                        // ReSharper disable once SwitchStatementMissingSomeCases
+                        switch (operationType)
                         {
-                            var op = operation.Body.PaymentOp;
-                            if (op.Asset.Discriminant.InnerValue == AssetType.AssetTypeEnum.ASSET_TYPE_NATIVE)
+                            case OperationType.OperationTypeEnum.PAYMENT:
                             {
+                                var op = operation.Body.PaymentOp;
+                                if (op.Asset.Discriminant.InnerValue == AssetType.AssetTypeEnum.ASSET_TYPE_NATIVE)
+                                {
+                                    var keyPair = KeyPair.FromXdrPublicKey(op.Destination.InnerValue);
+                                    toAddress = keyPair.Address;
+                                    amount = op.Amount.InnerValue;
+                                }
+                                break;
+                            }
+                            case OperationType.OperationTypeEnum.ACCOUNT_MERGE:
+                            {
+                                var op = operation.Body;
                                 var keyPair = KeyPair.FromXdrPublicKey(op.Destination.InnerValue);
                                 toAddress = keyPair.Address;
-                                amount = op.Amount.InnerValue;
+                                amount = _horizonService.GetAccountMergeAmount(transaction.ResultXdr, i);
+                                break;
                             }
-                        }
-                        else if (operationType == OperationType.OperationTypeEnum.ACCOUNT_MERGE)
-                        {
-                            var op = operation.Body;
-                            var keyPair = KeyPair.FromXdrPublicKey(op.Destination.InnerValue);
-                            toAddress = keyPair.Address;
-                            amount = _horizonService.GetAccountMergeAmount(transaction.ResultXdr, i);
-                        }
-
-                        if (toAddress != null && amount > 0)
-                        {
-                            var addressWithExtension = $"{toAddress}{Constants.PublicAddressExtension.Separator}{memo.ToLower()}";
-                            var observation = await _observationRepository.GetAsync(addressWithExtension);
-                            if (observation == null)
+                            case OperationType.OperationTypeEnum.PATH_PAYMENT:
                             {
-                                continue;    
+                                var op = operation.Body.PathPaymentOp;
+                                if (op.DestAsset.Discriminant.InnerValue == AssetType.AssetTypeEnum.ASSET_TYPE_NATIVE)
+                                {
+                                   var keyPair = KeyPair.FromXdrPublicKey(op.Destination.InnerValue);
+                                   toAddress = keyPair.Address;
+                                   amount = op.DestAmount.InnerValue;
+                                }
+                                break;
                             }
-
-                            var assetId = Core.Domain.Asset.Stellar.Id;
-                            await _walletBalanceRepository.IncreaseBalanceAsync(assetId, addressWithExtension, transaction.Ledger, i, transaction.Hash, amount);
+                            default:
+                                continue;
                         }
+
+                        var addressWithExtension = $"{toAddress}{Constants.PublicAddressExtension.Separator}{memo.ToLower()}";
+                        var observation = await _observationRepository.GetAsync(addressWithExtension);
+                        if (observation == null)
+                        {
+                            continue;    
+                        }
+
+                        var assetId = Core.Domain.Asset.Stellar.Id;
+                        await _walletBalanceRepository.IncreaseBalanceAsync(assetId, addressWithExtension, transaction.Ledger * 10, i, transaction.Hash, amount);
                     }
                 }
                 catch (Exception ex)

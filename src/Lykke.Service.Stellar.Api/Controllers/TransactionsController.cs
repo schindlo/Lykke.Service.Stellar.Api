@@ -20,7 +20,8 @@ namespace Lykke.Service.Stellar.Api.Controllers
         private readonly ITransactionService _transactionService;
         private readonly IBalanceService _balanceService;
 
-        public TransactionsController(ITransactionService transactionService, IBalanceService balanceService)
+        public TransactionsController(ITransactionService transactionService,
+                                      IBalanceService balanceService)
         {
             _transactionService = transactionService;
             _balanceService = balanceService;
@@ -45,24 +46,23 @@ namespace Lykke.Service.Stellar.Api.Controllers
             {
                 string memo = null;
 
-                if (!_balanceService.IsAddressValid(request.FromAddress, out bool fromAddressHasExtension))
+                if (!_balanceService.IsAddressValid(request.FromAddress, out var fromAddressHasExtension))
                 {
                     return BadRequest(ErrorResponse.Create($"{nameof(request.FromAddress)} is not a valid"));
                 }
-                if (!_balanceService.IsAddressValid(request.ToAddress, out bool toAddressHasExtension))
+                if (!_balanceService.IsAddressValid(request.ToAddress, out var toAddressHasExtension))
                 {
                     return BadRequest(ErrorResponse.Create($"{nameof(request.ToAddress)} is not a valid"));
                 }
 
-                var fromBaseAddress = _balanceService.GetBaseAddress(request.FromAddress);
                 if (fromAddressHasExtension)
                 {
-                    if (!fromBaseAddress.Equals(_balanceService.GetDepositBaseAddress(), StringComparison.OrdinalIgnoreCase))
+                    if (!_balanceService.IsDepositBaseAddress(request.FromAddress))
                     {
                         return BadRequest(ErrorResponse.Create($"{nameof(request.FromAddress)} is not a valid. Public address extension allowed for deposit base address only!"));
                     }
 
-                    if (!request.ToAddress.Equals(_balanceService.GetDepositBaseAddress(), StringComparison.OrdinalIgnoreCase))
+                    if (!_balanceService.IsDepositBaseAddress(request.ToAddress) || toAddressHasExtension)
                     {
                         return BadRequest(ErrorResponse.Create($"{nameof(request.ToAddress)} is not a valid. Only deposit base address allowed as destination, when sending from address with public address extension!"));
                     }
@@ -80,10 +80,10 @@ namespace Lykke.Service.Stellar.Api.Controllers
                     return BadRequest(ErrorResponse.Create($"{nameof(request.AssetId)} was not found"));
                 }
 
-                Int64 amount;
+                long amount;
                 try
                 {
-                    amount = Int64.Parse(request.Amount);
+                    amount = long.Parse(request.Amount);
                 }
                 catch (FormatException)
                 {
@@ -98,7 +98,7 @@ namespace Lykke.Service.Stellar.Api.Controllers
                 }
                 var fromAddressBalance = await _balanceService.GetAddressBalanceAsync(request.FromAddress, fees);
 
-                Int64 requiredBalance;
+                long requiredBalance;
                 if (request.IncludeFee)
                 {
                     requiredBalance = amount;
@@ -149,13 +149,11 @@ namespace Lykke.Service.Stellar.Api.Controllers
             }
             catch (BusinessException ex)
             {
-                if (!string.IsNullOrWhiteSpace(ex.ErrorCode))
-                {
-                    var errorResponse = StellarErrorResponse.Create(ex.Message, (BlockchainErrorCode)Enum.Parse(typeof(BlockchainErrorCode), ex.ErrorCode));
-                    return BadRequest(errorResponse);
-                }
                 // technical / unknown problem
-                throw;
+                if (string.IsNullOrWhiteSpace(ex.ErrorCode)) throw;
+
+                var errorResponse = StellarErrorResponse.Create(ex.Message, (BlockchainErrorCode)Enum.Parse(typeof(BlockchainErrorCode), ex.ErrorCode));
+                return BadRequest(errorResponse);
             }
 
             return Ok();
@@ -193,11 +191,11 @@ namespace Lykke.Service.Stellar.Api.Controllers
             {
                 OperationId = broadcast.OperationId,
                 State = broadcast.State.ToBroadcastedTransactionState(),
-                Timestamp = broadcast.CreatedAt ?? DateTime.MinValue,
+                Timestamp = broadcast.CreatedAt,
                 Amount = broadcast.Amount.ToString(),
                 Fee = broadcast.Fee.ToString(),
                 Hash = broadcast.Hash,
-                Block = broadcast.Ledger ?? 0,
+                Block = broadcast.Ledger,
                 Error = broadcast.Error,
                 ErrorCode = broadcast.ErrorCode?.ToTransactionExecutionError()
             });

@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Common.Log;
 using AzureStorage;
 using AzureStorage.Tables;
+using JetBrains.Annotations;
 using Lykke.SettingsReader;
 using Lykke.Service.Stellar.Api.Core.Domain.Balance;
 using Microsoft.WindowsAzure.Storage.Table;
@@ -16,7 +17,9 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Balance
 
         private readonly INoSQLTableStorage<WalletBalanceEntity> _table;
 
-        public WalletBalanceRepository(IReloadingManager<string> dataConnStringManager, ILog log)
+        [UsedImplicitly]
+        public WalletBalanceRepository(IReloadingManager<string> dataConnStringManager,
+                                       ILog log)
         {
             _table = AzureTableStorage<WalletBalanceEntity>.Create(dataConnStringManager, TableName, log);
         }
@@ -34,32 +37,21 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Balance
         public async Task<WalletBalance> GetAsync(string assetId, string address)
         {
             var rowKey = WalletBalanceEntity.GetRowKey(assetId, address);
-            var entity = await _table.GetDataAsync(TableKey.GetHashedRowKey(rowKey), rowKey);
-            if (entity != null)
-            {
-                var wallet = entity.ToDomain();
-                return wallet;
-            }
-
-            return null;
-        }
-
-        public async Task InsertOrReplaceAsync(WalletBalance balance)
-        {
-            var entity = balance.ToEntity();
-            await _table.InsertOrReplaceAsync(entity);
+            var entity = await _table.GetDataAsync(TableKeyHelper.GetHashedRowKey(rowKey), rowKey);
+            var wallet = entity?.ToDomain();
+            return wallet;
         }
 
         public async Task DeleteIfExistAsync(string assetId, string address)
         {
             var rowKey = WalletBalanceEntity.GetRowKey(assetId, address);
-            await _table.DeleteIfExistAsync(TableKey.GetHashedRowKey(rowKey), rowKey);
+            await _table.DeleteIfExistAsync(TableKeyHelper.GetHashedRowKey(rowKey), rowKey);
         }
 
         public async Task<bool> IncreaseBalanceAsync(string assetId, string address, long ledger, int operationIndex, string hash, long amount)
         {
             var rowKey = WalletBalanceEntity.GetRowKey(assetId, address);
-            var partitionKey = TableKey.GetHashedRowKey(rowKey);
+            var partitionKey = TableKeyHelper.GetHashedRowKey(rowKey);
 
             WalletBalanceEntity CreateEntity()
             {
@@ -77,8 +69,9 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Balance
             // ReSharper disable once ImplicitlyCapturedClosure
             bool ModifyEntity(WalletBalanceEntity entity)
             {
+                // ReSharper disable once InvertIf
                 if (ledger > entity.Ledger ||
-                    (ledger == entity.Ledger && operationIndex > entity.OperationIndex))
+                    ledger == entity.Ledger && operationIndex > entity.OperationIndex)
                 {
                     entity.Balance += amount;
                     entity.Ledger = ledger;
@@ -97,11 +90,12 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Balance
         public async Task<bool> DecreaseBalanceAsync(string assetId, string address, string hash, long amount)
         {
             var rowKey = WalletBalanceEntity.GetRowKey(assetId, address);
-            var partitionKey = TableKey.GetHashedRowKey(rowKey);
+            var partitionKey = TableKeyHelper.GetHashedRowKey(rowKey);
 
             // ReSharper disable once ImplicitlyCapturedClosure
             WalletBalanceEntity ModifyEntity(WalletBalanceEntity entity)
             {
+                // ReSharper disable once InvertIf
                 if (!hash.Equals(entity.LastTransactionHash, System.StringComparison.OrdinalIgnoreCase))
                 {
                     if (entity.Balance < amount)
@@ -123,9 +117,10 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Balance
         public async Task<bool> DeleteIfBalanceIsZero(string assetId, string address)
         {
             var rowKey = WalletBalanceEntity.GetRowKey(assetId, address);
-            var partitionKey = TableKey.GetHashedRowKey(rowKey);
+            var partitionKey = TableKeyHelper.GetHashedRowKey(rowKey);
 
             var entity = await _table.GetDataAsync(partitionKey, rowKey);
+            // ReSharper disable once InvertIf
             if (entity != null && entity.Balance == 0)
             {
                 await _table.DeleteAsync(entity);

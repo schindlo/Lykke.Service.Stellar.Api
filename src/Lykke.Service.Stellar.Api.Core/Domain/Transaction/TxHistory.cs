@@ -23,5 +23,10 @@ namespace Lykke.Service.Stellar.Api.Core.Domain.Transaction
         public PaymentType PaymentType { get; set; }
 
         public string Memo { get; set; }
+
+        public static string GetKey(string pagingToken, int operationIndex)
+        {
+            return ulong.Parse(pagingToken).ToString("D20") + operationIndex.ToString("D3");
+        }
     }
 }

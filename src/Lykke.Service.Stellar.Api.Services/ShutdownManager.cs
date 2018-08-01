@@ -1,5 +1,4 @@
 ﻿using System.Threading.Tasks;
-using Common.Log;
 using Lykke.Service.Stellar.Api.Core.Services;
 
 namespace Lykke.Service.Stellar.Api.Services
@@ -11,17 +10,8 @@ namespace Lykke.Service.Stellar.Api.Services
 
     public class ShutdownManager : IShutdownManager
     {
-        private readonly ILog _log;
-
-        public ShutdownManager(ILog log)
-        {
-            _log = log;
-        }
-
         public async Task StopAsync()
         {
-            // TODO: Implement your shutdown logic here. Good idea is to log every step
-
             await Task.CompletedTask;
         }
     }

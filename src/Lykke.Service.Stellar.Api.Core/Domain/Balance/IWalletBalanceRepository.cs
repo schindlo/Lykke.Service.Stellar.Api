@@ -9,8 +9,6 @@ namespace Lykke.Service.Stellar.Api.Core.Domain.Balance
 
         Task<WalletBalance> GetAsync(string assetId, string address);
 
-        Task InsertOrReplaceAsync(WalletBalance balance);
-
         Task DeleteIfExistAsync(string assetId, string address);
 
         Task<bool> IncreaseBalanceAsync(string assetId, string address, long ledger, int operationIndex, string hash, long amount);

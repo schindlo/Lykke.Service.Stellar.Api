@@ -1,5 +1,5 @@
 ﻿using System.Collections.Generic;
-using Lykke.Service.Stellar.Api.Core.Domain.Health;
+using Lykke.Common.Health;
 
 namespace Lykke.Service.Stellar.Api.Core.Services
 {

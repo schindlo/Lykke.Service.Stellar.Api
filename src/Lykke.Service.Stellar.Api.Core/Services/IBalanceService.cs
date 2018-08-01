@@ -7,9 +7,13 @@ namespace Lykke.Service.Stellar.Api.Core.Services
 {
     public interface IBalanceService
     {
+        bool IsAddressValid(string address);
+
         bool IsAddressValid(string address, out bool hasExtension);
 
         string GetDepositBaseAddress();
+
+        bool IsDepositBaseAddress(string address);
 
         string GetBaseAddress(string address);
 

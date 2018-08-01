@@ -10,10 +10,10 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Transaction
     public class TxBroadcastEntity : AzureTableEntity
     {
         private TxBroadcastState _state;
-        private long? _amount;
-        private long? _fee;
-        private long? _ledger;
-        private DateTime? _createdAt;
+        private long _amount;
+        private long _fee;
+        private long _ledger;
+        private DateTime _createdAt;
         private string _error;
         private TxExecutionError? _errorCode;
 
@@ -24,65 +24,55 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Transaction
             get => _state;
             set
             {
-                if (_state != value)
-                {
-                    _state = value;
-                    MarkValueTypePropertyAsDirty(nameof(State));
-                }
+                if (_state == value) return;
+                _state = value;
+                MarkValueTypePropertyAsDirty(nameof(State));
             }
         }
 
-        public long? Amount
+        public long Amount
         {
             get => _amount;
             set
             {
-                if (_amount != value)
-                {
-                    _amount = value;
-                    MarkValueTypePropertyAsDirty(nameof(Amount));
-                }
+                if (_amount == value) return;
+                _amount = value;
+                MarkValueTypePropertyAsDirty(nameof(Amount));
             }
         }
 
-        public long? Fee
+        public long Fee
         {
             get => _fee;
             set
             {
-                if (_fee != value)
-                {
-                    _fee = value;
-                    MarkValueTypePropertyAsDirty(nameof(Fee));
-                }
+                if (_fee == value) return;
+                _fee = value;
+                MarkValueTypePropertyAsDirty(nameof(Fee));
             }
         }
 
         public string Hash { get; set; }
 
-        public long? Ledger
+        public long Ledger
         { 
             get => _ledger;
             set
             {
-                if (_ledger != value)
-                {
-                    _ledger = value;
-                    MarkValueTypePropertyAsDirty(nameof(Ledger));
-                }
+                if (_ledger == value) return;
+                _ledger = value;
+                MarkValueTypePropertyAsDirty(nameof(Ledger));
             }
         }
 
-        public DateTime? CreatedAt
+        public DateTime CreatedAt
         {
             get => _createdAt;
             set
             {
-                if (_createdAt != value)
-                {
-                    _createdAt = value;
-                    MarkValueTypePropertyAsDirty(nameof(CreatedAt));
-                }
+                if (_createdAt == value) return;
+                _createdAt = value;
+                MarkValueTypePropertyAsDirty(nameof(CreatedAt));
             }
         }
 
@@ -91,11 +81,9 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Transaction
             get => _error;
             set
             {
-                if (_error != value)
-                {
-                    _error = value;
-                    MarkValueTypePropertyAsDirty(nameof(Error));
-                }
+                if (_error == value) return;
+                _error = value;
+                MarkValueTypePropertyAsDirty(nameof(Error));
             }
         }
 
@@ -104,11 +92,9 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Transaction
             get => _errorCode;
             set
             {
-                if (_errorCode != value)
-                {
-                    _errorCode = value;
-                    MarkValueTypePropertyAsDirty(nameof(ErrorCode));
-                }
+                if (_errorCode == value) return;
+                _errorCode = value;
+                MarkValueTypePropertyAsDirty(nameof(ErrorCode));
             }
         }
     }

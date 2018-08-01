@@ -3,6 +3,6 @@
     public enum TxDirectionType
     {
         Incoming = 0,
-        Outgoing = 1,
+        Outgoing = 1
     }
 }

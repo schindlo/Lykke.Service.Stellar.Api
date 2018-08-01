@@ -7,11 +7,6 @@
     "NetworkPassphrase": "Test SDF Network ; September 2015",
     "HorizonUrl": "https://horizon-testnet.stellar.org/",
     "DepositBaseAddress": "",
-    "WalletBalanceJobPeriodSeconds": 30,
-    "TransactionHistoryJobPeriodSeconds": 120,
-    "BroadcastInProgressJobPeriodSeconds": 120,
-    "TransactionHistoryJobBatchSize": 100,
-    "BroadcastInProgressJobBatchSize": 100,
     "ExplorerUrlFormats": [ "https://stellar.expert/explorer/testnet/account/{0}", "http://testnet.stellarchain.io/address/{0}" ]
   },
   "SlackNotifications": {

@@ -25,7 +25,7 @@ namespace Lykke.Service.Stellar.Api.Controllers
             }
             if (!string.IsNullOrEmpty(continuation))
             {
-                return BadRequest(ErrorResponse.Create("Invalid parameter").AddModelError("continuation", "Must be valid continuation token"));
+                return BadRequest(ErrorResponse.Create("Invalid parameter").AddModelError("continuation", "Continuation token not supported"));
             }
 
             var assets = new [] { Asset.Stellar.ToAssetResponse() };

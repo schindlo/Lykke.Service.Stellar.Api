@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
-using Lykke.Service.Stellar.Api.Core.Domain.Health;
+using JetBrains.Annotations;
 using Lykke.Service.Stellar.Api.Core.Services;
+using Lykke.Common.Health;
 
 namespace Lykke.Service.Stellar.Api.Services
 {
@@ -13,7 +14,10 @@ namespace Lykke.Service.Stellar.Api.Services
         private readonly ITransactionHistoryService _txHistoryService;
         private readonly ITransactionService _transactionService;
 
-        public HealthService(IBalanceService balanceService, ITransactionHistoryService txHistoryService, ITransactionService transactionService)
+        [UsedImplicitly]
+        public HealthService(IBalanceService balanceService,
+                             ITransactionHistoryService txHistoryService,
+                             ITransactionService transactionService)
         {
             _balanceService = balanceService;
             _txHistoryService = txHistoryService;

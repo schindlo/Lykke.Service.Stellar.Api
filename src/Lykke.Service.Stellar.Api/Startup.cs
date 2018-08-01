@@ -4,14 +4,18 @@ using Autofac;
 using Autofac.Extensions.DependencyInjection;
 using AzureStorage.Tables;
 using Common.Log;
+using JetBrains.Annotations;
 using Lykke.AzureStorage.Tables.Entity.Metamodel;
 using Lykke.AzureStorage.Tables.Entity.Metamodel.Providers;
 using Lykke.Common.ApiLibrary.Middleware;
 using Lykke.Common.ApiLibrary.Swagger;
 using Lykke.Logs;
+using Lykke.Logs.Slack;
+using Lykke.Service.Stellar.Api.AzureRepositories.Modules;
 using Lykke.Service.Stellar.Api.Core.Services;
 using Lykke.Service.Stellar.Api.Core.Settings;
 using Lykke.Service.Stellar.Api.Modules;
+using Lykke.Service.Stellar.Api.Services.Modules;
 using Lykke.SettingsReader;
 using Lykke.SlackNotification.AzureQueue;
 using Microsoft.AspNetCore.Builder;
@@ -28,6 +32,7 @@ namespace Lykke.Service.Stellar.Api
         public IConfigurationRoot Configuration { get; }
         public ILog Log { get; private set; }
 
+        [UsedImplicitly]
         public Startup(IHostingEnvironment env)
         {
             var builder = new ConfigurationBuilder()
@@ -51,7 +56,7 @@ namespace Lykke.Service.Stellar.Api
 
                 services.AddSwaggerGen(options =>
                 {
-                    options.DefaultLykkeConfiguration("v1", "StellarApi API");
+                    options.DefaultLykkeConfiguration("v1", "ServiceStellarApi API");
                 });
 
                 EntityMetamodel.Configure(new AnnotationsBasedMetamodelProvider());
@@ -61,7 +66,9 @@ namespace Lykke.Service.Stellar.Api
 
                 Log = CreateLogWithSlack(services, appSettings);
 
-                builder.RegisterModule(new ServiceModule(appSettings.Nested(x => x.StellarApiService), Log));
+                builder.RegisterModule(new StellarApiModule(Log));
+                builder.RegisterModule(new RepositoryModule(appSettings.Nested(x => x.StellarApiService)));
+                builder.RegisterModule(new ServiceModule(appSettings.Nested(x => x.StellarApiService)));
                 builder.Populate(services);
                 ApplicationContainer = builder.Build();
 
@@ -84,7 +91,7 @@ namespace Lykke.Service.Stellar.Api
                 }
 
                 app.UseLykkeForwardedHeaders();
-                app.UseLykkeMiddleware("StellarApi", ex => new { Message = "Technical problem" });
+                app.UseLykkeMiddleware("ServiceStellarApi", ex => new { Message = "Technical problem" });
 
                 app.UseMvc();
                 app.UseSwagger(c =>
@@ -159,6 +166,7 @@ namespace Lykke.Service.Stellar.Api
             }
             catch (Exception ex)
             {
+                // ReSharper disable once InvertIf
                 if (Log != null)
                 {
                     await Log.WriteFatalErrorAsync(nameof(Startup), nameof(CleanUp), "", ex);
@@ -188,7 +196,7 @@ namespace Lykke.Service.Stellar.Api
                 throw new InvalidOperationException($"LogsConnString {dbLogConnectionString} is not filled in settings");
 
             var persistenceManager = new LykkeLogToAzureStoragePersistenceManager(
-                AzureTableStorage<LogEntity>.Create(dbLogConnectionStringManager, "StellarApiLog", consoleLogger),
+                AzureTableStorage<LogEntity>.Create(dbLogConnectionStringManager, "ServiceStellarApiLog", consoleLogger),
                 consoleLogger);
 
             // Creating slack notification service, which logs own azure queue processing messages to aggregate log
@@ -209,6 +217,25 @@ namespace Lykke.Service.Stellar.Api
             azureStorageLogger.Start();
 
             aggregateLogger.AddLog(azureStorageLogger);
+
+			var allMessagesSlackLogger = LykkeLogToSlack.Create
+            (
+                slackService,
+                "BlockChainIntegration",
+                // ReSharper disable once RedundantArgumentDefaultValue
+                LogLevel.All
+            );
+
+            aggregateLogger.AddLog(allMessagesSlackLogger);
+
+            var importantMessagesSlackLogger = LykkeLogToSlack.Create
+            (
+                slackService,
+                "BlockChainIntegrationImportantMessages",
+                LogLevel.All ^ LogLevel.Info
+            );
+
+            aggregateLogger.AddLog(importantMessagesSlackLogger);
 
             return aggregateLogger;
         }

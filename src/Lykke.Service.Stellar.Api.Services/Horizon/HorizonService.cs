@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using StellarBase;
 using StellarBase.Generated;
+using static StellarBase.Generated.Operation;
 using StellarSdk;
 using StellarSdk.Model;
 using StellarSdk.Exceptions;
@@ -10,6 +11,7 @@ using Lykke.Service.Stellar.Api.Core.Exceptions;
 using Lykke.Service.Stellar.Api.Core.Services;
 using Lykke.Service.Stellar.Api.Core;
 using Chaos.NaCl;
+using JetBrains.Annotations;
 
 namespace Lykke.Service.Stellar.Api.Services.Horizon
 {
@@ -17,7 +19,9 @@ namespace Lykke.Service.Stellar.Api.Services.Horizon
     {
         private readonly string _horizonUrl;
 
-        public HorizonService(string network, string horizonUrl)
+        [UsedImplicitly]
+        public HorizonService(string network,
+                              string horizonUrl)
         {
             Network.CurrentNetwork = network;
             _horizonUrl = horizonUrl;
@@ -31,7 +35,7 @@ namespace Lykke.Service.Stellar.Api.Services.Horizon
             var tx = await builder.Call();
             if (tx == null || string.IsNullOrEmpty(tx.Hash))
             {
-                throw new HorizonApiException($"Submitting transaction failed. No valid transaction was returned.");
+                throw new HorizonApiException("Submitting transaction failed. No valid transaction was returned.");
             }
             return tx.Hash;
         }
@@ -52,13 +56,13 @@ namespace Lykke.Service.Stellar.Api.Services.Horizon
             }
         }
 
-        public async Task<List<TransactionDetails>> GetTransactions(string address, string order = StellarSdkConstants.OrderAsc, string cursor = "")
+        public async Task<List<TransactionDetails>> GetTransactions(string address, string order = StellarSdkConstants.OrderAsc, string cursor = "", int limit = 100)
         {
             try
             {
                 var builder = new AccountTransactionCallBuilder(_horizonUrl);
                 builder.accountId(address);
-                builder.order(order).cursor(cursor).limit(100);
+                builder.order(order).cursor(cursor).limit(limit);
                 var details = await builder.Call();
                 var transactions = details?.Embedded?.Records;
                 if (transactions != null)
@@ -74,31 +78,14 @@ namespace Lykke.Service.Stellar.Api.Services.Horizon
             return new List<TransactionDetails>();
         }
 
-        public async Task<Payments> GetPayments(string address, string order = StellarSdkConstants.OrderAsc, string cursor = "")
-        {
-            try
-            {
-                var builder = new PaymentCallBuilder(_horizonUrl);
-                builder.accountId(address);
-                builder.order(order).cursor(cursor);
-                var payments = await builder.Call();
-                return payments;
-            }
-            catch (ResourceNotFoundException)
-            {
-                // address not found
-                return null;
-            }
-        }
-
         public async Task<LedgerDetails> GetLatestLedger()
         {
             var builder = new LedgerCallBuilder(_horizonUrl);
             builder.order(StellarSdkConstants.OrderDesc).limit(1);
             var ledgers = await builder.Call();
-            if (ledgers?.Embedded?.Records == null || ledgers?.Embedded?.Records.Length < 1)
+            if (ledgers?.Embedded?.Records == null || ledgers.Embedded?.Records.Length < 1)
             {
-                throw new HorizonApiException($"Latest ledger missing from query result.");
+                throw new HorizonApiException("Latest ledger missing from query result.");
             }
             return ledgers.Embedded.Records[0];
         }
@@ -125,25 +112,6 @@ namespace Lykke.Service.Stellar.Api.Services.Horizon
             return accountDetails != null;
         }
 
-        public async Task<long> GetLedgerNoOfLastPayment(string address)
-        {
-            var builder = new PaymentCallBuilder(_horizonUrl);
-            builder.accountId(address);
-            builder.order(StellarSdkConstants.OrderDesc).limit(1);
-            var payments = await builder.Call();
-            if (payments?.Embedded?.Records == null || payments?.Embedded?.Records.Length < 1)
-            {
-                throw new HorizonApiException($"Latest ledger missing from query result.");
-            }
-            var hash = payments.Embedded.Records[0].TransactionHash;
-            var tx = await GetTransactionDetails(hash);
-            if (tx == null)
-            {
-                throw new HorizonApiException($"Transaction not found. hash={hash}");
-            }
-            return tx.Ledger;
-        }
-
         public long GetAccountMergeAmount(string resultXdrBase64, int operationIndex)
         {
             var xdr = Convert.FromBase64String(resultXdrBase64);
@@ -153,28 +121,31 @@ namespace Lykke.Service.Stellar.Api.Services.Horizon
             var merge = txResult.Result.Results[operationIndex];
             var result = merge?.Tr?.AccountMergeResult;
             var resultCode = result?.Discriminant?.InnerValue;
-            if (resultCode != null && resultCode == AccountMergeResultCode.AccountMergeResultCodeEnum.ACCOUNT_MERGE_SUCCESS)
-            {
-                long amount = result.SourceAccountBalance.InnerValue;
-                return amount;
-            }
+            if (resultCode == null ||
+                resultCode != AccountMergeResultCode.AccountMergeResultCodeEnum.ACCOUNT_MERGE_SUCCESS) return 0;
 
-            return 0;
+            var amount = result.SourceAccountBalance.InnerValue;
+            return amount;
         }
 
-        public PaymentOp GetFirstPaymentFromTransaction(TransactionDetails tx)
+        public OperationBody GetFirstOperationFromTxEnvelopeXdr(string xdrBase64)
         {
-            var xdr = Convert.FromBase64String(tx.EnvelopeXdr);
+            var xdr = Convert.FromBase64String(xdrBase64);
             var reader = new ByteReader(xdr);
             var txEnvelope = TransactionEnvelope.Decode(reader);
+            return GetFirstOperationFromTxEnvelope(txEnvelope);
+        }
+
+        public OperationBody GetFirstOperationFromTxEnvelope(TransactionEnvelope txEnvelope)
+        {
             if (txEnvelope?.Tx?.Operations == null || txEnvelope.Tx.Operations.Length < 1 ||
-                txEnvelope.Tx.Operations[0].Body?.PaymentOp == null)
+                txEnvelope.Tx.Operations[0].Body == null)
             {
-                throw new HorizonApiException($"Failed to extract first payment operation from transaction. hash={tx.Hash}");
+                throw new HorizonApiException($"Failed to extract first operation from transaction.");
             }
 
-            var paymentOp = txEnvelope.Tx.Operations[0].Body.PaymentOp;
-            return paymentOp;
+            var operation = txEnvelope.Tx.Operations[0].Body;
+            return operation;
         }
 
         public string GetMemo(TransactionDetails tx)

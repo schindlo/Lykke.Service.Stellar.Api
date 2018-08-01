@@ -20,7 +20,7 @@ namespace Lykke.Service.Stellar.Api.Core.Services
 
         Task<string> BuildTransactionAsync(Guid operationId, AddressBalance from, string toAddress, string memoText, long amount);
 
-        Task<int> UpdateBroadcastsInProgress();
+        Task<int> UpdateBroadcastsInProgress(int batchSize);
 
         string GetLastJobError();
     }

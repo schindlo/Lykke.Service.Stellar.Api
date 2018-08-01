@@ -1,12 +1,10 @@
-﻿using System;
-using System.Linq;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.WindowsAzure.Storage.Table;
 using Common.Log;
 using AzureStorage;
 using AzureStorage.Tables;
+using JetBrains.Annotations;
 using Lykke.SettingsReader;
 using Lykke.Service.Stellar.Api.Core.Domain.Transaction;
 
@@ -14,149 +12,64 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Transaction
 {
     public class TxHistoryRepository : ITxHistoryRepository
     {
-        private const string TableNamePrefix = "TransactionHistory";
-        private const string IndexSeparator = ";";
+        private const string TableNamePrefix = "TransactionHistoryDepositBase";
 
-        private static string GetPartitionKey(TxDirectionType direction) => direction.ToString();
-        private static string GetPartitionKeyHash() => "Hash";
-        private static string GetPartitionKeyPagingToken() => "PagingToken";
+        private readonly INoSQLTableStorage<TxHistoryEntity> _tableIn;
+        private readonly INoSQLTableStorage<TxHistoryEntity> _tableOut;
 
-        private static string GetCurrentRowKey() => "Current";
-
-        private readonly ILog _log;
-        private readonly IReloadingManager<string> _dataConnStringManager;
-
-        private readonly ConcurrentDictionary<string, (INoSQLTableStorage<TxHistoryEntity>, INoSQLTableStorage<KeyValueEntity>)> _tableCache;
-
-        public TxHistoryRepository(IReloadingManager<string> dataConnStringManager, ILog log)
+        [UsedImplicitly]
+        public TxHistoryRepository(IReloadingManager<string> dataConnStringManager,
+                                   ILog log)
         {
-            _dataConnStringManager = dataConnStringManager;
-            _log = log;
-            _tableCache = new ConcurrentDictionary<string, (INoSQLTableStorage<TxHistoryEntity>, INoSQLTableStorage<KeyValueEntity>)>();
+            _tableIn = AzureTableStorage<TxHistoryEntity>.Create(dataConnStringManager, $"{TableNamePrefix}In", log);
+            _tableOut = AzureTableStorage<TxHistoryEntity>.Create(dataConnStringManager, $"{TableNamePrefix}Out", log);
         }
 
-        private string GetTableName(string tableId)
+        private INoSQLTableStorage<TxHistoryEntity> GetTable(TxDirectionType direction)
         {
-            var tableName = $"{TableNamePrefix}{tableId}";
-            return tableName;
+            return direction == TxDirectionType.Incoming ? _tableIn : _tableOut;
         }
 
-        private (INoSQLTableStorage<TxHistoryEntity>, INoSQLTableStorage<KeyValueEntity>) GetTable(string tableId)
+        public async Task<List<TxHistory>> GetAllAfterHashAsync(TxDirectionType direction, string memo, int take, string afterKey)
         {
-            var tableName = GetTableName(tableId);
-            if (_tableCache.ContainsKey(tableName))
+            // memo on transaction is assigned to destination
+            if (direction == TxDirectionType.Outgoing && !string.IsNullOrEmpty(memo))
             {
-                return _tableCache[tableName];
-            }
-            var table = AzureTableStorage<TxHistoryEntity>.Create(_dataConnStringManager, tableName, _log);
-            var tableIndex = AzureTableStorage<KeyValueEntity>.Create(_dataConnStringManager, tableName, _log);
-            _tableCache.TryAdd(tableName, (table, tableIndex));
-            return (table, tableIndex);
-        }
-
-        public async Task<(List<TxHistory> Items, string ContinuationToken)> GetAllAsync(string tableId, TxDirectionType direction, int take, string continuationToken)
-        {
-            var (table, tableIndex) = GetTable(tableId);
-            var filter = TableQuery.GenerateFilterCondition(nameof(ITableEntity.PartitionKey), QueryComparisons.Equal, direction.ToString());
-            var query = new TableQuery<TxHistoryEntity>().Where(filter).Take(take);
-            var data = await table.GetDataWithContinuationTokenAsync(query, continuationToken);
-            var items = data.Entities.ToDomain();
-            return (items, data.ContinuationToken);
-        }
-
-        public async Task<List<TxHistory>> GetAllAfterHashAsync(string tableId, TxDirectionType direction, int take, string afterHash)
-        {
-            var (table, tableIndex) = GetTable(tableId);
-
-            // build range query
-            string filter = TableQuery.GenerateFilterCondition(nameof(ITableEntity.PartitionKey), QueryComparisons.Equal, direction.ToString());
-            if (!string.IsNullOrEmpty(afterHash))
-            {
-                var index = await tableIndex.GetDataAsync(GetPartitionKeyHash(), afterHash);
-                if (index == null)
-                {
-                    throw new ArgumentException($"Unknwon transaction hash: {afterHash}", nameof(afterHash));
-                }
-                var rowKeys = index.Value.Split(IndexSeparator).ToList().OrderByDescending(x => x);
-                var rowKey = rowKeys.First();
-
-                var rkFilter = TableQuery.GenerateFilterCondition(nameof(ITableEntity.RowKey), QueryComparisons.GreaterThan, rowKey);
-                filter = TableQuery.CombineFilters(filter, TableOperators.And, rkFilter);
+                return new List<TxHistory>();
             }
 
-            var query = new TableQuery<TxHistoryEntity>().Where(filter).Take(take);
+            var table = GetTable(direction);
+
+            // build filter
+            string filter = null;
+            if (!string.IsNullOrEmpty(afterKey))
+            {
+                filter = TableQuery.GenerateFilterCondition(nameof(ITableEntity.PartitionKey), QueryComparisons.GreaterThan, afterKey);
+            }
+            if (!string.IsNullOrEmpty(memo))
+            {
+                var rkFilter = TableQuery.GenerateFilterCondition(nameof(ITableEntity.RowKey), QueryComparisons.Equal, memo);
+                filter = filter != null ? TableQuery.CombineFilters(filter, TableOperators.And, rkFilter) : rkFilter;
+            }
+
+            var query = new TableQuery<TxHistoryEntity>();
+            if (filter != null)
+            {
+                query = query.Where(filter);
+            }
+            query = query.Take(take);
             var data = await table.GetDataWithContinuationTokenAsync(query, null);
             var items = data.Entities.ToDomain();
             return items;
         }
 
-        public async Task<string> GetCurrentPagingToken(string tableId)
+        public async Task InsertOrReplaceAsync(TxDirectionType direction, TxHistory history)
         {
-            var (table, tableIndex) = GetTable(tableId);
+            var table = GetTable(direction);
 
-            var pagingTokenIndex = await tableIndex.GetDataAsync(GetPartitionKeyPagingToken(), GetCurrentRowKey());
-            if (pagingTokenIndex != null)
-            {
-                return pagingTokenIndex.Value;
-            }
-
-            return null;
-        }
-
-        public async Task SetCurrentPagingToken(string tableId, string pagingToken)
-        {
-            var (table, tableIndex) = GetTable(tableId);
-
-            // index to current paging token
-            var entity = new KeyValueEntity
-            {
-                PartitionKey = GetPartitionKeyPagingToken(),
-                RowKey = GetCurrentRowKey(),
-                Value = pagingToken
-            };
-            await tableIndex.InsertOrReplaceAsync(entity);
-        }
-
-        public async Task InsertOrReplaceAsync(string tableId, TxDirectionType direction, TxHistory history)
-        {
-            var (table, tableIndex) = GetTable(tableId);
-
-            var tasks = new Task[2];
-                
             // history entry
-            var entity = history.ToEntity(GetPartitionKey(direction));
-            tasks[0] = table.InsertOrReplaceAsync(entity);
-
-            // hash to row key(s)
-            var value = entity.RowKey;
-            var index = await tableIndex.GetDataAsync(GetPartitionKeyHash(), entity.Hash);
-            if (index == null || string.IsNullOrEmpty(index.Value))
-            {
-                index = new KeyValueEntity
-                {
-                    PartitionKey = GetPartitionKeyHash(),
-                    RowKey = history.Hash,
-                    Value = value
-                };
-            }
-            else if (!index.Value.Contains(value))
-            {
-                index.Value += IndexSeparator + value;
-            }
-            tasks[1] = tableIndex.InsertOrReplaceAsync(index);
-
-            await Task.WhenAll(tasks);
-        }
-
-        public async Task DeleteAsync(string tableId)
-        {
-            var (table, tableIndex) = GetTable(tableId);
-            await table.DeleteAsync();
-
-            // remove from cache
-            var tableName = GetTableName(tableId);
-            (INoSQLTableStorage<TxHistoryEntity>, INoSQLTableStorage<KeyValueEntity>) ignored;
-            _tableCache.TryRemove(tableName, out ignored);
+            var entity = history.ToEntity();
+            await table.InsertOrReplaceAsync(entity);
         }
     }
 }
