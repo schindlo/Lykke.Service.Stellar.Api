@@ -22,8 +22,6 @@ namespace Lykke.Service.Stellar.Api
 #endif
             Console.WriteLine($"ENV_INFO: {EnvInfo}");
 
-            var hash = "ut_"+ (DateTime.UtcNow.ToUnixTime()).ToString(CultureInfo.InvariantCulture);
-
             try
             {
                 var host = new WebHostBuilder()
