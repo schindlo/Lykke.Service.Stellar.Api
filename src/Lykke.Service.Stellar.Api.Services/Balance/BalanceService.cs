@@ -61,9 +61,13 @@ namespace Lykke.Service.Stellar.Api.Services.Balance
             try
             {
                 var baseAddress = parts[0];
-                StrKey.DecodeCheck(VersionByte.ed25519Publickey, baseAddress);
+                byte[] secret = StrKey.DecodeCheck(VersionByte.ed25519Publickey, baseAddress);
+                string encoded = StrKey.EncodeCheck(VersionByte.ed25519Publickey, secret);
+
+                if (baseAddress != encoded)
+                    return false;
             }
-            catch (Exception)
+            catch (Exception e)
             {
                 return false;
             }
