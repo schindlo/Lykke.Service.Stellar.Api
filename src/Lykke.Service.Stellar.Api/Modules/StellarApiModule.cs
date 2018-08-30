@@ -1,22 +1,20 @@
 ﻿using Autofac;
-using Common.Log;
 
 namespace Lykke.Service.Stellar.Api.Modules
 {
+    /// <summary>
+    /// Is not currently used but is presented in order to comply with Lykke template. May be safely removed in future or implemented with something usefull.
+    /// </summary>
     public class StellarApiModule : Module
     {
-        private readonly ILog _log;
-
-        public StellarApiModule(ILog log)
+        public StellarApiModule()
         {
-            _log = log;
+            // TODO: add some implementation or remove the whole file in future.
         }
 
         protected override void Load(ContainerBuilder builder)
         {
-            builder.RegisterInstance(_log)
-                   .As<ILog>()
-                   .SingleInstance();
+            // TODO: add some implementation or remove the whole file in future.
         }
     }
 }
