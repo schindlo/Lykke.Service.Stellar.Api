@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Threading.Tasks;
-using Common.Log;
 using AzureStorage;
 using AzureStorage.Tables;
 using JetBrains.Annotations;
 using Lykke.SettingsReader;
 using Lykke.Service.Stellar.Api.Core.Domain.Transaction;
+using Lykke.Common.Log;
 
 namespace Lykke.Service.Stellar.Api.AzureRepositories.Transaction
 {
@@ -17,9 +17,9 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Transaction
 
         [UsedImplicitly]
         public TxBroadcastRepository(IReloadingManager<string> dataConnStringManager,
-                                     ILog log)
+                                     ILogFactory logFactory)
         {
-            _table = AzureTableStorage<TxBroadcastEntity>.Create(dataConnStringManager, TableName, log);
+            _table = AzureTableStorage<TxBroadcastEntity>.Create(dataConnStringManager, TableName, logFactory);
         }
 
         public async Task<TxBroadcast> GetAsync(Guid operationId)

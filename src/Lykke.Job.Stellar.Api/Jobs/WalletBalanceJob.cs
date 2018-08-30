@@ -1,8 +1,10 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Diagnostics;
 using System.Threading.Tasks;
 using Common;
 using Common.Log;
 using JetBrains.Annotations;
+using Lykke.Common.Log;
 using Lykke.Service.Stellar.Api.Core.Exceptions;
 using Lykke.Service.Stellar.Api.Core.Services;
 
@@ -16,17 +18,17 @@ namespace Lykke.Job.Stellar.Api.Jobs
 
         [UsedImplicitly]
         public WalletBalanceJob(IBalanceService balanceService,
-                                int period,
-                                ILog log)
-            : base(nameof(WalletBalanceJob), period, log)
+                                TimeSpan period,
+                                ILogFactory logFactory)
+            : base(period, logFactory)
         {
             _balanceService = balanceService;
-            _log = log;
+            _log = logFactory.CreateLog(this);
         }
 
         public override async Task Execute()
         {
-            await _log.WriteInfoAsync(nameof(WalletBalanceJob), nameof(Execute), "Job started");
+            _log.Info("Job started");
             _watch.Restart();
 
             try
@@ -34,12 +36,12 @@ namespace Lykke.Job.Stellar.Api.Jobs
                 var count = await _balanceService.UpdateWalletBalances();
 
                 _watch.Stop();
-                await _log.WriteInfoAsync(nameof(WalletBalanceJob), nameof(Execute), $"Job finished. dt={_watch.ElapsedMilliseconds}ms, records={count}");
+                _log.Info($"Job finished. dt={_watch.ElapsedMilliseconds}ms, records={count}");
             }
             catch (JobExecutionException ex)
             {
                 _watch.Stop();
-                await _log.WriteWarningAsync(nameof(WalletBalanceJob), nameof(Execute), $"Job aborted with exception. dt={_watch.ElapsedMilliseconds}ms, records={ex.Processed}");
+                _log.Warning($"Job aborted with exception. dt={_watch.ElapsedMilliseconds}ms, records={ex.Processed}");
 
                 throw;
             }

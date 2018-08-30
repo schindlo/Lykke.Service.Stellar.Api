@@ -67,7 +67,7 @@ namespace Lykke.Service.Stellar.Api.Services.Balance
                 if (baseAddress != encoded)
                     return false;
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 return false;
             }

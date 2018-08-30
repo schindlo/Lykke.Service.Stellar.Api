@@ -1,8 +1,6 @@
 ﻿using System;
-using System.Threading.Tasks;
 using Autofac;
 using Autofac.Extensions.DependencyInjection;
-using AzureStorage.Tables;
 using Common.Log;
 using JetBrains.Annotations;
 using Lykke.AzureStorage.Tables.Entity.Metamodel;
@@ -15,13 +13,13 @@ using Lykke.Service.Stellar.Api.Core.Services;
 using Lykke.Job.Stellar.Api.Modules;
 using Lykke.Service.Stellar.Api.Services.Modules;
 using Lykke.SettingsReader;
-using Lykke.SlackNotification.AzureQueue;
 using Lykke.Job.Stellar.Api.Settings;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Lykke.Logs.Slack;
+using Lykke.Common.Log;
+using Lykke.Logs.Loggers.LykkeSlack;
 
 namespace Lykke.Job.Stellar.Api
 {
@@ -31,6 +29,7 @@ namespace Lykke.Job.Stellar.Api
         public IContainer ApplicationContainer { get; private set; }
         public IConfigurationRoot Configuration { get; }
         public ILog Log { get; private set; }
+        public IHealthNotifier HealthNotifier { get; set; }
 
         [UsedImplicitly]
         public Startup(IHostingEnvironment env)
@@ -62,21 +61,47 @@ namespace Lykke.Job.Stellar.Api
                 EntityMetamodel.Configure(new AnnotationsBasedMetamodelProvider());
 
                 var builder = new ContainerBuilder();
-                var appSettings = Configuration.LoadSettings<AppSettings>();
+                var appSettings = Configuration.LoadSettings<AppSettings>(options =>
+                {
+                    options.SetConnString(x => x.SlackNotifications.AzureQueue.ConnectionString);
+                    options.SetQueueName(x => x.SlackNotifications.AzureQueue.QueueName);
+                    options.SenderName = "JobStellarApi";
+                });
 
-                Log = CreateLogWithSlack(services, appSettings);
+                services.AddLykkeLogging(
+                    appSettings.ConnectionString(x => x.StellarApiService.Db.LogsConnString),
+                    "JobStellarApiLog",
+                    appSettings.CurrentValue.SlackNotifications.AzureQueue.ConnectionString,
+                    appSettings.CurrentValue.SlackNotifications.AzureQueue.QueueName,
+                    logBuilder =>
+                    {
+                        logBuilder.AddAdditionalSlackChannel("BlockChainIntegration", options =>
+                        {
+                            options.MinLogLevel = Microsoft.Extensions.Logging.LogLevel.Information; // Let it be explicit
+                        });
 
-                builder.RegisterModule(new StellarJobModule(appSettings.Nested(x => x.StellarApiJob), Log));
+                        logBuilder.AddAdditionalSlackChannel("BlockChainIntegrationImportantMessages", options =>
+                        {
+                            options.MinLogLevel = Microsoft.Extensions.Logging.LogLevel.Warning;
+                        });
+                    }
+                    );
+
+                builder.RegisterModule(new StellarJobModule(appSettings.Nested(x => x.StellarApiJob)));
                 builder.RegisterModule(new RepositoryModule(appSettings.Nested(x => x.StellarApiService)));
                 builder.RegisterModule(new ServiceModule(appSettings.Nested(x => x.StellarApiService)));
                 builder.Populate(services);
+
                 ApplicationContainer = builder.Build();
+
+                Log = ApplicationContainer.Resolve<ILogFactory>().CreateLog(this);
+                HealthNotifier = ApplicationContainer.Resolve<IHealthNotifier>();
 
                 return new AutofacServiceProvider(ApplicationContainer);
             }
             catch (Exception ex)
             {
-                Log?.WriteFatalErrorAsync(nameof(Startup), nameof(ConfigureServices), "", ex).GetAwaiter().GetResult();
+                Log?.Critical(ex);
                 throw;
             }
         }
@@ -91,7 +116,7 @@ namespace Lykke.Job.Stellar.Api
                 }
 
                 app.UseLykkeForwardedHeaders();
-                app.UseLykkeMiddleware("JobStellarApi", ex => new { Message = "Technical problem" });
+                app.UseLykkeMiddleware(ex => new { Message = "Technical problem" });
 
                 app.UseMvc();
                 app.UseSwagger(c =>
@@ -105,139 +130,66 @@ namespace Lykke.Job.Stellar.Api
                 });
                 app.UseStaticFiles();
 
-                appLifetime.ApplicationStarted.Register(() => StartApplication().GetAwaiter().GetResult());
-                appLifetime.ApplicationStopping.Register(() => StopApplication().GetAwaiter().GetResult());
-                appLifetime.ApplicationStopped.Register(() => CleanUp().GetAwaiter().GetResult());
+                appLifetime.ApplicationStarted.Register(StartApplication);
+                appLifetime.ApplicationStopping.Register(StopApplication);
+                appLifetime.ApplicationStopped.Register(CleanUp);
             }
             catch (Exception ex)
             {
-                Log?.WriteFatalErrorAsync(nameof(Startup), nameof(Configure), "", ex).GetAwaiter().GetResult();
+                Log?.Critical(ex);
                 throw;
             }
         }
 
-        private async Task StartApplication()
+        private void StartApplication()
         {
             try
             {
                 // NOTE: Service not yet recieve and process requests here
 
-                await ApplicationContainer.Resolve<IStartupManager>().StartAsync();
+                ApplicationContainer.Resolve<IStartupManager>().StartAsync().GetAwaiter().GetResult();
 
-                await Log.WriteMonitorAsync("", $"Env: {Program.EnvInfo}", "Started");
+                HealthNotifier?.Notify("Started");
             }
             catch (Exception ex)
             {
-                await Log.WriteFatalErrorAsync(nameof(Startup), nameof(StartApplication), "", ex);
+                Log.Critical(ex);
                 throw;
             }
         }
 
-        private async Task StopApplication()
+        private void StopApplication()
         {
             try
             {
                 // NOTE: Service still can recieve and process requests here, so take care about it if you add logic here.
 
-                await ApplicationContainer.Resolve<IShutdownManager>().StopAsync();
+                ApplicationContainer.Resolve<IShutdownManager>().StopAsync().GetAwaiter().GetResult();
             }
             catch (Exception ex)
             {
-                if (Log != null)
-                {
-                    await Log.WriteFatalErrorAsync(nameof(Startup), nameof(StopApplication), "", ex);
-                }
+                Log.Critical(ex);
                 throw;
             }
         }
 
-        private async Task CleanUp()
+        private void CleanUp()
         {
             try
             {
                 // NOTE: Service can't recieve and process requests here, so you can destroy all resources
 
-                if (Log != null)
-                {
-                    await Log.WriteMonitorAsync("", $"Env: {Program.EnvInfo}", "Terminating");
-                }
+                HealthNotifier?.Notify("Terminating");
 
                 ApplicationContainer.Dispose();
             }
             catch (Exception ex)
             {
                 // ReSharper disable once InvertIf
-                if (Log != null)
-                {
-                    await Log.WriteFatalErrorAsync(nameof(Startup), nameof(CleanUp), "", ex);
-                    (Log as IDisposable)?.Dispose();
-                }
+                Log?.Critical(ex);
+                (Log as IDisposable)?.Dispose();
                 throw;
             }
-        }
-
-        private static ILog CreateLogWithSlack(IServiceCollection services, IReloadingManager<AppSettings> settings)
-        {
-            var consoleLogger = new LogToConsole();
-            var aggregateLogger = new AggregateLogger();
-
-            aggregateLogger.AddLog(consoleLogger);
-
-            var dbLogConnectionStringManager = settings.Nested(x => x.StellarApiService.Db.LogsConnString);
-            var dbLogConnectionString = dbLogConnectionStringManager.CurrentValue;
-
-            if (string.IsNullOrEmpty(dbLogConnectionString))
-            {
-                consoleLogger.WriteWarningAsync(nameof(Startup), nameof(CreateLogWithSlack), "Table loggger is not inited").Wait();
-                return aggregateLogger;
-            }
-
-            if (dbLogConnectionString.StartsWith("${") && dbLogConnectionString.EndsWith("}"))
-                throw new InvalidOperationException($"LogsConnString {dbLogConnectionString} is not filled in settings");
-
-            var persistenceManager = new LykkeLogToAzureStoragePersistenceManager(
-                AzureTableStorage<LogEntity>.Create(dbLogConnectionStringManager, "JobStellarApiLog", consoleLogger),
-                consoleLogger);
-
-            // Creating slack notification service, which logs own azure queue processing messages to aggregate log
-            var slackService = services.UseSlackNotificationsSenderViaAzureQueue(new AzureQueueIntegration.AzureQueueSettings
-            {
-                ConnectionString = settings.CurrentValue.SlackNotifications.AzureQueue.ConnectionString,
-                QueueName = settings.CurrentValue.SlackNotifications.AzureQueue.QueueName
-            }, aggregateLogger);
-
-            var slackNotificationsManager = new LykkeLogToAzureSlackNotificationsManager(slackService, consoleLogger);
-
-            // Creating azure storage logger, which logs own messages to concole log
-            var azureStorageLogger = new LykkeLogToAzureStorage(
-                persistenceManager,
-                slackNotificationsManager,
-                consoleLogger);
-
-            azureStorageLogger.Start();
-
-            aggregateLogger.AddLog(azureStorageLogger);
-
-            var allMessagesSlackLogger = LykkeLogToSlack.Create
-            (
-                slackService,
-                "BlockChainIntegration",
-                // ReSharper disable once RedundantArgumentDefaultValue
-                LogLevel.All
-            );
-
-            aggregateLogger.AddLog(allMessagesSlackLogger);
-
-            var importantMessagesSlackLogger = LykkeLogToSlack.Create
-            (
-                slackService,
-                "BlockChainIntegrationImportantMessages",
-                LogLevel.All ^ LogLevel.Info
-            );
-
-            aggregateLogger.AddLog(importantMessagesSlackLogger);
-
-            return aggregateLogger;
         }
     }
 }
