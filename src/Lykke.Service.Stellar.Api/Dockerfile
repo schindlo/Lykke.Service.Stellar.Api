@@ -1,4 +1,4 @@
-FROM FROM microsoft/dotnet:2.1-aspnetcore-runtime
+FROM microsoft/dotnet:2.1-aspnetcore-runtime
 WORKDIR /app
 COPY . .
 EXPOSE 5000/tcp
