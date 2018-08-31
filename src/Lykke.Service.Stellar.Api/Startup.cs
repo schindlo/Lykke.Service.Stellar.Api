@@ -1,25 +1,22 @@
 ﻿using System;
-using System.Threading.Tasks;
 using Autofac;
 using Autofac.Extensions.DependencyInjection;
-using AzureStorage.Tables;
 using Common.Log;
 using JetBrains.Annotations;
 using Lykke.AzureStorage.Tables.Entity.Metamodel;
 using Lykke.AzureStorage.Tables.Entity.Metamodel.Providers;
+using Lykke.Common;
 using Lykke.Common.ApiLibrary.Middleware;
 using Lykke.Common.ApiLibrary.Swagger;
 using Lykke.Common.Log;
 using Lykke.Logs;
 using Lykke.Logs.Loggers.LykkeSlack;
-using Lykke.Logs.Slack;
 using Lykke.Service.Stellar.Api.AzureRepositories.Modules;
 using Lykke.Service.Stellar.Api.Core.Services;
 using Lykke.Service.Stellar.Api.Core.Settings;
 using Lykke.Service.Stellar.Api.Modules;
 using Lykke.Service.Stellar.Api.Services.Modules;
 using Lykke.SettingsReader;
-using Lykke.SlackNotification.AzureQueue;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
@@ -69,7 +66,7 @@ namespace Lykke.Service.Stellar.Api
                 {
                     options.SetConnString(x => x.SlackNotifications.AzureQueue.ConnectionString);
                     options.SetQueueName(x => x.SlackNotifications.AzureQueue.QueueName);
-                    options.SenderName = "ServiceStellarApi";
+                    options.SenderName = AppEnvironment.Name;
                 });
 
                 services.AddLykkeLogging(
