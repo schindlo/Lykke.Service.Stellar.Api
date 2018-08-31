@@ -20,6 +20,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Lykke.Common.Log;
 using Lykke.Logs.Loggers.LykkeSlack;
+using Lykke.Common;
 
 namespace Lykke.Job.Stellar.Api
 {
@@ -65,7 +66,7 @@ namespace Lykke.Job.Stellar.Api
                 {
                     options.SetConnString(x => x.SlackNotifications.AzureQueue.ConnectionString);
                     options.SetQueueName(x => x.SlackNotifications.AzureQueue.QueueName);
-                    options.SenderName = "JobStellarApi";
+                    options.SenderName = AppEnvironment.Name;
                 });
 
                 services.AddLykkeLogging(
