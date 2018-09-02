@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 using Autofac;
 using Autofac.Extensions.DependencyInjection;
 using Common.Log;
@@ -131,8 +132,8 @@ namespace Lykke.Service.Stellar.Api
                 });
                 app.UseStaticFiles();
 
-                appLifetime.ApplicationStarted.Register(StartApplication);
-                appLifetime.ApplicationStopping.Register(StopApplication);
+                appLifetime.ApplicationStarted.Register(() => StartApplication().GetAwaiter().GetResult());
+                appLifetime.ApplicationStopping.Register(() => StopApplication().GetAwaiter().GetResult());
                 appLifetime.ApplicationStopped.Register(CleanUp);
             }
             catch (Exception ex)
@@ -142,13 +143,13 @@ namespace Lykke.Service.Stellar.Api
             }
         }
 
-        private void StartApplication()
+        private async Task StartApplication()
         {
             try
             {
                 // NOTE: Service not yet recieve and process requests here
 
-                ApplicationContainer.Resolve<IStartupManager>().StartAsync().GetAwaiter().GetResult();
+                await ApplicationContainer.Resolve<IStartupManager>().StartAsync();
 
                 HealthNotifier?.Notify("Started");
             }
@@ -159,13 +160,13 @@ namespace Lykke.Service.Stellar.Api
             }
         }
 
-        private void StopApplication()
+        private async Task StopApplication()
         {
             try
             {
                 // NOTE: Service still can recieve and process requests here, so take care about it if you add logic here.
 
-                ApplicationContainer.Resolve<IShutdownManager>().StopAsync().GetAwaiter().GetResult();
+                await ApplicationContainer.Resolve<IShutdownManager>().StopAsync();
             }
             catch (Exception ex)
             {
