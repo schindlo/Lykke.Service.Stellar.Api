@@ -1,13 +1,13 @@
 ﻿using System.Linq;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Common.Log;
 using AzureStorage;
 using AzureStorage.Tables;
 using JetBrains.Annotations;
 using Lykke.SettingsReader;
 using Lykke.Service.Stellar.Api.Core.Domain.Balance;
 using Microsoft.WindowsAzure.Storage.Table;
+using Lykke.Common.Log;
 
 namespace Lykke.Service.Stellar.Api.AzureRepositories.Balance
 {
@@ -19,9 +19,9 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Balance
 
         [UsedImplicitly]
         public WalletBalanceRepository(IReloadingManager<string> dataConnStringManager,
-                                       ILog log)
+                                       ILogFactory logFactory)
         {
-            _table = AzureTableStorage<WalletBalanceEntity>.Create(dataConnStringManager, TableName, log);
+            _table = AzureTableStorage<WalletBalanceEntity>.Create(dataConnStringManager, TableName, logFactory);
         }
 
         public async Task<(List<WalletBalance> Entities, string ContinuationToken)> GetAllAsync(int take, string continuationToken)

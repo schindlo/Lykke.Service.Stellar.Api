@@ -1,10 +1,10 @@
 ﻿using System.Threading.Tasks;
-using Common.Log;
 using AzureStorage;
 using AzureStorage.Tables;
 using JetBrains.Annotations;
 using Lykke.SettingsReader;
 using Lykke.Service.Stellar.Api.Core.Domain;
+using Lykke.Common.Log;
 
 namespace Lykke.Service.Stellar.Api.AzureRepositories
 {
@@ -16,9 +16,9 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories
 
         [UsedImplicitly]
         public KeyValueStoreRepository(IReloadingManager<string> dataConnStringManager,
-                                       ILog log)
+                                       ILogFactory logFactory)
         {
-            _table = AzureTableStorage<KeyValueEntity>.Create(dataConnStringManager, TableName, log);
+            _table = AzureTableStorage<KeyValueEntity>.Create(dataConnStringManager, TableName, logFactory);
         }
 
         public async Task<string> GetAsync(string key)
