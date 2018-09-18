@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Linq;
 using System.Threading.Tasks;
-using Common.Log;
 using AzureStorage;
 using AzureStorage.Tables;
 using Lykke.SettingsReader;
@@ -9,6 +8,7 @@ using System.Collections.Generic;
 using JetBrains.Annotations;
 using Microsoft.WindowsAzure.Storage.Table;
 using Lykke.Service.Stellar.Api.Core.Domain.Observation;
+using Lykke.Common.Log;
 
 namespace Lykke.Service.Stellar.Api.AzureRepositories.Observation
 {
@@ -19,9 +19,9 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Observation
         [UsedImplicitly]
         public ObservationRepository(string tableName,
                                      IReloadingManager<string> dataConnStringManager,
-                                     ILog log)
+                                     ILogFactory logFactory)
         {
-            _table = AzureTableStorage<T>.Create(dataConnStringManager, tableName, log);
+            _table = AzureTableStorage<T>.Create(dataConnStringManager, tableName, logFactory);
         }
 
         public async Task<(List<TU> Items, string ContinuationToken)> GetAllAsync(int take, string continuationToken)

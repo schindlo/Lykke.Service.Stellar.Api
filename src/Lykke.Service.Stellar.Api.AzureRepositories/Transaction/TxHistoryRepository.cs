@@ -1,12 +1,12 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.WindowsAzure.Storage.Table;
-using Common.Log;
 using AzureStorage;
 using AzureStorage.Tables;
 using JetBrains.Annotations;
 using Lykke.SettingsReader;
 using Lykke.Service.Stellar.Api.Core.Domain.Transaction;
+using Lykke.Common.Log;
 
 namespace Lykke.Service.Stellar.Api.AzureRepositories.Transaction
 {
@@ -19,10 +19,10 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Transaction
 
         [UsedImplicitly]
         public TxHistoryRepository(IReloadingManager<string> dataConnStringManager,
-                                   ILog log)
+                                   ILogFactory logFactory)
         {
-            _tableIn = AzureTableStorage<TxHistoryEntity>.Create(dataConnStringManager, $"{TableNamePrefix}In", log);
-            _tableOut = AzureTableStorage<TxHistoryEntity>.Create(dataConnStringManager, $"{TableNamePrefix}Out", log);
+            _tableIn = AzureTableStorage<TxHistoryEntity>.Create(dataConnStringManager, $"{TableNamePrefix}In", logFactory);
+            _tableOut = AzureTableStorage<TxHistoryEntity>.Create(dataConnStringManager, $"{TableNamePrefix}Out", logFactory);
         }
 
         private INoSQLTableStorage<TxHistoryEntity> GetTable(TxDirectionType direction)

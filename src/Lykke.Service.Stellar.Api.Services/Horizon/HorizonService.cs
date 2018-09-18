@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using StellarBase;
 using StellarBase.Generated;
+using static StellarBase.Generated.Operation;
 using StellarSdk;
 using StellarSdk.Model;
 using StellarSdk.Exceptions;
@@ -127,19 +128,24 @@ namespace Lykke.Service.Stellar.Api.Services.Horizon
             return amount;
         }
 
-        public PaymentOp GetFirstPaymentFromTransaction(TransactionDetails tx)
+        public OperationBody GetFirstOperationFromTxEnvelopeXdr(string xdrBase64)
         {
-            var xdr = Convert.FromBase64String(tx.EnvelopeXdr);
+            var xdr = Convert.FromBase64String(xdrBase64);
             var reader = new ByteReader(xdr);
             var txEnvelope = TransactionEnvelope.Decode(reader);
+            return GetFirstOperationFromTxEnvelope(txEnvelope);
+        }
+
+        public OperationBody GetFirstOperationFromTxEnvelope(TransactionEnvelope txEnvelope)
+        {
             if (txEnvelope?.Tx?.Operations == null || txEnvelope.Tx.Operations.Length < 1 ||
-                txEnvelope.Tx.Operations[0].Body?.PaymentOp == null)
+                txEnvelope.Tx.Operations[0].Body == null)
             {
-                throw new HorizonApiException($"Failed to extract first payment operation from transaction. hash={tx.Hash}");
+                throw new HorizonApiException($"Failed to extract first operation from transaction.");
             }
 
-            var paymentOp = txEnvelope.Tx.Operations[0].Body.PaymentOp;
-            return paymentOp;
+            var operation = txEnvelope.Tx.Operations[0].Body;
+            return operation;
         }
 
         public string GetMemo(TransactionDetails tx)

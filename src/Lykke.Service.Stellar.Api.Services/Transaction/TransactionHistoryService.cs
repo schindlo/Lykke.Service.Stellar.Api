@@ -132,7 +132,7 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
             if (!string.IsNullOrEmpty(afterHash))
             {
                 var tx = await _horizonService.GetTransactionDetails(afterHash);
-                if (tx == null)
+                if (tx == null || !afterHash.Equals(tx.Hash, StringComparison.OrdinalIgnoreCase))
                 {
                     throw new BusinessException($"No transaction found. hash={afterHash}");
                 }
@@ -305,6 +305,18 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
                                 history.ToAddress = keyPair.Address;
                                 history.Amount = _horizonService.GetAccountMergeAmount(transaction.ResultXdr, i);
                                 history.PaymentType = PaymentType.AccountMerge;
+                                break;
+                            }
+                            case OperationType.OperationTypeEnum.PATH_PAYMENT:
+                            {
+                                var op = operation.Body.PathPaymentOp;
+                                if (op.DestAsset.Discriminant.InnerValue == AssetType.AssetTypeEnum.ASSET_TYPE_NATIVE)
+                                {
+                                    var keyPair = KeyPair.FromXdrPublicKey(op.Destination.InnerValue);
+                                    history.ToAddress = keyPair.Address;
+                                    history.Amount = op.DestAmount.InnerValue;
+                                    history.PaymentType = PaymentType.PathPayment;
+                                }
                                 break;
                             }
                             default:

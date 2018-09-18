@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
 using Lykke.Service.Stellar.Api.Core;
@@ -56,23 +57,43 @@ namespace Lykke.Service.Stellar.Api.Services.Balance
                 return false;
             }
 
-            var parts = address.Split(Constants.PublicAddressExtension.Separator);
+            var parts = address.Split(Constants.PublicAddressExtension.Separator, 2);
             try
             {
                 var baseAddress = parts[0];
-                StrKey.DecodeCheck(VersionByte.ed25519Publickey, baseAddress);
+                byte[] secret = StrKey.DecodeCheck(VersionByte.ed25519Publickey, baseAddress);
+                string encoded = StrKey.EncodeCheck(VersionByte.ed25519Publickey, secret);
+
+                if (baseAddress != encoded)
+                    return false;
             }
             catch (Exception)
             {
                 return false;
             }
 
-            if (parts.Length > 1 && !string.IsNullOrWhiteSpace(parts[1]))
+            if (parts.Length > 1)
             {
+                if (!IsValidMemo(parts[1])) 
+                {
+                    return false;   
+                }
+
                 hasExtension = true;
             }
 
             return true;
+        }
+
+        private bool IsValidMemo(string memo)
+        {
+            if (string.IsNullOrWhiteSpace(memo)) 
+            {
+                return false; 
+            }
+
+            var length = Encoding.UTF8.GetByteCount(memo);
+            return length <= StellarSdkConstants.MaxMemoLength;
         }
 
         public string GetDepositBaseAddress()
@@ -88,12 +109,12 @@ namespace Lykke.Service.Stellar.Api.Services.Balance
 
         public string GetBaseAddress(string address)
         {
-            return address.Split(Constants.PublicAddressExtension.Separator)[0];
+            return address.Split(Constants.PublicAddressExtension.Separator, 2)[0];
         }
 
         public string GetPublicAddressExtension(string address)
         {
-            var parts = address.Split(Constants.PublicAddressExtension.Separator);
+            var parts = address.Split(Constants.PublicAddressExtension.Separator, 2);
             return parts.Length > 1 ? parts[1] : null;
         }
 
@@ -249,6 +270,17 @@ namespace Lykke.Service.Stellar.Api.Services.Balance
                                 var keyPair = KeyPair.FromXdrPublicKey(op.Destination.InnerValue);
                                 toAddress = keyPair.Address;
                                 amount = _horizonService.GetAccountMergeAmount(transaction.ResultXdr, i);
+                                break;
+                            }
+                            case OperationType.OperationTypeEnum.PATH_PAYMENT:
+                            {
+                                var op = operation.Body.PathPaymentOp;
+                                if (op.DestAsset.Discriminant.InnerValue == AssetType.AssetTypeEnum.ASSET_TYPE_NATIVE)
+                                {
+                                   var keyPair = KeyPair.FromXdrPublicKey(op.Destination.InnerValue);
+                                   toAddress = keyPair.Address;
+                                   amount = op.DestAmount.InnerValue;
+                                }
                                 break;
                             }
                             default:
