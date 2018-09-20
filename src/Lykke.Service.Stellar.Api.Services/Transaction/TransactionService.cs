@@ -183,12 +183,18 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
         private static TxExecutionError GetErrorCode(Exception ex)
         {
             var bre = ex as BadRequestException;
-            var ops = bre?.ErrorDetails?.Extras?.ResultCodes?.Operations;
+            var resultCodes = bre?.ErrorDetails?.Extras?.ResultCodes;
+            var ops = resultCodes?.Operations;
+            var transactionDetail = resultCodes?.Transaction;
             if (bre?.ErrorDetails != null && bre.ErrorDetails.Status == (int)HttpStatusCode.BadRequest &&
                 ops != null && ops.Length > 0 && ops[0].Equals(StellarSdkConstants.OperationUnderfunded))
             {
                 return TxExecutionError.NotEnoughBalance;
             }
+
+            if (transactionDetail == "tx_too_late")
+                return TxExecutionError.BuildingShouldBeRepeated;
+
             return TxExecutionError.Unknown;
         }
 
@@ -272,7 +278,9 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
             var tx = builder.Build();
 
             var xdr = tx.ToXDR();
-            var maxTimeUnix = (ulong)(DateTime.UtcNow + _transactionExpirationTime).ToUnixTime();
+            var expirationDate = (DateTime.UtcNow + _transactionExpirationTime);
+            var maxUnixTimeDouble = expirationDate.ToUnixTime() /1000;//ms to seconds
+            var maxTimeUnix = (ulong) maxUnixTimeDouble;
             xdr.TimeBounds = new TimeBounds()
             {
                 MaxTime = new StellarBase.Generated.Uint64(maxTimeUnix),

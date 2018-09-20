@@ -46,7 +46,9 @@ namespace Lykke.Service.Stellar.Api.Helpers
                 case TxExecutionError.AmountIsTooSmall:
                     return BlockchainErrorCode.AmountIsTooSmall;
                 case TxExecutionError.NotEnoughBalance:
-                    return BlockchainErrorCode.NotEnoughtBalance;
+                    return BlockchainErrorCode.NotEnoughBalance;
+                case TxExecutionError.BuildingShouldBeRepeated:
+                    return BlockchainErrorCode.BuildingShouldBeRepeated;
                 default:
                     throw new ArgumentException("Failed to convert " +
                                                 $"{nameof(TxExecutionError)}.{Enum.GetName(typeof(TxExecutionError), self)} " +
