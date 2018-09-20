@@ -29,6 +29,7 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
         private readonly IWalletBalanceRepository _balanceRepository;
         private readonly ITxBroadcastRepository _broadcastRepository;
         private readonly ITxBuildRepository _buildRepository;
+        private readonly TimeSpan _transactionExpirationTime;
 
         [UsedImplicitly]
         public TransactionService(IBalanceService balanceService,
@@ -36,7 +37,8 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
                                   IObservationRepository<BroadcastObservation> observationRepository,
                                   IWalletBalanceRepository balanceRepository,
                                   ITxBroadcastRepository broadcastRepository,
-                                  ITxBuildRepository buildRepository)
+                                  ITxBuildRepository buildRepository,
+                                  TimeSpan transactionExpirationTime)
         {
             _balanceService = balanceService;
             _horizonService = horizonService;
@@ -44,6 +46,7 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
             _balanceRepository = balanceRepository;
             _broadcastRepository = broadcastRepository;
             _buildRepository = buildRepository;
+            _transactionExpirationTime = transactionExpirationTime;
         }
 
         public async Task<TxBroadcast> GetTxBroadcastAsync(Guid operationId)
@@ -265,9 +268,17 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
                 var memo = StellarBase.Memo.MemoText(memoText);
                 builder = builder.AddMemo(memo);
             }
+
             var tx = builder.Build();
 
             var xdr = tx.ToXDR();
+            var maxTimeUnix = (ulong)(DateTime.UtcNow + _transactionExpirationTime).ToUnixTime();
+            xdr.TimeBounds = new TimeBounds()
+            {
+                MaxTime = new StellarBase.Generated.Uint64(maxTimeUnix),
+                MinTime = new StellarBase.Generated.Uint64(0),
+            };
+
             var writer = new ByteWriter();
             StellarBase.Generated.Transaction.Encode(writer, xdr);
             var xdrBase64 = Convert.ToBase64String(writer.ToArray());
