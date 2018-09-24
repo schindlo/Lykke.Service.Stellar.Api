@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Common.Log;
 using JetBrains.Annotations;
 using Lykke.Service.Stellar.Api.Core;
 using Lykke.Service.Stellar.Api.Core.Domain;
@@ -12,12 +13,28 @@ using Lykke.Service.Stellar.Api.Core.Exceptions;
 using Lykke.Service.Stellar.Api.Core.Services;
 using StellarBase;
 using StellarBase.Generated;
+using StellarSdk.Model;
 
 namespace Lykke.Service.Stellar.Api.Services.Balance
 {
     public class BalanceService : IBalanceService
     {
         private string _lastJobError;
+        /*
+            The forward slash (/) character
+            The backslash (\) character
+            The number sign (#) character
+            The question mark (?) character
+            Control characters from U+0000 to U+001F, including:
+            The horizontal tab (\t) character
+            The linefeed (\n) character
+            The carriage return (\r) character
+            Control characters from U+007F to U+009F
+         */
+        private HashSet<char> _forbiddenCharacters = new HashSet<char>()
+        {
+            '/', '\\', '#', '?','\t', '\r','\n'
+        };
 
         private readonly IHorizonService _horizonService;
         private readonly IKeyValueStoreRepository _keyValueStoreRepository;
@@ -26,6 +43,7 @@ namespace Lykke.Service.Stellar.Api.Services.Balance
 
         private readonly string _depositBaseAddress;
         private readonly string[] _explorerUrlFormats;
+        private readonly ILog _log;
 
         [UsedImplicitly]
         public BalanceService(IHorizonService horizonService,
@@ -33,7 +51,8 @@ namespace Lykke.Service.Stellar.Api.Services.Balance
                               IObservationRepository<BalanceObservation> observationRepository, 
                               IWalletBalanceRepository walletBalanceRepository,
                               string depositBaseAddress,
-                              string[] explorerUrlFormats)
+                              string[] explorerUrlFormats,
+                              ILog log)
         {
             _horizonService = horizonService;
             _keyValueStoreRepository = keyValueStoreRepository;
@@ -41,6 +60,19 @@ namespace Lykke.Service.Stellar.Api.Services.Balance
             _walletBalanceRepository = walletBalanceRepository;
             _depositBaseAddress = depositBaseAddress;
             _explorerUrlFormats = explorerUrlFormats;
+            _log = log;
+
+            for (int i = 0; i <= 0x001f; i++)
+            {
+                char forbidden = (char)i;
+                _forbiddenCharacters.Add(forbidden);
+            }
+
+            for (int i = 0x007F; i <= 0x009F; i++)
+            {
+                char forbidden = (char)i;
+                _forbiddenCharacters.Add(forbidden);
+            }
         }
 
         public bool IsAddressValid(string address)
@@ -220,7 +252,6 @@ namespace Lykke.Service.Stellar.Api.Services.Balance
         private async Task<(int Count, string Cursor)> ProcessDeposits(string cursor)
         {
             var transactions = await _horizonService.GetTransactions(_depositBaseAddress, StellarSdkConstants.OrderAsc, cursor);
-
             var count = 0;
             cursor = null;
             foreach (var transaction in transactions)
@@ -288,6 +319,16 @@ namespace Lykke.Service.Stellar.Api.Services.Balance
                         }
 
                         var addressWithExtension = $"{toAddress}{Constants.PublicAddressExtension.Separator}{memo.ToLower()}";
+                        if (memo.Any(x => _forbiddenCharacters.Contains(x)))
+                        {
+                            await _log.WriteErrorAsync(nameof(BalanceService),
+                                nameof(ProcessDeposits), 
+                                addressWithExtension, 
+                                new Exception("Possible cashin skipped. It has forbiddden characters in memo."));
+
+                            continue;
+                        }
+
                         var observation = await _observationRepository.GetAsync(addressWithExtension);
                         if (observation == null)
                         {
