@@ -12,6 +12,11 @@ namespace Lykke.Service.Stellar.Api.Core.Services
 
         Task<TransactionDetails> GetTransactionDetails(string hash);
 
+        /// <param name="address"></param>
+        /// <param name="order"></param>
+        /// <param name="cursor"></param>
+        /// <param name="limit">200 is max</param>
+        /// <returns></returns>
         Task<List<TransactionDetails>> GetTransactions(string address, string order = StellarSdkConstants.OrderAsc, string cursor = "", int limit = 100);
 
         Task<LedgerDetails> GetLatestLedger();

@@ -11,6 +11,7 @@ using Lykke.Service.Stellar.Api.Core.Domain.Balance;
 using Lykke.Service.Stellar.Api.Core.Domain.Observation;
 using Lykke.Service.Stellar.Api.Core.Exceptions;
 using Lykke.Service.Stellar.Api.Core.Services;
+using Lykke.Service.Stellar.Api.Core.Utils;
 using StellarBase;
 using StellarBase.Generated;
 using StellarSdk.Model;
@@ -20,21 +21,6 @@ namespace Lykke.Service.Stellar.Api.Services.Balance
     public class BalanceService : IBalanceService
     {
         private string _lastJobError;
-        /*
-            The forward slash (/) character
-            The backslash (\) character
-            The number sign (#) character
-            The question mark (?) character
-            Control characters from U+0000 to U+001F, including:
-            The horizontal tab (\t) character
-            The linefeed (\n) character
-            The carriage return (\r) character
-            Control characters from U+007F to U+009F
-         */
-        private HashSet<char> _forbiddenCharacters = new HashSet<char>()
-        {
-            '/', '\\', '#', '?','\t', '\r','\n'
-        };
 
         private readonly IHorizonService _horizonService;
         private readonly IKeyValueStoreRepository _keyValueStoreRepository;
@@ -61,18 +47,6 @@ namespace Lykke.Service.Stellar.Api.Services.Balance
             _depositBaseAddress = depositBaseAddress;
             _explorerUrlFormats = explorerUrlFormats;
             _log = log;
-
-            for (int i = 0; i <= 0x001f; i++)
-            {
-                char forbidden = (char)i;
-                _forbiddenCharacters.Add(forbidden);
-            }
-
-            for (int i = 0x007F; i <= 0x009F; i++)
-            {
-                char forbidden = (char)i;
-                _forbiddenCharacters.Add(forbidden);
-            }
         }
 
         public bool IsAddressValid(string address)
@@ -319,7 +293,7 @@ namespace Lykke.Service.Stellar.Api.Services.Balance
                         }
 
                         var addressWithExtension = $"{toAddress}{Constants.PublicAddressExtension.Separator}{memo.ToLower()}";
-                        if (memo.Any(x => _forbiddenCharacters.Contains(x)))
+                        if (!ForbiddenCharacterAzureStorageUtils.IsValidRowKey(memo))
                         {
                             await _log.WriteErrorAsync(nameof(BalanceService),
                                 nameof(ProcessDeposits), 
