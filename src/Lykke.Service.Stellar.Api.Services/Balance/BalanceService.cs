@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Common.Log;
 using JetBrains.Annotations;
+using Lykke.Common.Log;
 using Lykke.Service.Stellar.Api.Core;
 using Lykke.Service.Stellar.Api.Core.Domain;
 using Lykke.Service.Stellar.Api.Core.Domain.Balance;
@@ -38,7 +39,7 @@ namespace Lykke.Service.Stellar.Api.Services.Balance
                               IWalletBalanceRepository walletBalanceRepository,
                               string depositBaseAddress,
                               string[] explorerUrlFormats,
-                              ILog log)
+                              ILogFactory log)
         {
             _horizonService = horizonService;
             _keyValueStoreRepository = keyValueStoreRepository;
@@ -46,7 +47,7 @@ namespace Lykke.Service.Stellar.Api.Services.Balance
             _walletBalanceRepository = walletBalanceRepository;
             _depositBaseAddress = depositBaseAddress;
             _explorerUrlFormats = explorerUrlFormats;
-            _log = log;
+            _log = log.CreateLog(this);
         }
 
         public bool IsAddressValid(string address)
