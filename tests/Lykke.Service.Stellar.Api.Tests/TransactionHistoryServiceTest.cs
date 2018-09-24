@@ -10,6 +10,7 @@ using Moq;
 using StellarSdk.Model;
 using System;
 using System.Threading.Tasks;
+using Lykke.Common.Log;
 using Lykke.Service.Stellar.Api.Core.Domain.Transaction;
 using Lykke.Service.Stellar.Api.Services.Transaction;
 using Xunit;
@@ -31,7 +32,9 @@ namespace Lykke.Service.Stellar.Api.Tests
             string depositBaseAddress = "GCCWY6MNVWORHO7B3L6W5LULGFR337K5UAATA2Z3FSPQA5MYRW5X33ZP";
             string memo = "http://stellar-win.me/";
             string[] explorerUrlFormats = new []{""};
-            Mock<ILog> log = new Mock<ILog>();
+            Mock<ILog> l1 = new Mock<ILog>();
+            Mock<ILogFactory> log = new Mock<ILogFactory>();
+            log.Setup(x => x.CreateLog(It.IsAny<object>())).Returns(l1.Object);
             var transactionDetails = new TransactionDetails()
             {
                 Memo = memo,
@@ -92,7 +95,9 @@ namespace Lykke.Service.Stellar.Api.Tests
             string depositBaseAddress = "GCCWY6MNVWORHO7B3L6W5LULGFR337K5UAATA2Z3FSPQA5MYRW5X33ZP";
             string memo = "r6mzsfwnbkgwtc8cktx4i5nw8e";
             string[] explorerUrlFormats = new[] { "" };
-            Mock<ILog> log = new Mock<ILog>();
+            Mock<ILog> l1 = new Mock<ILog>();
+            Mock<ILogFactory> log = new Mock<ILogFactory>();
+            log.Setup(x => x.CreateLog(It.IsAny<object>())).Returns(l1.Object);
             var transactionDetails = new TransactionDetails()
             {
                 Memo = memo,

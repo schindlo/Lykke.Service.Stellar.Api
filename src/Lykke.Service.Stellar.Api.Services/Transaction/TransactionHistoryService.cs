@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Common.Log;
 using JetBrains.Annotations;
+using Lykke.Common.Log;
 using StellarBase;
 using StellarBase.Generated;
 using Lykke.Service.Stellar.Api.Core.Domain.Observation;
@@ -32,14 +33,14 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
                                          IKeyValueStoreRepository keyValueStoreRepository,
                                          IObservationRepository<TransactionHistoryObservation> observationRepository,
                                          ITxHistoryRepository txHistoryRepository,
-                                         ILog log)
+                                         ILogFactory log)
         {
             _balanceService = balanceService;
             _horizonService = horizonService;
             _keyValueStoreRepository = keyValueStoreRepository;
             _observationRepository = observationRepository;
             _txHistoryRepository = txHistoryRepository;
-            _log = log;
+            _log = log.CreateLog(this);
         }
 
         public async Task<bool> IsIncomingTransactionObservedAsync(string address)
