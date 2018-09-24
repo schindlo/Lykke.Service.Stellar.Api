@@ -1,7 +1,4 @@
-﻿using System;
-using System.Threading.Tasks;
-using Castle.Components.DictionaryAdapter;
-using Common;
+﻿using Castle.Components.DictionaryAdapter;
 using Common.Log;
 using Lykke.Service.Stellar.Api.Core;
 using Lykke.Service.Stellar.Api.Core.Domain;
@@ -10,8 +7,9 @@ using Lykke.Service.Stellar.Api.Core.Domain.Observation;
 using Lykke.Service.Stellar.Api.Core.Services;
 using Lykke.Service.Stellar.Api.Services.Balance;
 using Moq;
-using StellarBase.Generated;
 using StellarSdk.Model;
+using System;
+using System.Threading.Tasks;
 using Xunit;
 
 namespace Lykke.Service.Stellar.Api.Tests

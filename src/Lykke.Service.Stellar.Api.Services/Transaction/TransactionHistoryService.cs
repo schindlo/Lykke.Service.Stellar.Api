@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Common.Log;
 using JetBrains.Annotations;
 using StellarBase;
 using StellarBase.Generated;
@@ -10,6 +11,7 @@ using Lykke.Service.Stellar.Api.Core.Services;
 using Lykke.Service.Stellar.Api.Core.Exceptions;
 using Lykke.Service.Stellar.Api.Core;
 using Lykke.Service.Stellar.Api.Core.Domain;
+using Lykke.Service.Stellar.Api.Core.Utils;
 
 namespace Lykke.Service.Stellar.Api.Services.Transaction
 {
@@ -22,19 +24,22 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
         private readonly IKeyValueStoreRepository _keyValueStoreRepository;
         private readonly IObservationRepository<TransactionHistoryObservation> _observationRepository;
         private readonly ITxHistoryRepository _txHistoryRepository;
+        private readonly ILog _log;
 
         [UsedImplicitly]
         public TransactionHistoryService(IBalanceService balanceService,
                                          IHorizonService horizonService,
                                          IKeyValueStoreRepository keyValueStoreRepository,
                                          IObservationRepository<TransactionHistoryObservation> observationRepository,
-                                         ITxHistoryRepository txHistoryRepository)
+                                         ITxHistoryRepository txHistoryRepository,
+                                         ILog log)
         {
             _balanceService = balanceService;
             _horizonService = horizonService;
             _keyValueStoreRepository = keyValueStoreRepository;
             _observationRepository = observationRepository;
             _txHistoryRepository = txHistoryRepository;
+            _log = log;
         }
 
         public async Task<bool> IsIncomingTransactionObservedAsync(string address)
@@ -321,6 +326,16 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
                             }
                             default:
                                 continue;
+                        }
+
+                        if (!ForbiddenCharacterAzureStorageUtils.IsValidRowKey(history.Memo))
+                        {
+                            await _log.WriteErrorAsync(nameof(TransactionHistoryService),
+                                nameof(QueryAndProcessTransactions),
+                                history.Memo,
+                                new Exception("Possible cashin skipped. It has forbiddden characters in memo."));
+
+                            continue;
                         }
 
                         var cancel = false;
