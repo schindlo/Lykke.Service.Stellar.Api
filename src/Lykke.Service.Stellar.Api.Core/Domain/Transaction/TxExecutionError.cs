@@ -4,6 +4,7 @@
     {
         Unknown = 0,
         AmountIsTooSmall = 1,
-        NotEnoughBalance = 2
+        NotEnoughBalance = 2,
+        BuildingShouldBeRepeated = 3
     }
 }

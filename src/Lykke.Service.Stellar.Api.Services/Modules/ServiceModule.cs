@@ -1,4 +1,6 @@
-﻿using Autofac;
+﻿using System;
+using System.Globalization;
+using Autofac;
 using Lykke.Service.Stellar.Api.Core.Services;
 using Lykke.Service.Stellar.Api.Core.Settings.ServiceSettings;
 using Lykke.SettingsReader;
@@ -43,6 +45,7 @@ namespace Lykke.Service.Stellar.Api.Services.Modules
 
             builder.RegisterType<TransactionService>()
                    .As<ITransactionService>()
+                .WithParameter("transactionExpirationTime", _settings.CurrentValue.TransactionExpirationTime)
                    .SingleInstance();
 
             builder.RegisterType<TransactionHistoryService>()

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -145,7 +146,7 @@ namespace Lykke.Service.Stellar.Api.Services.Balance
             if (string.IsNullOrEmpty(addressExtension))
             {
                 var nativeBalance = accountDetails.Balances.Single(b => Core.Domain.Asset.Stellar.TypeName.Equals(b.AssetType, StringComparison.OrdinalIgnoreCase));
-                result.Balance = Convert.ToInt64(decimal.Parse(nativeBalance.Balance) * One.Value);
+                result.Balance = Convert.ToInt64(decimal.Parse(nativeBalance.Balance, CultureInfo.InvariantCulture) * One.Value);
             }
             else
             {

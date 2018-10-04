@@ -112,7 +112,7 @@ namespace Lykke.Service.Stellar.Api.Controllers
                 if (requiredBalance > availableBalance)
                 {
                     return BadRequest(StellarErrorResponse.Create($"Not enough balance to create transaction. required={requiredBalance}, available={availableBalance}",
-                                                                  BlockchainErrorCode.NotEnoughtBalance));
+                                                                  BlockchainErrorCode.NotEnoughBalance));
                 }
 
                 xdrBase64 = await _transactionService.BuildTransactionAsync(request.OperationId, fromAddressBalance, toBaseAddress, memo, amount);
