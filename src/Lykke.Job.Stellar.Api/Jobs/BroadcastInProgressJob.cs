@@ -31,7 +31,7 @@ namespace Lykke.Job.Stellar.Api.Jobs
 
         public override async Task Execute()
         {
-            _log.Info("Job started");
+            _log.Debug("Job started");
             _watch.Restart();
 
             try
@@ -39,7 +39,7 @@ namespace Lykke.Job.Stellar.Api.Jobs
                 var count = await _transactionService.UpdateBroadcastsInProgress(_batchSize);
 
                 _watch.Stop();
-                _log.Info($"Job finished. dt={_watch.ElapsedMilliseconds}ms, records={count}");
+                _log.Debug($"Job finished. dt={_watch.ElapsedMilliseconds}ms, records={count}");
             }
             catch (JobExecutionException ex)
             {
