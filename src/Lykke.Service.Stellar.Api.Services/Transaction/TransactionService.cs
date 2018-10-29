@@ -5,6 +5,7 @@ using System.Net;
 using System.Threading.Tasks;
 using Common;
 using JetBrains.Annotations;
+using Lykke.Common.Log;
 using StellarBase;
 using StellarBase.Generated;
 using StellarSdk.Exceptions;
@@ -16,6 +17,7 @@ using Lykke.Service.Stellar.Api.Core.Services;
 using Lykke.Service.Stellar.Api.Core.Domain;
 using Lykke.Service.Stellar.Api.Core.Domain.Observation;
 using Newtonsoft.Json;
+using Common.Log;
 
 namespace Lykke.Service.Stellar.Api.Services.Transaction
 {
@@ -30,6 +32,7 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
         private readonly ITxBroadcastRepository _broadcastRepository;
         private readonly ITxBuildRepository _buildRepository;
         private readonly TimeSpan _transactionExpirationTime;
+        private readonly ILog _log;
 
         [UsedImplicitly]
         public TransactionService(IBalanceService balanceService,
@@ -38,7 +41,8 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
                                   IWalletBalanceRepository balanceRepository,
                                   ITxBroadcastRepository broadcastRepository,
                                   ITxBuildRepository buildRepository,
-                                  TimeSpan transactionExpirationTime)
+                                  TimeSpan transactionExpirationTime,
+                                  ILogFactory logFactory)
         {
             _balanceService = balanceService;
             _horizonService = horizonService;
@@ -47,6 +51,7 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
             _broadcastRepository = broadcastRepository;
             _buildRepository = buildRepository;
             _transactionExpirationTime = transactionExpirationTime;
+            _log = logFactory.CreateLog(this);
         }
 
         public async Task<TxBroadcast> GetTxBroadcastAsync(Guid operationId)
@@ -121,6 +126,7 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
                 };
                 await _broadcastRepository.InsertOrReplaceAsync(broadcast);
 
+                _log.Error(ex, message:"Broadcasting has failed!", context: new { OperationId = operationId });
                 throw new BusinessException($"Broadcasting transaction failed. operationId={operationId}, message={broadcast.Error}", ex, broadcast.ErrorCode.ToString());
             }
         }
