@@ -22,6 +22,7 @@ namespace Lykke.Service.Stellar.Api.Tests
         [Fact]
         public async Task TransactionHistory_UpdateWallets_SkipErrorMemo()
         {
+            Mock<IBlockchainAssetsService> blockchainAssetsService = new Mock<IBlockchainAssetsService>();
             Mock<IBalanceService> balanceService = new Mock<IBalanceService>();
             Mock<ITxHistoryRepository> txHistoryRepository = new Mock<ITxHistoryRepository>();
             Mock<IHorizonService> horizonService = new Mock<IHorizonService>();
@@ -52,9 +53,9 @@ namespace Lykke.Service.Stellar.Api.Tests
             balanceService.Setup(x => x.GetDepositBaseAddress()).Returns(depositBaseAddress);
             txHistoryRepository.Setup(x => x.InsertOrReplaceAsync(It.IsAny<TxDirectionType>(), It.IsAny<TxHistory>()))
                 .Returns(Task.FromResult(0)).Verifiable();
-            horizonService.Setup(x => x.GetTransactions(depositBaseAddress, 
-                StellarSdkConstants.OrderAsc, 
-                null, 
+            horizonService.Setup(x => x.GetTransactions(depositBaseAddress,
+                StellarSdkConstants.OrderAsc,
+                null,
                 It.IsAny<int>()))
                 .ReturnsAsync(new EditableList<TransactionDetails>()
                 {
@@ -67,12 +68,16 @@ namespace Lykke.Service.Stellar.Api.Tests
                     }
                 });
 
+            blockchainAssetsService.Setup(x => x.GetNativeAsset())
+                .Returns(new Asset("XLM", "", "Stellar Lumen", "native", 7));
+
             TransactionHistoryService transactionHistoryService = new TransactionHistoryService(balanceService.Object,
                 horizonService.Object,
                 keyValueStoreRepository.Object,
                 observationRepository.Object,
                 txHistoryRepository.Object,
-                log.Object);
+                log.Object,
+                blockchainAssetsService.Object);
 
 
 
@@ -85,6 +90,7 @@ namespace Lykke.Service.Stellar.Api.Tests
         [Fact]
         public async Task TransactionHistory_UpdateWallets_ProcessDepositMemo()
         {
+            Mock<IBlockchainAssetsService> blockchainAssetsService = new Mock<IBlockchainAssetsService>();
             Mock<IBalanceService> balanceService = new Mock<IBalanceService>();
             Mock<ITxHistoryRepository> txHistoryRepository = new Mock<ITxHistoryRepository>();
             Mock<IHorizonService> horizonService = new Mock<IHorizonService>();
@@ -130,12 +136,16 @@ namespace Lykke.Service.Stellar.Api.Tests
                     }
                 });
 
+            blockchainAssetsService.Setup(x => x.GetNativeAsset())
+                .Returns(new Asset("XLM", "", "Stellar Lumen", "native", 7));
+
             TransactionHistoryService transactionHistoryService = new TransactionHistoryService(balanceService.Object,
                 horizonService.Object,
                 keyValueStoreRepository.Object,
                 observationRepository.Object,
                 txHistoryRepository.Object,
-                log.Object);
+                log.Object,
+                blockchainAssetsService.Object);
 
 
 

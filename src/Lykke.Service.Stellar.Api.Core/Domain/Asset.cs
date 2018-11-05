@@ -15,6 +15,6 @@
         public string TypeName { get; }
         public int Accuracy { get; }
 
-        public static Asset Stellar { get; } = new Asset("XLM", "", "Stellar Lumen", "native", 7);
+        //public static Asset Stellar { get; } = new Asset("XLM", "", "Stellar Lumen", "native", 7);
     }
 }

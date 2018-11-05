@@ -20,6 +20,7 @@ namespace Lykke.Service.Stellar.Api.Tests
         [Fact]
         public async Task BalanceService_UpdateWallets_SkipErrorMemo()
         {
+            Mock<IBlockchainAssetsService> blockchainAssetsService = new Mock<IBlockchainAssetsService>();
             Mock<IHorizonService> horizonService = new Mock<IHorizonService>();
             Mock<IKeyValueStoreRepository> keyValueStoreRepository = new Mock<IKeyValueStoreRepository>();
             Mock < IObservationRepository < BalanceObservation >> observationRepository = 
@@ -80,15 +81,17 @@ namespace Lykke.Service.Stellar.Api.Tests
                     }
                 });
 
+            blockchainAssetsService.Setup(x => x.GetNativeAsset())
+                .Returns(new Asset("XLM", "", "Stellar Lumen", "native", 7));
+
             BalanceService balanceService = new BalanceService(horizonService.Object,
                 keyValueStoreRepository.Object,
                 observationRepository.Object,
                 walletBalanceRepository.Object,
                 depositBaseAddress,
                 explorerUrlFormats,
-                log.Object);
-
-
+                log.Object,
+                blockchainAssetsService.Object);
 
             await balanceService.UpdateWalletBalances();
             walletBalanceRepository.Verify(x => x.IncreaseBalanceAsync(It.IsAny<string>(),
@@ -102,6 +105,7 @@ namespace Lykke.Service.Stellar.Api.Tests
         [Fact]
         public async Task BalanceService_UpdateWallets_ProcessDepositMemo()
         {
+            Mock<IBlockchainAssetsService> blockchainAssetsService = new Mock<IBlockchainAssetsService>();
             Mock<IHorizonService> horizonService = new Mock<IHorizonService>();
             Mock<IKeyValueStoreRepository> keyValueStoreRepository = new Mock<IKeyValueStoreRepository>();
             Mock<IObservationRepository<BalanceObservation>> observationRepository =
@@ -164,6 +168,9 @@ namespace Lykke.Service.Stellar.Api.Tests
                     }
                 });
 
+            blockchainAssetsService.Setup(x => x.GetNativeAsset())
+                .Returns(new Asset("XLM", "", "Stellar Lumen", "native", 7));
+
             observationRepository.Setup(x => x.GetAsync(It.IsAny<string>())).ReturnsAsync(new BalanceObservation()
             {
                 Address = depositBaseAddress
@@ -175,7 +182,8 @@ namespace Lykke.Service.Stellar.Api.Tests
                 walletBalanceRepository.Object,
                 depositBaseAddress,
                 explorerUrlFormats,
-                log.Object);
+                log.Object,
+                blockchainAssetsService.Object);
 
             await balanceService.UpdateWalletBalances();
             walletBalanceRepository.Verify(x => x.IncreaseBalanceAsync(It.IsAny<string>(),

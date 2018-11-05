@@ -33,6 +33,7 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
         private readonly ITxBuildRepository _buildRepository;
         private readonly TimeSpan _transactionExpirationTime;
         private readonly ILog _log;
+        private readonly IBlockchainAssetsService _blockchainAssetsService;
 
         [UsedImplicitly]
         public TransactionService(IBalanceService balanceService,
@@ -42,7 +43,8 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
                                   ITxBroadcastRepository broadcastRepository,
                                   ITxBuildRepository buildRepository,
                                   TimeSpan transactionExpirationTime,
-                                  ILogFactory logFactory)
+                                  ILogFactory logFactory,
+                                  IBlockchainAssetsService blockchainAssetsService)
         {
             _balanceService = balanceService;
             _horizonService = horizonService;
@@ -52,6 +54,7 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
             _buildRepository = buildRepository;
             _transactionExpirationTime = transactionExpirationTime;
             _log = logFactory.CreateLog(this);
+            _blockchainAssetsService = blockchainAssetsService;
         }
 
         public async Task<TxBroadcast> GetTxBroadcastAsync(Guid operationId)
@@ -157,7 +160,7 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
                 CreatedAt = DateTime.UtcNow
             };
 
-            var assetId = Core.Domain.Asset.Stellar.Id;
+            var assetId = _blockchainAssetsService.GetNativeAsset().Id;
             if (await _balanceRepository.DecreaseBalanceAsync(assetId, fromAddress, hash, amount))
             {
                 broadcast.State = TxBroadcastState.Completed;

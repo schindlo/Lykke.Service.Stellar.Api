@@ -32,6 +32,7 @@ namespace Lykke.Service.Stellar.Api.Services.Balance
         private readonly string _depositBaseAddress;
         private readonly string[] _explorerUrlFormats;
         private readonly ILog _log;
+        private readonly IBlockchainAssetsService _blockchainAssetsService;
 
         [UsedImplicitly]
         public BalanceService(IHorizonService horizonService,
@@ -40,7 +41,8 @@ namespace Lykke.Service.Stellar.Api.Services.Balance
                               IWalletBalanceRepository walletBalanceRepository,
                               string depositBaseAddress,
                               string[] explorerUrlFormats,
-                              ILogFactory log)
+                              ILogFactory log,
+                              IBlockchainAssetsService blockchainAssetsService)
         {
             _horizonService = horizonService;
             _keyValueStoreRepository = keyValueStoreRepository;
@@ -49,6 +51,7 @@ namespace Lykke.Service.Stellar.Api.Services.Balance
             _depositBaseAddress = depositBaseAddress;
             _explorerUrlFormats = explorerUrlFormats;
             _log = log.CreateLog(this);
+            _blockchainAssetsService = blockchainAssetsService;
         }
 
         public bool IsAddressValid(string address)
@@ -145,12 +148,12 @@ namespace Lykke.Service.Stellar.Api.Services.Balance
             var addressExtension = GetPublicAddressExtension(address);
             if (string.IsNullOrEmpty(addressExtension))
             {
-                var nativeBalance = accountDetails.Balances.Single(b => Core.Domain.Asset.Stellar.TypeName.Equals(b.AssetType, StringComparison.OrdinalIgnoreCase));
+                var nativeBalance = accountDetails.Balances.Single(b => _blockchainAssetsService.GetNativeAsset().TypeName.Equals(b.AssetType, StringComparison.OrdinalIgnoreCase));
                 result.Balance = Convert.ToInt64(decimal.Parse(nativeBalance.Balance, CultureInfo.InvariantCulture) * One.Value);
             }
             else
             {
-                var walletBalance = await _walletBalanceRepository.GetAsync(Core.Domain.Asset.Stellar.Id, address);
+                var walletBalance = await _walletBalanceRepository.GetAsync(_blockchainAssetsService.GetNativeAsset().Id, address);
                 if (walletBalance != null)
                 {
                     result.Balance = walletBalance.Balance;
@@ -183,7 +186,7 @@ namespace Lykke.Service.Stellar.Api.Services.Balance
         public async Task DeleteBalanceObservationAsync(string address)
         {
             await _observationRepository.DeleteIfExistAsync(address);
-            await _walletBalanceRepository.DeleteIfExistAsync(Core.Domain.Asset.Stellar.Id, address);
+            await _walletBalanceRepository.DeleteIfExistAsync(_blockchainAssetsService.GetNativeAsset().Id, address);
         }
 
         public async Task<(List<WalletBalance> Wallets, string ContinuationToken)> 
@@ -325,7 +328,7 @@ namespace Lykke.Service.Stellar.Api.Services.Balance
                             continue;
                         }
 
-                        var assetId = Core.Domain.Asset.Stellar.Id;
+                        var assetId = _blockchainAssetsService.GetNativeAsset().Id;
                         await _walletBalanceRepository.IncreaseBalanceAsync(assetId, addressWithExtension, transaction.Ledger * 10, i, transaction.Hash, amount);
                     }
                 }

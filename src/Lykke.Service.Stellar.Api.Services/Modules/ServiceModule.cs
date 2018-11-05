@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Globalization;
 using Autofac;
+using Autofac.Core;
 using Lykke.Service.Stellar.Api.Core.Services;
 using Lykke.Service.Stellar.Api.Core.Settings.ServiceSettings;
+using Lykke.Service.Stellar.Api.Services.Assets;
 using Lykke.SettingsReader;
 using Lykke.Service.Stellar.Api.Services.Transaction;
 using Lykke.Service.Stellar.Api.Services.Horizon;
@@ -50,7 +52,20 @@ namespace Lykke.Service.Stellar.Api.Services.Modules
 
             builder.RegisterType<TransactionHistoryService>()
                    .As<ITransactionHistoryService>()
-                   .SingleInstance();
+                   .SingleInstance(); 
+
+            var nativeAsset = _settings.CurrentValue.NativeAsset;
+            builder.RegisterType<BlockchainAssetsService>()
+                .As<IBlockchainAssetsService>()
+                .WithParameters(new Parameter[]
+                {
+                    new NamedParameter("id", nativeAsset.Id),
+                    new NamedParameter("address", nativeAsset.Address),
+                    new NamedParameter("name", nativeAsset.Name),
+                    new NamedParameter("typeName", nativeAsset.TypeName),
+                    new NamedParameter("accuracy", nativeAsset.Accuracy)
+                })
+                .SingleInstance();
         }
     }
 }

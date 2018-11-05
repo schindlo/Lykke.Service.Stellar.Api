@@ -19,12 +19,15 @@ namespace Lykke.Service.Stellar.Api.Controllers
     {
         private readonly ITransactionService _transactionService;
         private readonly IBalanceService _balanceService;
+        private readonly IBlockchainAssetsService _blockchainAssetsService;
 
         public TransactionsController(ITransactionService transactionService,
-                                      IBalanceService balanceService)
+                                      IBalanceService balanceService,
+                                      IBlockchainAssetsService blockchainAssetsService)
         {
             _transactionService = transactionService;
             _balanceService = balanceService;
+            _blockchainAssetsService = blockchainAssetsService;
         }
 
         [HttpPost("single")]
@@ -75,7 +78,7 @@ namespace Lykke.Service.Stellar.Api.Controllers
                     memo = _balanceService.GetPublicAddressExtension(request.ToAddress);
                 }
 
-                if (request.AssetId != Asset.Stellar.Id)
+                if (request.AssetId != _blockchainAssetsService.GetNativeAsset().Id)
                 {
                     return BadRequest(ErrorResponse.Create($"{nameof(request.AssetId)} was not found"));
                 }
