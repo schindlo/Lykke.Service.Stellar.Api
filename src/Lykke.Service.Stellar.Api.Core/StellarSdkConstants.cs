@@ -12,6 +12,8 @@
 
         public const string OperationUnderfunded = "op_underfunded";
 
+        public const string OperationLowReserve = "op_low_reserve";
+
         public const byte MaxMemoLength = 28;
     }
 }

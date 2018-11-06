@@ -192,8 +192,11 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
             var resultCodes = bre?.ErrorDetails?.Extras?.ResultCodes;
             var ops = resultCodes?.Operations;
             var transactionDetail = resultCodes?.Transaction;
-            if (bre?.ErrorDetails != null && bre.ErrorDetails.Status == (int)HttpStatusCode.BadRequest &&
-                ops != null && ops.Length > 0 && ops[0].Equals(StellarSdkConstants.OperationUnderfunded))
+            if (bre?.ErrorDetails != null && bre.ErrorDetails.Status == (int)HttpStatusCode.BadRequest 
+                && ops != null 
+                && ops.Length > 0 
+                && (ops[0].Equals(StellarSdkConstants.OperationUnderfunded) 
+                    || ops[0].Equals(StellarSdkConstants.OperationLowReserve)))
             {
                 return TxExecutionError.NotEnoughBalance;
             }
