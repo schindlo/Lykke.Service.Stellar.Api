@@ -223,8 +223,11 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
                 return TxExecutionError.NotEnoughBalance;
             }
 
-            if (transactionDetail == "tx_too_late")
+            if (transactionDetail == "tx_too_late" ||
+                transactionDetail == "tx_bad_seq")
+            {
                 return TxExecutionError.BuildingShouldBeRepeated;
+            }
 
             return TxExecutionError.Unknown;
         }
