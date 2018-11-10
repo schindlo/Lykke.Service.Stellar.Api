@@ -40,6 +40,11 @@ namespace Lykke.Service.Stellar.Api.Controllers
             }
 
             string xdrBase64;
+            var broadcast = await _transactionService.GetTxBroadcastAsync(request.OperationId);
+            if (broadcast != null)
+            {
+                return new StatusCodeResult(StatusCodes.Status409Conflict);
+            }
             var build = await _transactionService.GetTxBuildAsync(request.OperationId);
             if (build != null)
             {
@@ -142,6 +147,11 @@ namespace Lykke.Service.Stellar.Api.Controllers
             }
 
             var broadcast = await _transactionService.GetTxBroadcastAsync(request.OperationId);
+            if (!_transactionService.CheckSignature(request.SignedTransaction))
+            {
+                var errorResponse = StellarErrorResponse.Create("Wrong signature", BlockchainErrorCode.BuildingShouldBeRepeated);
+                return BadRequest(errorResponse);
+            }
             if (broadcast != null)
             {
                 return new StatusCodeResult(StatusCodes.Status409Conflict);

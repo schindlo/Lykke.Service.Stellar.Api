@@ -22,6 +22,8 @@ namespace Lykke.Service.Stellar.Api.Core.Services
 
         Task<int> UpdateBroadcastsInProgress(int batchSize);
 
+        bool CheckSignature(string xdrBase64);
+
         string GetLastJobError();
     }
 }

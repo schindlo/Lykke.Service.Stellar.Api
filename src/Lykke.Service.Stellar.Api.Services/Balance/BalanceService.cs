@@ -23,6 +23,20 @@ namespace Lykke.Service.Stellar.Api.Services.Balance
     public class BalanceService : IBalanceService
     {
         private string _lastJobError;
+        private readonly HashSet<char> _forbiddenAddressChars = new HashSet<char>
+        {
+            '\\',
+            '/',
+            '#',
+            '\\',
+            '?',
+            '\t',
+            '\r',
+            '\n',
+            '\0',
+            '\a',
+            '\b',
+        };
 
         private readonly IHorizonService _horizonService;
         private readonly IKeyValueStoreRepository _keyValueStoreRepository;
@@ -62,8 +76,24 @@ namespace Lykke.Service.Stellar.Api.Services.Balance
         public bool IsAddressValid(string address, out bool hasExtension)
         {
             hasExtension = false;
+            bool containsForbiddenChar = false;
 
             if (string.IsNullOrWhiteSpace(address))
+            {
+                return false;
+            }
+
+
+            foreach (var @char in address)
+            {
+                if (_forbiddenAddressChars.Contains(@char))
+                {
+                    containsForbiddenChar = true;
+                    break;
+                }
+            }
+
+            if (containsForbiddenChar)
             {
                 return false;
             }
@@ -189,14 +219,14 @@ namespace Lykke.Service.Stellar.Api.Services.Balance
             await _walletBalanceRepository.DeleteIfExistAsync(_blockchainAssetsService.GetNativeAsset().Id, address);
         }
 
-        public async Task<(List<WalletBalance> Wallets, string ContinuationToken)> 
+        public async Task<(List<WalletBalance> Wallets, string ContinuationToken)>
             GetBalancesAsync(int take, string continuationToken)
         {
             var ledger = await _horizonService.GetLatestLedger();
-            var currentLedger = ledger.Sequence * 10;
+            var currentLedger = (ledger.Sequence * 10) + 1;
             var balances = await _walletBalanceRepository.GetAllAsync(take, continuationToken);
 
-            if (balances.Entities != null && 
+            if (balances.Entities != null &&
                 balances.Entities.Count != 0)
             {
                 foreach (var balance in balances.Entities)
