@@ -83,15 +83,7 @@ namespace Lykke.Service.Stellar.Api.Services.Balance
                 return false;
             }
 
-
-            foreach (var @char in address)
-            {
-                if (_forbiddenAddressChars.Contains(@char))
-                {
-                    containsForbiddenChar = true;
-                    break;
-                }
-            }
+            containsForbiddenChar = address.Any(_forbiddenAddressChars.Contains);
 
             if (containsForbiddenChar)
             {
