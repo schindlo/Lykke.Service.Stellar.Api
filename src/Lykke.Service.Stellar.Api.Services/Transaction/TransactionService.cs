@@ -144,6 +144,7 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
             var amount = tx.Operations[0].Body.PaymentOp.Amount.InnerValue;
             var hash = "ut_" + (DateTime.UtcNow.ToUnixTime()).ToString(CultureInfo.InvariantCulture);//_horizonService.GetTransactionHash(tx);
             var ledger = await _horizonService.GetLatestLedger();
+            var updateLedger = (ledger.Sequence * 10) + 1;
 
             var broadcast = new TxBroadcast
             {
@@ -152,7 +153,7 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
                 Fee = 0,
                 Hash = hash,
                 // ReSharper disable once ArrangeRedundantParentheses
-                Ledger = (ledger.Sequence * 10) + 1,
+                Ledger = updateLedger,
                 CreatedAt = DateTime.UtcNow
             };
 

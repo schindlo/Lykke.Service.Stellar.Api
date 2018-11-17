@@ -105,6 +105,7 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Balance
 
                     entity.Balance -= amount;
                     entity.LastTransactionHash = hash;
+                    entity.Ledger += 1; //DIRTY-HACK
                 }
 
                 return entity;
