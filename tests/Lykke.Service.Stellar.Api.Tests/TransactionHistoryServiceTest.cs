@@ -43,13 +43,6 @@ namespace Lykke.Service.Stellar.Api.Tests
             };
 
             horizonService.Setup(x => x.GetMemo(It.IsAny<TransactionDetails>())).Returns(memo);
-            walletBalanceRepository.Setup(x => x.IncreaseBalanceAsync(It.IsAny<string>(),
-                It.IsAny<string>(),
-                It.IsAny<long>(),
-                It.IsAny<int>(),
-                It.IsAny<string>(),
-                It.IsAny<long>())).Verifiable();
-
             balanceService.Setup(x => x.GetDepositBaseAddress()).Returns(depositBaseAddress);
             txHistoryRepository.Setup(x => x.InsertOrReplaceAsync(It.IsAny<TxDirectionType>(), It.IsAny<TxHistory>()))
                 .Returns(Task.FromResult(0)).Verifiable();
@@ -111,13 +104,6 @@ namespace Lykke.Service.Stellar.Api.Tests
             };
 
             horizonService.Setup(x => x.GetMemo(It.IsAny<TransactionDetails>())).Returns(memo);
-            walletBalanceRepository.Setup(x => x.IncreaseBalanceAsync(It.IsAny<string>(),
-                It.IsAny<string>(),
-                It.IsAny<long>(),
-                It.IsAny<int>(),
-                It.IsAny<string>(),
-                It.IsAny<long>())).Verifiable();
-
             balanceService.Setup(x => x.GetDepositBaseAddress()).Returns(depositBaseAddress);
             txHistoryRepository.Setup(x => x.InsertOrReplaceAsync(It.IsAny<TxDirectionType>(), It.IsAny<TxHistory>()))
                 .Returns(Task.FromResult(0)).Verifiable();

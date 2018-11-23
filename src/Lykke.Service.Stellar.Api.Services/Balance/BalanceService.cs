@@ -1,4 +1,5 @@
-﻿using System;
+﻿extern alias sdk2;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -14,9 +15,9 @@ using Lykke.Service.Stellar.Api.Core.Domain.Observation;
 using Lykke.Service.Stellar.Api.Core.Exceptions;
 using Lykke.Service.Stellar.Api.Core.Services;
 using Lykke.Service.Stellar.Api.Core.Utils;
+using sdk2::stellar_dotnet_sdk.responses.operations;
 using StellarBase;
 using StellarBase.Generated;
-using StellarSdk.Model;
 
 namespace Lykke.Service.Stellar.Api.Services.Balance
 {
@@ -268,6 +269,7 @@ namespace Lykke.Service.Stellar.Api.Services.Balance
         {
             var transactions = await _horizonService.GetTransactions(_depositBaseAddress, StellarSdkConstants.OrderAsc, cursor);
             var count = 0;
+            var walletsToRefresh = new HashSet<(string assetId, string address)>();
             cursor = null;
             foreach (var transaction in transactions)
             {
@@ -284,51 +286,45 @@ namespace Lykke.Service.Stellar.Api.Services.Balance
                         continue;
                     }
 
-                    var xdr = Convert.FromBase64String(transaction.EnvelopeXdr);
-                    var reader = new ByteReader(xdr);
-                    var txEnvelope = TransactionEnvelope.Decode(reader);
-                    var tx = txEnvelope.Tx;
-
-                    for (short i = 0; i < tx.Operations.Length; i++)
+                    // transaction XDR doesn't contain operation IDs,
+                    // make a dedicated request to get operations
+                    var operations = await _horizonService.GetTransactionOperations(transaction.Hash);
+                    if (operations == null)
                     {
-                        var operation = tx.Operations[i];
-                        var operationType = operation.Body.Discriminant.InnerValue;
+                        continue;
+                    }
 
+                    foreach (var op in operations)
+                    {
                         string toAddress = null;
                         long amount = 0;
-                        // ReSharper disable once SwitchStatementMissingSomeCases
-                        switch (operationType)
+
+                        switch (op.Type.ToLower())
                         {
-                            case OperationType.OperationTypeEnum.PAYMENT:
+                            case "payment":
+                                var payment = (PaymentOperationResponse)op;
+                                if (payment.AssetType == "native")
                                 {
-                                    var op = operation.Body.PaymentOp;
-                                    if (op.Asset.Discriminant.InnerValue == AssetType.AssetTypeEnum.ASSET_TYPE_NATIVE)
-                                    {
-                                        var keyPair = KeyPair.FromXdrPublicKey(op.Destination.InnerValue);
-                                        toAddress = keyPair.Address;
-                                        amount = op.Amount.InnerValue;
-                                    }
-                                    break;
+                                    toAddress = payment.To.Address;
+                                    amount = long.Parse(payment.Amount);
                                 }
-                            case OperationType.OperationTypeEnum.ACCOUNT_MERGE:
+                                break;
+
+                            case "account_merge":
+                                var accountMerge = (AccountMergeOperationResponse)op;
+                                toAddress = accountMerge.Into.Address;
+                                amount = _horizonService.GetAccountMergeAmount(transaction.ResultMetaXdr, accountMerge.SourceAccount.Address);
+                                break;
+
+                            case "path_payment":
+                                var pathPayment = (PathPaymentOperationResponse)op;
+                                if (pathPayment.AssetType == "native")
                                 {
-                                    var op = operation.Body;
-                                    var keyPair = KeyPair.FromXdrPublicKey(op.Destination.InnerValue);
-                                    toAddress = keyPair.Address;
-                                    amount = _horizonService.GetAccountMergeAmount(transaction.ResultXdr, i);
-                                    break;
+                                    toAddress = pathPayment.To.Address;
+                                    amount = long.Parse(pathPayment.Amount);
                                 }
-                            case OperationType.OperationTypeEnum.PATH_PAYMENT:
-                                {
-                                    var op = operation.Body.PathPaymentOp;
-                                    if (op.DestAsset.Discriminant.InnerValue == AssetType.AssetTypeEnum.ASSET_TYPE_NATIVE)
-                                    {
-                                        var keyPair = KeyPair.FromXdrPublicKey(op.Destination.InnerValue);
-                                        toAddress = keyPair.Address;
-                                        amount = op.DestAmount.InnerValue;
-                                    }
-                                    break;
-                                }
+                                break;
+
                             default:
                                 continue;
                         }
@@ -351,7 +347,8 @@ namespace Lykke.Service.Stellar.Api.Services.Balance
                         }
 
                         var assetId = _blockchainAssetsService.GetNativeAsset().Id;
-                        await _walletBalanceRepository.IncreaseBalanceAsync(assetId, addressWithExtension, transaction.Ledger * 10, i, transaction.Hash, amount);
+                        await _walletBalanceRepository.RecordOperationAsync(assetId, addressWithExtension, transaction.Ledger * 10, op.Id, transaction.Hash, amount);
+                        walletsToRefresh.Add((assetId, addressWithExtension));
                     }
                 }
                 catch (Exception ex)
@@ -359,6 +356,8 @@ namespace Lykke.Service.Stellar.Api.Services.Balance
                     throw new BusinessException($"Failed to process transaction. hash={transaction?.Hash}", ex);
                 }
             }
+
+            await _walletBalanceRepository.RefreshBalance(walletsToRefresh);
 
             if (!string.IsNullOrEmpty(cursor))
             {

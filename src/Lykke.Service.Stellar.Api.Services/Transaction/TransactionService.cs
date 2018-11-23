@@ -179,21 +179,22 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
             };
 
             var assetId = _blockchainAssetsService.GetNativeAsset().Id;
-            if (await _balanceRepository.DecreaseBalanceAsync(assetId, fromAddress, hash, amount))
-            {
-                broadcast.State = TxBroadcastState.Completed;
-            }
-            else
+            var balance = await _balanceRepository.GetAsync(assetId, fromAddress);
+            if (balance.Balance < amount)
             {
                 broadcast.State = TxBroadcastState.Failed;
                 broadcast.Error = "Not enough balance!";
                 broadcast.ErrorCode = TxExecutionError.NotEnoughBalance;
             }
+            else
+            {
+                await _balanceRepository.RecordOperationAsync(assetId, fromAddress, ledger.Sequence, 0, hash, (-1) * amount);
+                await _balanceRepository.RefreshBalance(assetId, fromAddress);
+                broadcast.State = TxBroadcastState.Completed;
+            }
 
             await _broadcastRepository.InsertOrReplaceAsync(broadcast);
-            await _balanceRepository.DeleteIfBalanceIsZero(assetId, fromAddress);
             return true;
-
         }
 
         private static string GetErrorMessage(Exception ex)

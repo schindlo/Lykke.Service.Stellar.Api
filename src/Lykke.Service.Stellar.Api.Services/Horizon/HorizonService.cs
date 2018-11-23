@@ -1,30 +1,39 @@
-﻿using System;
+﻿extern alias sdk2;
+using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Net.Http;
 using System.Threading.Tasks;
-using StellarBase;
-using StellarBase.Generated;
-using static StellarBase.Generated.Operation;
-using StellarSdk;
-using StellarSdk.Model;
-using StellarSdk.Exceptions;
-using Lykke.Service.Stellar.Api.Core.Exceptions;
-using Lykke.Service.Stellar.Api.Core.Services;
-using Lykke.Service.Stellar.Api.Core;
 using Chaos.NaCl;
 using JetBrains.Annotations;
+using Lykke.Service.Stellar.Api.Core;
+using Lykke.Service.Stellar.Api.Core.Exceptions;
+using Lykke.Service.Stellar.Api.Core.Services;
+using sdk2::stellar_dotnet_sdk.requests;
+using sdk2::stellar_dotnet_sdk.responses.operations;
+using StellarBase;
+using StellarBase.Generated;
+using StellarSdk;
+using StellarSdk.Exceptions;
+using StellarSdk.Model;
+using static StellarBase.Generated.LedgerEntryChangeType;
+using static StellarBase.Generated.Operation;
 
 namespace Lykke.Service.Stellar.Api.Services.Horizon
 {
     public class HorizonService : IHorizonService
     {
         private readonly string _horizonUrl;
+        private readonly IHttpClientFactory _httpClientFactory;
 
         [UsedImplicitly]
         public HorizonService(string network,
-                              string horizonUrl)
+                              string horizonUrl,
+                              IHttpClientFactory httpClientFactory)
         {
             Network.CurrentNetwork = network;
             _horizonUrl = horizonUrl;
+            _httpClientFactory = httpClientFactory;
         }
 
         public async Task<string> SubmitTransactionAsync(string signedTx)
@@ -67,7 +76,9 @@ namespace Lykke.Service.Stellar.Api.Services.Horizon
                 var transactions = details?.Embedded?.Records;
                 if (transactions != null)
                 {
-                    return new List<TransactionDetails>(transactions);
+                    return transactions
+                        .Where(tx => GetTransactionResult(tx) == TransactionResultCode.TransactionResultCodeEnum.txSUCCESS)
+                        .ToList();
                 }
             }
             catch (ResourceNotFoundException)
@@ -76,6 +87,15 @@ namespace Lykke.Service.Stellar.Api.Services.Horizon
             }
 
             return new List<TransactionDetails>();
+        }
+
+        public async Task<List<OperationResponse>> GetTransactionOperations(string hash)
+        {
+            var result = await new OperationsRequestBuilder(new Uri(_horizonUrl), _httpClientFactory.CreateClient())
+                .ForTransaction(hash)
+                .Execute();
+
+            return result?.Records;
         }
 
         public async Task<LedgerDetails> GetLatestLedger()
@@ -117,7 +137,6 @@ namespace Lykke.Service.Stellar.Api.Services.Horizon
             var xdr = Convert.FromBase64String(resultXdrBase64);
             var reader = new ByteReader(xdr);
             var txResult = StellarBase.Generated.TransactionResult.Decode(reader);
-
             var merge = txResult.Result.Results[operationIndex];
             var result = merge?.Tr?.AccountMergeResult;
             var resultCode = result?.Discriminant?.InnerValue;
@@ -126,6 +145,25 @@ namespace Lykke.Service.Stellar.Api.Services.Horizon
 
             var amount = result.SourceAccountBalance.InnerValue;
             return amount;
+        }
+
+        public long GetAccountMergeAmount(string metaXdrBase64, string sourceAddress)
+        {
+            var xdr = Convert.FromBase64String(metaXdrBase64);
+            var reader = new ByteReader(xdr);
+            var txMeta = StellarBase.Generated.TransactionMeta.Decode(reader);
+            var mergeMeta = txMeta.Operations.First(op =>
+            {
+                return op.Changes.InnerValue.Any(c =>
+                {
+                    return c.Discriminant.InnerValue == LedgerEntryChangeTypeEnum.LEDGER_ENTRY_REMOVED &&
+                        KeyPair.FromXdrPublicKey(c.Removed.Account.AccountID.InnerValue).Address == sourceAddress;
+                });
+            });
+            var sourceAccountStateMeta = mergeMeta.Changes.InnerValue.First(c => 
+                c.Discriminant.InnerValue == LedgerEntryChangeTypeEnum.LEDGER_ENTRY_STATE && KeyPair.FromXdrPublicKey(c.State.Data.Account.AccountID.InnerValue).Address == sourceAddress);
+
+            return sourceAccountStateMeta.State.Data.Account.Balance.InnerValue;
         }
 
         public OperationBody GetFirstOperationFromTxEnvelopeXdr(string xdrBase64)
@@ -178,6 +216,14 @@ namespace Lykke.Service.Stellar.Api.Services.Horizon
             var data = writer.ToArray();
             var hash = Utilities.Hash(data);
             return CryptoBytes.ToHexStringLower(hash);
+        }
+
+        public TransactionResultCode.TransactionResultCodeEnum GetTransactionResult(TransactionDetails tx)
+        {
+            var xdr = Convert.FromBase64String(tx.ResultXdr);
+            var reader = new ByteReader(xdr);
+            var txResult = StellarBase.Generated.TransactionResult.Decode(reader);
+            return txResult.Result.Discriminant.InnerValue;
         }
     }
 }

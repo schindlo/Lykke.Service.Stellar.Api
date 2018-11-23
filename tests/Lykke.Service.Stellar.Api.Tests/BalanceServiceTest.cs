@@ -10,6 +10,8 @@ using Lykke.Service.Stellar.Api.Services.Balance;
 using Moq;
 using StellarSdk.Model;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Xunit;
 
@@ -20,6 +22,8 @@ namespace Lykke.Service.Stellar.Api.Tests
         [Fact]
         public async Task BalanceService_UpdateWallets_SkipErrorMemo()
         {
+            // Arrange
+            
             Mock<IBlockchainAssetsService> blockchainAssetsService = new Mock<IBlockchainAssetsService>();
             Mock<IHorizonService> horizonService = new Mock<IHorizonService>();
             Mock<IKeyValueStoreRepository> keyValueStoreRepository = new Mock<IKeyValueStoreRepository>();
@@ -39,12 +43,12 @@ namespace Lykke.Service.Stellar.Api.Tests
             };
 
             horizonService.Setup(x => x.GetMemo(It.IsAny<TransactionDetails>())).Returns(memo);
-            walletBalanceRepository.Setup(x => x.IncreaseBalanceAsync(It.IsAny<string>(),
-                It.IsAny<string>(),
-                It.IsAny<long>(),
-                It.IsAny<int>(),
-                It.IsAny<string>(),
-                It.IsAny<long>())).Verifiable();
+            walletBalanceRepository
+                .Setup(x => x.RecordOperationAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<long>(), It.IsAny<long>(), It.IsAny<string>(), It.IsAny<long>()))
+                .Verifiable();
+            walletBalanceRepository
+                .Setup(x => x.RefreshBalance(It.IsAny<IEnumerable<(string, string)>>()))
+                .Verifiable();
 
             horizonService.Setup(x => x.GetTransactions(depositBaseAddress, 
                 StellarSdkConstants.OrderAsc, 
@@ -93,18 +97,28 @@ namespace Lykke.Service.Stellar.Api.Tests
                 log.Object,
                 blockchainAssetsService.Object);
 
+            // Act
+
             await balanceService.UpdateWalletBalances();
-            walletBalanceRepository.Verify(x => x.IncreaseBalanceAsync(It.IsAny<string>(),
-                It.IsAny<string>(),
-                It.IsAny<long>(),
-                It.IsAny<int>(),
-                It.IsAny<string>(),
-                It.IsAny<long>()), Times.Never);
+
+            // Assert
+
+            walletBalanceRepository.Verify(
+                x => x.RecordOperationAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<long>(), It.IsAny<int>(), It.IsAny<string>(), It.IsAny<long>()),
+                Times.Never
+            );
+
+            walletBalanceRepository.Verify(
+                x => x.RefreshBalance(It.Is<IEnumerable<(string, string)>>(v => v.Count() == 0)),
+                Times.Exactly(1)
+            );
         }
 
         [Fact]
         public async Task BalanceService_UpdateWallets_ProcessDepositMemo()
         {
+            // Arrange
+
             Mock<IBlockchainAssetsService> blockchainAssetsService = new Mock<IBlockchainAssetsService>();
             Mock<IHorizonService> horizonService = new Mock<IHorizonService>();
             Mock<IKeyValueStoreRepository> keyValueStoreRepository = new Mock<IKeyValueStoreRepository>();
@@ -124,13 +138,13 @@ namespace Lykke.Service.Stellar.Api.Tests
             };
 
             horizonService.Setup(x => x.GetMemo(It.IsAny<TransactionDetails>())).Returns(memo);
-            walletBalanceRepository.Setup(x => x.IncreaseBalanceAsync(It.IsAny<string>(),
+            walletBalanceRepository.Setup(x => x.RecordOperationAsync(It.IsAny<string>(),
                 It.IsAny<string>(),
                 It.IsAny<long>(),
-                It.IsAny<int>(),
+                It.IsAny<long>(),
                 It.IsAny<string>(),
-                It.IsAny<long>()))
-                .ReturnsAsync(true)
+                It.IsAny<long>())).Verifiable();
+            walletBalanceRepository.Setup(x => x.RefreshBalance(It.IsAny<(string, string)[]>()))
                 .Verifiable();
 
             horizonService.Setup(x => x.GetTransactions(depositBaseAddress,
@@ -185,13 +199,23 @@ namespace Lykke.Service.Stellar.Api.Tests
                 log.Object,
                 blockchainAssetsService.Object);
 
+            // Act
+
             await balanceService.UpdateWalletBalances();
-            walletBalanceRepository.Verify(x => x.IncreaseBalanceAsync(It.IsAny<string>(),
+
+            // Assert
+
+            walletBalanceRepository.Verify(x => x.RecordOperationAsync(It.IsAny<string>(),
                 It.IsAny<string>(),
                 It.IsAny<long>(),
                 It.IsAny<int>(),
                 It.IsAny<string>(),
                 It.IsAny<long>()), Times.AtLeastOnce);
+            
+            walletBalanceRepository.Verify(
+                x => x.RefreshBalance(It.Is<IEnumerable<(string, string)>>(v => v.Count() > 0)),
+                Times.Exactly(1)
+            );
         }
     }
 }
