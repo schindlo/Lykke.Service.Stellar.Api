@@ -48,6 +48,7 @@ namespace Lykke.Job.Stellar.Api
         {
             try
             {
+                services.AddHttpClient();
                 services.AddMvc()
                     .AddJsonOptions(options =>
                     {

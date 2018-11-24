@@ -48,6 +48,7 @@ namespace Lykke.Service.Stellar.Api
         {
             try
             {
+                services.AddHttpClient();
                 services.AddMvc()
                     .AddJsonOptions(options =>
                     {
