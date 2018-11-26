@@ -1,4 +1,7 @@
-﻿namespace Lykke.Service.Stellar.Api.Core.Domain
+﻿using System;
+using System.Globalization;
+
+namespace Lykke.Service.Stellar.Api.Core.Domain
 {
     public class Asset
     {
@@ -14,5 +17,17 @@
         public string Name { get; }
         public string TypeName { get; }
         public int Accuracy { get; }
+
+        public static Asset Stellar { get; } = new Asset("XLM", "", "Stellar Lumen", "native", 7);
+
+        public long ParseDecimal(string value)
+        {
+            var pow = Convert.ToDecimal(Math.Pow(10, Accuracy));
+            var dec = decimal.Parse(value, CultureInfo.InvariantCulture);
+            var mul = decimal.Round(dec * pow);
+            var res = Convert.ToInt64(mul);
+
+            return res;
+        }
     }
 }
