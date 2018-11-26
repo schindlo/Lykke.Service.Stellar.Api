@@ -188,7 +188,7 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
             }
             else
             {
-                await _balanceRepository.RecordOperationAsync(assetId, fromAddress, ledger.Sequence, 0, hash, (-1) * amount);
+                await _balanceRepository.RecordOperationAsync(assetId, fromAddress, updateLedger, 0, hash, (-1) * amount);
                 await _balanceRepository.RefreshBalance(assetId, fromAddress);
                 broadcast.State = TxBroadcastState.Completed;
             }
