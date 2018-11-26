@@ -215,20 +215,7 @@ namespace Lykke.Service.Stellar.Api.Services.Balance
         public async Task<(List<WalletBalance> Wallets, string ContinuationToken)>
             GetBalancesAsync(int take, string continuationToken)
         {
-            var ledger = await _horizonService.GetLatestLedger();
-            var currentLedger = (ledger.Sequence * 10) + 1;
-            var balances = await _walletBalanceRepository.GetAllAsync(take, continuationToken);
-
-            if (balances.Entities != null &&
-                balances.Entities.Count != 0)
-            {
-                foreach (var balance in balances.Entities)
-                {
-                    balance.Ledger = currentLedger;
-                }
-            }
-
-            return balances;
+            return await _walletBalanceRepository.GetAllAsync(take, continuationToken);
         }
 
         public List<string> GetExplorerUrls(string address)
