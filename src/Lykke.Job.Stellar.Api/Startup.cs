@@ -90,6 +90,7 @@ namespace Lykke.Job.Stellar.Api
                     }
                     );
 
+                builder.RegisterChaosKitty(appSettings.CurrentValue.StellarApiService.ChaosKitty);
                 builder.RegisterModule(new StellarJobModule(appSettings.Nested(x => x.StellarApiJob)));
                 builder.RegisterModule(new RepositoryModule(appSettings.Nested(x => x.StellarApiService)));
                 builder.RegisterModule(new ServiceModule(appSettings.Nested(x => x.StellarApiService)));
