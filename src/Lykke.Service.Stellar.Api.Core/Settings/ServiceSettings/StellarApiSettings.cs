@@ -22,6 +22,6 @@ namespace Lykke.Service.Stellar.Api.Core.Settings.ServiceSettings
         public AssetSettings NativeAsset { get; set; }
         
         [Optional]
-        public ChaosSettings ChaosSettings { get; set; }
+        public ChaosSettings ChaosKitty { get; set; }
     }
 }

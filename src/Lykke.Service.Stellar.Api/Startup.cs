@@ -91,7 +91,7 @@ namespace Lykke.Service.Stellar.Api
                     }
                     );
 
-                builder.RegisterChaosKitty(appSettings.CurrentValue.StellarApiService.ChaosSettings);
+                builder.RegisterChaosKitty(appSettings.CurrentValue.StellarApiService.ChaosKitty);
                 builder.RegisterModule(new StellarApiModule());
                 builder.RegisterModule(new RepositoryModule(appSettings.Nested(x => x.StellarApiService)));
                 builder.RegisterModule(new ServiceModule(appSettings.Nested(x => x.StellarApiService)));
