@@ -85,9 +85,9 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Balance
             return $"{assetId}_{address}";
         }
 
-        public static string GetRowKey(long ledger, string hash, long operationId)
+        public static string GetRowKey(string hash, long operationId)
         {
-            return $"{ledger}_{hash}_{operationId}";
+            return $"{hash}_{operationId}";
         }
     }
 }

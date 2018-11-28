@@ -6,7 +6,7 @@ namespace Lykke.Service.Stellar.Api.Core.Domain.Transaction
     {
         public Guid OperationId { get; set; }
 
-        public TxBroadcastState State { get; set; }
+        public TxBroadcastState? State { get; set; }
 
         public long Amount { get; set; }
 

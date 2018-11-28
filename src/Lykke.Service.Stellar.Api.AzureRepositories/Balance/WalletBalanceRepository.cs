@@ -56,7 +56,7 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Balance
             await _journalTable.InsertOrReplaceAsync(new WalletBalanceJournalEntity
             {
                 PartitionKey = WalletBalanceJournalEntity.GetPartitionKey(assetId, address),
-                RowKey = WalletBalanceJournalEntity.GetRowKey(ledger, transactionHash, operationId),
+                RowKey = WalletBalanceJournalEntity.GetRowKey(transactionHash, operationId),
                 AssetId = assetId,
                 Address = address,
                 Ledger = ledger,

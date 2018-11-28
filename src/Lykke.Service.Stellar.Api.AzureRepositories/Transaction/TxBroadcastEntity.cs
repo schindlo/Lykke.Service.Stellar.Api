@@ -9,7 +9,7 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Transaction
     [ValueTypeMergingStrategy(ValueTypeMergingStrategy.UpdateIfDirty)]
     public class TxBroadcastEntity : AzureTableEntity
     {
-        private TxBroadcastState _state;
+        private TxBroadcastState? _state;
         private long _amount;
         private long _fee;
         private long _ledger;
@@ -19,7 +19,7 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Transaction
 
         public Guid OperationId => Guid.Parse(RowKey);
 
-        public TxBroadcastState State 
+        public TxBroadcastState? State 
         { 
             get => _state;
             set
