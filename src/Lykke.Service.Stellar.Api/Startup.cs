@@ -9,6 +9,7 @@ using Lykke.AzureStorage.Tables.Entity.Metamodel.Providers;
 using Lykke.Common;
 using Lykke.Common.ApiLibrary.Middleware;
 using Lykke.Common.ApiLibrary.Swagger;
+using Lykke.Common.Chaos;
 using Lykke.Common.Log;
 using Lykke.Logs;
 using Lykke.Logs.Loggers.LykkeSlack;
@@ -22,7 +23,6 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Lykke.Common.Chaos;
 
 namespace Lykke.Service.Stellar.Api
 {

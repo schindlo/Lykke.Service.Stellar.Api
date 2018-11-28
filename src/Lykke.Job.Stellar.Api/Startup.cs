@@ -1,27 +1,28 @@
 ﻿using System;
+using System.Threading.Tasks;
 using Autofac;
 using Autofac.Extensions.DependencyInjection;
 using Common.Log;
 using JetBrains.Annotations;
 using Lykke.AzureStorage.Tables.Entity.Metamodel;
 using Lykke.AzureStorage.Tables.Entity.Metamodel.Providers;
+using Lykke.Common;
 using Lykke.Common.ApiLibrary.Middleware;
 using Lykke.Common.ApiLibrary.Swagger;
+using Lykke.Common.Chaos;
+using Lykke.Common.Log;
+using Lykke.Job.Stellar.Api.Modules;
+using Lykke.Job.Stellar.Api.Settings;
 using Lykke.Logs;
+using Lykke.Logs.Loggers.LykkeSlack;
 using Lykke.Service.Stellar.Api.AzureRepositories.Modules;
 using Lykke.Service.Stellar.Api.Core.Services;
-using Lykke.Job.Stellar.Api.Modules;
 using Lykke.Service.Stellar.Api.Services.Modules;
 using Lykke.SettingsReader;
-using Lykke.Job.Stellar.Api.Settings;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Lykke.Common.Log;
-using Lykke.Logs.Loggers.LykkeSlack;
-using Lykke.Common;
-using System.Threading.Tasks;
 
 namespace Lykke.Job.Stellar.Api
 {
