@@ -22,6 +22,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Lykke.Common.Chaos;
 
 namespace Lykke.Service.Stellar.Api
 {
@@ -90,6 +91,7 @@ namespace Lykke.Service.Stellar.Api
                     }
                     );
 
+                builder.RegisterChaosKitty(appSettings.CurrentValue.StellarApiService.ChaosSettings);
                 builder.RegisterModule(new StellarApiModule());
                 builder.RegisterModule(new RepositoryModule(appSettings.Nested(x => x.StellarApiService)));
                 builder.RegisterModule(new ServiceModule(appSettings.Nested(x => x.StellarApiService)));
