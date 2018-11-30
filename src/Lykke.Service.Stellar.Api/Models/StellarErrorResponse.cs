@@ -26,7 +26,7 @@ namespace Lykke.Service.Stellar.Api.Models
         {
             //TODO: Fix that bug
             if (errorCode == BlockchainErrorCode.Unknown)
-                errorCode = BlockchainErrorCode.NotEnoughBalance;
+                errorCode = BlockchainErrorCode.AmountIsTooSmall;
 
             ErrorMessage = errorMessage;
             ErrorCode = errorCode;
@@ -36,14 +36,14 @@ namespace Lykke.Service.Stellar.Api.Models
         public static StellarErrorResponse Create(string message)
         {
             //TODO: Fix that bug
-            return new StellarErrorResponse(message, BlockchainErrorCode.NotEnoughBalance);
+            return new StellarErrorResponse(message, BlockchainErrorCode.AmountIsTooSmall);
         }
 
         public static StellarErrorResponse Create(string message, BlockchainErrorCode errorCode)
         {
             //TODO: Fix that bug
             if (errorCode == BlockchainErrorCode.Unknown)
-                errorCode = BlockchainErrorCode.NotEnoughBalance;
+                errorCode = BlockchainErrorCode.AmountIsTooSmall;
 
             return new StellarErrorResponse(message, errorCode);
         }
