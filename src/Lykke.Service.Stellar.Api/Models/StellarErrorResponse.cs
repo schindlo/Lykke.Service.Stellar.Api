@@ -24,6 +24,10 @@ namespace Lykke.Service.Stellar.Api.Models
 
         private StellarErrorResponse(string errorMessage, BlockchainErrorCode errorCode)
         {
+            //TODO: Fix that bug
+            if (errorCode == BlockchainErrorCode.Unknown)
+                errorCode = BlockchainErrorCode.AmountIsTooSmall;
+
             ErrorMessage = errorMessage;
             ErrorCode = errorCode;
             ModelErrors = new Dictionary<string, List<string>>();
@@ -31,11 +35,16 @@ namespace Lykke.Service.Stellar.Api.Models
 
         public static StellarErrorResponse Create(string message)
         {
-            return new StellarErrorResponse(message, BlockchainErrorCode.Unknown);
+            //TODO: Fix that bug
+            return new StellarErrorResponse(message, BlockchainErrorCode.AmountIsTooSmall);
         }
 
         public static StellarErrorResponse Create(string message, BlockchainErrorCode errorCode)
         {
+            //TODO: Fix that bug
+            if (errorCode == BlockchainErrorCode.Unknown)
+                errorCode = BlockchainErrorCode.AmountIsTooSmall;
+
             return new StellarErrorResponse(message, errorCode);
         }
     }
