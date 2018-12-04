@@ -257,7 +257,7 @@ namespace Lykke.Service.Stellar.Api.Services.Balance
             var transactions = await _horizonService.GetTransactions(_depositBaseAddress, StellarSdkConstants.OrderAsc, cursor);
             var count = 0;
             var walletsToRefresh = new HashSet<(string assetId, string address)>();
-            var asset = Core.Domain.Asset.Stellar;
+            var asset = _blockchainAssetsService.GetNativeAsset();
             cursor = null;
             foreach (var transaction in transactions)
             {
