@@ -19,12 +19,15 @@ namespace Lykke.Service.Stellar.Api.Controllers
     {
         private readonly ITransactionService _transactionService;
         private readonly IBalanceService _balanceService;
+        private readonly IBlockchainAssetsService _blockchainAssetsService;
 
         public TransactionsController(ITransactionService transactionService,
-                                      IBalanceService balanceService)
+                                      IBalanceService balanceService,
+                                      IBlockchainAssetsService blockchainAssetsService)
         {
             _transactionService = transactionService;
             _balanceService = balanceService;
+            _blockchainAssetsService = blockchainAssetsService;
         }
 
         [HttpPost("single")]
@@ -37,6 +40,11 @@ namespace Lykke.Service.Stellar.Api.Controllers
             }
 
             string xdrBase64;
+            var broadcast = await _transactionService.GetTxBroadcastAsync(request.OperationId);
+            if (broadcast != null)
+            {
+                return new StatusCodeResult(StatusCodes.Status409Conflict);
+            }
             var build = await _transactionService.GetTxBuildAsync(request.OperationId);
             if (build != null)
             {
@@ -75,7 +83,7 @@ namespace Lykke.Service.Stellar.Api.Controllers
                     memo = _balanceService.GetPublicAddressExtension(request.ToAddress);
                 }
 
-                if (request.AssetId != Asset.Stellar.Id)
+                if (request.AssetId != _blockchainAssetsService.GetNativeAsset().Id)
                 {
                     return BadRequest(ErrorResponse.Create($"{nameof(request.AssetId)} was not found"));
                 }
@@ -139,6 +147,11 @@ namespace Lykke.Service.Stellar.Api.Controllers
             }
 
             var broadcast = await _transactionService.GetTxBroadcastAsync(request.OperationId);
+            if (!_transactionService.CheckSignature(request.SignedTransaction))
+            {
+                var errorResponse = StellarErrorResponse.Create("Wrong signature", BlockchainErrorCode.BuildingShouldBeRepeated);
+                return BadRequest(errorResponse);
+            }
             if (broadcast != null)
             {
                 return new StatusCodeResult(StatusCodes.Status409Conflict);

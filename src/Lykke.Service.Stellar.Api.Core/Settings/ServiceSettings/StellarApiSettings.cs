@@ -17,5 +17,7 @@ namespace Lykke.Service.Stellar.Api.Core.Settings.ServiceSettings
         public string DepositBaseAddress { get; set; }
 
         public string[] ExplorerUrlFormats { get; set; }
+
+        public AssetSettings NativeAsset { get; set; }
     }
 }

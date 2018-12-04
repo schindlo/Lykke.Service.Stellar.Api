@@ -33,6 +33,7 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
         private readonly ITxBuildRepository _buildRepository;
         private readonly TimeSpan _transactionExpirationTime;
         private readonly ILog _log;
+        private readonly IBlockchainAssetsService _blockchainAssetsService;
 
         [UsedImplicitly]
         public TransactionService(IBalanceService balanceService,
@@ -42,7 +43,8 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
                                   ITxBroadcastRepository broadcastRepository,
                                   ITxBuildRepository buildRepository,
                                   TimeSpan transactionExpirationTime,
-                                  ILogFactory logFactory)
+                                  ILogFactory logFactory,
+                                  IBlockchainAssetsService blockchainAssetsService)
         {
             _balanceService = balanceService;
             _horizonService = horizonService;
@@ -52,6 +54,25 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
             _buildRepository = buildRepository;
             _transactionExpirationTime = transactionExpirationTime;
             _log = logFactory.CreateLog(this);
+            _blockchainAssetsService = blockchainAssetsService;
+        }
+
+        public bool CheckSignature(string xdrBase64)
+        {
+            bool isSignOk = true;
+
+            try
+            {
+                var xdr = Convert.FromBase64String(xdrBase64);
+                var reader = new ByteReader(xdr);
+                var txEnvelope = TransactionEnvelope.Decode(reader);
+            }
+            catch (Exception e)
+            {
+                isSignOk = false;
+            }
+
+            return isSignOk;
         }
 
         public async Task<TxBroadcast> GetTxBroadcastAsync(Guid operationId)
@@ -78,24 +99,24 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
                     switch (operationType)
                     {
                         case OperationType.OperationTypeEnum.CREATE_ACCOUNT:
-                        {
-                            amount = operation.CreateAccountOp.StartingBalance.InnerValue;
-                            break;
-                        }
+                            {
+                                amount = operation.CreateAccountOp.StartingBalance.InnerValue;
+                                break;
+                            }
                         case OperationType.OperationTypeEnum.PAYMENT:
-                        {
-                            amount = operation.PaymentOp.Amount.InnerValue;
-                            break;
-                        }
+                            {
+                                amount = operation.PaymentOp.Amount.InnerValue;
+                                break;
+                            }
                         case OperationType.OperationTypeEnum.ACCOUNT_MERGE:
-                        {
-                            // amount not yet known
-                            break;
-                        }
+                            {
+                                // amount not yet known
+                                break;
+                            }
                         default:
                             throw new BusinessException($"Unsupported operation type. type={operationType}");
                     }
-                    
+
                     var hash = await _horizonService.SubmitTransactionAsync(xdrBase64);
                     var broadcast = new TxBroadcast
                     {
@@ -110,7 +131,7 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
                     {
                         OperationId = operationId
                     };
-                    await _observationRepository.InsertOrReplaceAsync(observation);   
+                    await _observationRepository.InsertOrReplaceAsync(observation);
                 }
             }
             catch (Exception ex)
@@ -126,7 +147,7 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
                 };
                 await _broadcastRepository.InsertOrReplaceAsync(broadcast);
 
-                _log.Error(ex, message:"Broadcasting has failed!", context: new { OperationId = operationId });
+                _log.Error(ex, message: "Broadcasting has failed!", context: new { OperationId = operationId });
                 throw new BusinessException($"Broadcasting transaction failed. operationId={operationId}, message={broadcast.Error}", ex, broadcast.ErrorCode.ToString());
             }
         }
@@ -157,7 +178,7 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
                 CreatedAt = DateTime.UtcNow
             };
 
-            var assetId = Core.Domain.Asset.Stellar.Id;
+            var assetId = _blockchainAssetsService.GetNativeAsset().Id;
             if (await _balanceRepository.DecreaseBalanceAsync(assetId, fromAddress, hash, amount))
             {
                 broadcast.State = TxBroadcastState.Completed;
@@ -193,17 +214,20 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
             var resultCodes = bre?.ErrorDetails?.Extras?.ResultCodes;
             var ops = resultCodes?.Operations;
             var transactionDetail = resultCodes?.Transaction;
-            if (bre?.ErrorDetails != null && bre.ErrorDetails.Status == (int)HttpStatusCode.BadRequest 
-                && ops != null 
-                && ops.Length > 0 
-                && (ops[0].Equals(StellarSdkConstants.OperationUnderfunded) 
+            if (bre?.ErrorDetails != null && bre.ErrorDetails.Status == (int)HttpStatusCode.BadRequest
+                && ops != null
+                && ops.Length > 0
+                && (ops[0].Equals(StellarSdkConstants.OperationUnderfunded)
                     || ops[0].Equals(StellarSdkConstants.OperationLowReserve)))
             {
                 return TxExecutionError.NotEnoughBalance;
             }
 
-            if (transactionDetail == "tx_too_late")
+            if (transactionDetail == "tx_too_late" ||
+                transactionDetail == "tx_bad_seq")
+            {
                 return TxExecutionError.BuildingShouldBeRepeated;
+            }
 
             return TxExecutionError.Unknown;
         }
@@ -289,8 +313,8 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
 
             var xdr = tx.ToXDR();
             var expirationDate = (DateTime.UtcNow + _transactionExpirationTime);
-            var maxUnixTimeDouble = expirationDate.ToUnixTime() /1000;//ms to seconds
-            var maxTimeUnix = (ulong) maxUnixTimeDouble;
+            var maxUnixTimeDouble = expirationDate.ToUnixTime() / 1000;//ms to seconds
+            var maxTimeUnix = (ulong)maxUnixTimeDouble;
             xdr.TimeBounds = new TimeBounds()
             {
                 MaxTime = new StellarBase.Generated.Uint64(maxTimeUnix),
@@ -375,20 +399,20 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
                 switch (operationType)
                 {
                     case OperationType.OperationTypeEnum.CREATE_ACCOUNT:
-                    {
-                        broadcast.Amount = operation.CreateAccountOp.StartingBalance.InnerValue;
-                        break;
-                    }
+                        {
+                            broadcast.Amount = operation.CreateAccountOp.StartingBalance.InnerValue;
+                            break;
+                        }
                     case OperationType.OperationTypeEnum.PAYMENT:
-                    {
-                        broadcast.Amount = operation.PaymentOp.Amount.InnerValue;
-                        break;
-                    }
+                        {
+                            broadcast.Amount = operation.PaymentOp.Amount.InnerValue;
+                            break;
+                        }
                     case OperationType.OperationTypeEnum.ACCOUNT_MERGE:
-                    {
-                        broadcast.Amount = _horizonService.GetAccountMergeAmount(tx.ResultXdr, 0);
-                        break;
-                    }
+                        {
+                            broadcast.Amount = _horizonService.GetAccountMergeAmount(tx.ResultXdr, 0);
+                            break;
+                        }
                     default:
                         throw new BusinessException($"Unsupported operation type. type={operationType}");
                 }

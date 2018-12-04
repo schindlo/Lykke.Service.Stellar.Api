@@ -13,6 +13,7 @@ using Lykke.Service.Stellar.Api.Core.Exceptions;
 using Lykke.Service.Stellar.Api.Core;
 using Lykke.Service.Stellar.Api.Core.Domain;
 using Lykke.Service.Stellar.Api.Core.Utils;
+using Lykke.Service.Stellar.Api.Services.Assets;
 
 namespace Lykke.Service.Stellar.Api.Services.Transaction
 {
@@ -26,6 +27,7 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
         private readonly IObservationRepository<TransactionHistoryObservation> _observationRepository;
         private readonly ITxHistoryRepository _txHistoryRepository;
         private readonly ILog _log;
+        private readonly IBlockchainAssetsService _blockchainAssetsService;
 
         [UsedImplicitly]
         public TransactionHistoryService(IBalanceService balanceService,
@@ -33,7 +35,8 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
                                          IKeyValueStoreRepository keyValueStoreRepository,
                                          IObservationRepository<TransactionHistoryObservation> observationRepository,
                                          ITxHistoryRepository txHistoryRepository,
-                                         ILogFactory log)
+                                         ILogFactory log,
+                                         IBlockchainAssetsService blockchainAssetsService)
         {
             _balanceService = balanceService;
             _horizonService = horizonService;
@@ -41,6 +44,7 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
             _observationRepository = observationRepository;
             _txHistoryRepository = txHistoryRepository;
             _log = log.CreateLog(this);
+            _blockchainAssetsService = blockchainAssetsService;
         }
 
         public async Task<bool> IsIncomingTransactionObservedAsync(string address)
@@ -272,7 +276,7 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
                         var history = new TxHistory
                         {
                             FromAddress = transaction.SourceAccount,
-                            AssetId = Core.Domain.Asset.Stellar.Id,
+                            AssetId = _blockchainAssetsService.GetNativeAsset().Id,
                             Hash = transaction.Hash,
                             OperationIndex = i,
                             PagingToken = transaction.PagingToken,

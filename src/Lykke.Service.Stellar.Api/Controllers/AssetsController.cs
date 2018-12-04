@@ -7,12 +7,20 @@ using Lykke.Service.Stellar.Api.Helpers;
 using Lykke.Service.BlockchainApi.Contract;
 using Lykke.Service.BlockchainApi.Contract.Assets;
 using Lykke.Common.Api.Contract.Responses;
+using Lykke.Service.Stellar.Api.Core.Services;
 
 namespace Lykke.Service.Stellar.Api.Controllers
 {
     [Route("api/assets")]
     public class AssetsController : Controller
     {
+        private readonly IBlockchainAssetsService _blockchainAssetsService;
+
+        public AssetsController(IBlockchainAssetsService blockchainAssetsService)
+        {
+            _blockchainAssetsService = blockchainAssetsService;
+        }
+
         [HttpGet]
         [SwaggerOperation("assets")]
         [ProducesResponseType(typeof(PaginationResponse<AssetResponse>), (int)HttpStatusCode.OK)]
@@ -28,7 +36,7 @@ namespace Lykke.Service.Stellar.Api.Controllers
                 return BadRequest(ErrorResponse.Create("Invalid parameter").AddModelError("continuation", "Continuation token not supported"));
             }
 
-            var assets = new [] { Asset.Stellar.ToAssetResponse() };
+            var assets = new [] { _blockchainAssetsService.GetNativeAsset().ToAssetResponse() };
             return Ok(PaginationResponse.From("", assets));
         }
 
@@ -38,12 +46,12 @@ namespace Lykke.Service.Stellar.Api.Controllers
         [ProducesResponseType((int)HttpStatusCode.NoContent)]
         public IActionResult GetAsset([Required] string assetId)
         {
-            if (Asset.Stellar.Id != assetId)
+            if (_blockchainAssetsService.GetNativeAsset().Id != assetId)
             {
                 return NoContent();
             }
 
-            return Ok(Asset.Stellar.ToAssetResponse());
+            return Ok(_blockchainAssetsService.GetNativeAsset().ToAssetResponse());
         }
     }
 }
