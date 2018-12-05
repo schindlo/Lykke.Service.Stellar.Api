@@ -204,7 +204,7 @@ namespace Lykke.Service.Stellar.Api.Controllers
             return Ok(new BroadcastedSingleTransactionResponse
             {
                 OperationId = broadcast.OperationId,
-                State = broadcast.State?.ToBroadcastedTransactionState() ?? BroadcastedTransactionState.InProgress,
+                State = broadcast.State.ToBroadcastedTransactionState(),
                 Timestamp = broadcast.CreatedAt,
                 Amount = broadcast.Amount.ToString(),
                 Fee = broadcast.Fee.ToString(),
