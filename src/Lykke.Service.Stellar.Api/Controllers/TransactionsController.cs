@@ -152,6 +152,7 @@ namespace Lykke.Service.Stellar.Api.Controllers
                 var errorResponse = StellarErrorResponse.Create("Wrong signature", BlockchainErrorCode.BuildingShouldBeRepeated);
                 return BadRequest(errorResponse);
             }
+
             if (broadcast != null)
             {
                 return new StatusCodeResult(StatusCodes.Status409Conflict);

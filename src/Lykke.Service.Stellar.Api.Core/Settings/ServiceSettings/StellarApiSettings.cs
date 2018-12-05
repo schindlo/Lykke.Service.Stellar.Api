@@ -1,4 +1,5 @@
 ﻿using System;
+using Lykke.Common.Chaos;
 using Lykke.SettingsReader.Attributes;
 
 namespace Lykke.Service.Stellar.Api.Core.Settings.ServiceSettings
@@ -19,5 +20,8 @@ namespace Lykke.Service.Stellar.Api.Core.Settings.ServiceSettings
         public string[] ExplorerUrlFormats { get; set; }
 
         public AssetSettings NativeAsset { get; set; }
+        
+        [Optional]
+        public ChaosSettings ChaosKitty { get; set; }
     }
 }

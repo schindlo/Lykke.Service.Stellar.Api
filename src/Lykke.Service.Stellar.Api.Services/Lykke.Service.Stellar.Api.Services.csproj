@@ -7,10 +7,17 @@
     <Version>1.0.0</Version>
   </PropertyGroup>
 
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <LangVersion>7.3</LangVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <LangVersion>7.3</LangVersion>
+  </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="csharp-stellar-sdk" Version="1.0.4" />
     <PackageReference Include="csharp-stellar-base" Version="1.0.3" />
     <PackageReference Include="Lykke.Common" Version="7.0.3" />
+    <PackageReference Include="Microsoft.Extensions.Http" Version="2.1.1" />
   </ItemGroup>
 
   <ItemGroup>
@@ -23,4 +30,12 @@
     <Folder Include="Horizon\" />
     <Folder Include="Modules\" />
   </ItemGroup>
+
+  <Target Name="ChangeAliasesOfStrongNameAssemblies" BeforeTargets="FindReferenceAssembliesForReferences;ResolveReferences">
+    <ItemGroup>
+      <ReferencePath Condition="'%(FileName)' == 'stellar-dotnetcore-sdk'">
+        <Aliases>sdk2</Aliases>
+      </ReferencePath>
+    </ItemGroup>
+  </Target>
 </Project>

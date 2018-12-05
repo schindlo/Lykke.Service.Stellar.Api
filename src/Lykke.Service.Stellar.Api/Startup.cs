@@ -9,6 +9,7 @@ using Lykke.AzureStorage.Tables.Entity.Metamodel.Providers;
 using Lykke.Common;
 using Lykke.Common.ApiLibrary.Middleware;
 using Lykke.Common.ApiLibrary.Swagger;
+using Lykke.Common.Chaos;
 using Lykke.Common.Log;
 using Lykke.Logs;
 using Lykke.Logs.Loggers.LykkeSlack;
@@ -48,6 +49,7 @@ namespace Lykke.Service.Stellar.Api
         {
             try
             {
+                services.AddHttpClient();
                 services.AddMvc()
                     .AddJsonOptions(options =>
                     {
@@ -89,6 +91,7 @@ namespace Lykke.Service.Stellar.Api
                     }
                     );
 
+                builder.RegisterChaosKitty(appSettings.CurrentValue.StellarApiService.ChaosKitty);
                 builder.RegisterModule(new StellarApiModule());
                 builder.RegisterModule(new RepositoryModule(appSettings.Nested(x => x.StellarApiService)));
                 builder.RegisterModule(new ServiceModule(appSettings.Nested(x => x.StellarApiService)));

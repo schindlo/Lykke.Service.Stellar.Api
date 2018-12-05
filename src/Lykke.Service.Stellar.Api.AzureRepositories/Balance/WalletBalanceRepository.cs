@@ -1,35 +1,38 @@
-﻿using System.Linq;
+﻿using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using AzureStorage;
 using AzureStorage.Tables;
 using JetBrains.Annotations;
-using Lykke.SettingsReader;
-using Lykke.Service.Stellar.Api.Core.Domain.Balance;
-using Microsoft.WindowsAzure.Storage.Table;
 using Lykke.Common.Log;
+using Lykke.Service.Stellar.Api.Core.Domain.Balance;
+using Lykke.SettingsReader;
+using Microsoft.WindowsAzure.Storage.Table;
 
 namespace Lykke.Service.Stellar.Api.AzureRepositories.Balance
 {
     public class WalletBalanceRepository : IWalletBalanceRepository
     {
-        private const string TableName = "WalletBalance";
+        private const string BalanceTableName = "WalletBalance";
+        private const string JournalTableName = "WalletBalanceJournal";
 
-        private readonly INoSQLTableStorage<WalletBalanceEntity> _table;
+        private readonly INoSQLTableStorage<WalletBalanceEntity> _balanceTable;
+        private readonly INoSQLTableStorage<WalletBalanceJournalEntity> _journalTable;
+
 
         [UsedImplicitly]
         public WalletBalanceRepository(IReloadingManager<string> dataConnStringManager,
                                        ILogFactory logFactory)
         {
-            _table = AzureTableStorage<WalletBalanceEntity>.Create(dataConnStringManager, TableName, logFactory);
+            _balanceTable = AzureTableStorage<WalletBalanceEntity>.Create(dataConnStringManager, BalanceTableName, logFactory);
+            _journalTable = AzureTableStorage<WalletBalanceJournalEntity>.Create(dataConnStringManager, JournalTableName, logFactory);
         }
 
         public async Task<(List<WalletBalance> Entities, string ContinuationToken)> GetAllAsync(int take, string continuationToken)
         {
-            var filter = TableQuery.GenerateFilterConditionForLong(nameof(WalletBalanceEntity.Balance), QueryComparisons.GreaterThan, 0);
-            var query = new TableQuery<WalletBalanceEntity>().Where(filter).Take(take);
-            var data = await _table.GetDataWithContinuationTokenAsync(query, continuationToken);
-
+            var data = await _balanceTable.GetDataWithContinuationTokenAsync(take, continuationToken);
             var balances = data.Entities.Select(x => x.ToDomain()).ToList();
             return (balances, data.ContinuationToken);
         }
@@ -37,7 +40,7 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Balance
         public async Task<WalletBalance> GetAsync(string assetId, string address)
         {
             var rowKey = WalletBalanceEntity.GetRowKey(assetId, address);
-            var entity = await _table.GetDataAsync(TableKeyHelper.GetHashedRowKey(rowKey), rowKey);
+            var entity = await _balanceTable.GetDataAsync(TableKeyHelper.GetHashedRowKey(rowKey), rowKey);
             var wallet = entity?.ToDomain();
             return wallet;
         }
@@ -45,90 +48,67 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Balance
         public async Task DeleteIfExistAsync(string assetId, string address)
         {
             var rowKey = WalletBalanceEntity.GetRowKey(assetId, address);
-            await _table.DeleteIfExistAsync(TableKeyHelper.GetHashedRowKey(rowKey), rowKey);
+            await _balanceTable.DeleteIfExistAsync(TableKeyHelper.GetHashedRowKey(rowKey), rowKey);
         }
 
-        public async Task<bool> IncreaseBalanceAsync(string assetId, string address, long ledger, int operationIndex, string hash, long amount)
+        public async Task RecordOperationAsync(string assetId, string address, long ledger, long operationId, string transactionHash, long amount)
         {
-            var rowKey = WalletBalanceEntity.GetRowKey(assetId, address);
-            var partitionKey = TableKeyHelper.GetHashedRowKey(rowKey);
-
-            WalletBalanceEntity CreateEntity()
+            await _journalTable.InsertOrReplaceAsync(new WalletBalanceJournalEntity
             {
-                return new WalletBalanceEntity
-                {
-                    PartitionKey = partitionKey,
-                    RowKey = rowKey,
-                    Balance = amount,
-                    Ledger = ledger,
-                    OperationIndex = operationIndex,
-                    LastTransactionHash = hash
-                };
-            }
-
-            // ReSharper disable once ImplicitlyCapturedClosure
-            bool ModifyEntity(WalletBalanceEntity entity)
-            {
-                // ReSharper disable once InvertIf
-                if (ledger > entity.Ledger ||
-                    ledger == entity.Ledger && operationIndex > entity.OperationIndex)
-                {
-                    entity.Balance += amount;
-                    entity.Ledger = ledger;
-                    entity.OperationIndex = operationIndex;
-                    entity.LastTransactionHash = hash;
-                    return true;
-                }
-
-                return false;
-            }
-
-            var result = await _table.InsertOrModifyAsync(partitionKey, rowKey, CreateEntity, ModifyEntity);
-            return result;
+                PartitionKey = WalletBalanceJournalEntity.GetPartitionKey(assetId, address),
+                RowKey = WalletBalanceJournalEntity.GetRowKey(transactionHash, operationId),
+                AssetId = assetId,
+                Address = address,
+                Ledger = ledger,
+                TransactionHash = transactionHash,
+                OperationId = operationId,
+                Amount = amount
+            });
         }
 
-        public async Task<bool> DecreaseBalanceAsync(string assetId, string address, string hash, long amount)
+        public async Task RefreshBalance(IEnumerable<(string assetId, string address)> wallets)
         {
-            var rowKey = WalletBalanceEntity.GetRowKey(assetId, address);
-            var partitionKey = TableKeyHelper.GetHashedRowKey(rowKey);
-
-            // ReSharper disable once ImplicitlyCapturedClosure
-            WalletBalanceEntity ModifyEntity(WalletBalanceEntity entity)
+            if (wallets.Any())
             {
-                // ReSharper disable once InvertIf
-                if (!hash.Equals(entity.LastTransactionHash, System.StringComparison.OrdinalIgnoreCase))
+                using (var semaphore = new SemaphoreSlim(10))
                 {
-                    if (entity.Balance < amount)
+                    var tasks = wallets.Select(async x =>
                     {
-                        return null;
-                    }
+                        try
+                        {
+                            await semaphore.WaitAsync();
+                            await RefreshBalance(x.assetId, x.address);
+                        }
+                        finally
+                        {
+                            semaphore.Release();
+                        }
+                    });
 
-                    entity.Balance -= amount;
-                    entity.LastTransactionHash = hash;
-                    entity.Ledger += 1; //DIRTY-HACK
+                    await Task.WhenAll(tasks);
                 }
-
-                return entity;
             }
-
-            var result = await _table.MergeAsync(partitionKey, rowKey, ModifyEntity);
-            return result != null;
         }
 
-        public async Task<bool> DeleteIfBalanceIsZero(string assetId, string address)
+        public async Task RefreshBalance(string assetId, string address)
         {
-            var rowKey = WalletBalanceEntity.GetRowKey(assetId, address);
-            var partitionKey = TableKeyHelper.GetHashedRowKey(rowKey);
+            var balanceRowKey = WalletBalanceEntity.GetRowKey(assetId, address);
+            var balancePartitionKey = TableKeyHelper.GetHashedRowKey(balanceRowKey);
+            var records = await _journalTable.GetDataAsync(WalletBalanceJournalEntity.GetPartitionKey(assetId, address));
+            var balance = records.Aggregate(
+                new WalletBalanceEntity { PartitionKey = balancePartitionKey, RowKey = balanceRowKey },
+                (b, j) =>
+                {
+                    b.Balance += j.Amount;
+                    b.Ledger = Math.Max(b.Ledger, j.Ledger);
+                    return b;
+                }
+            );
 
-            var entity = await _table.GetDataAsync(partitionKey, rowKey);
-            // ReSharper disable once InvertIf
-            if (entity != null && entity.Balance == 0)
-            {
-                await _table.DeleteAsync(entity);
-                return true;
-            }
-
-            return false;
+            if (balance.Balance == 0)
+                await _balanceTable.DeleteIfExistAsync(balancePartitionKey, balanceRowKey);
+            else
+                await _balanceTable.InsertOrMergeAsync(balance);
         }
     }
 }

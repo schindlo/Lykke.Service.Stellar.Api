@@ -18,6 +18,7 @@ using Lykke.Service.Stellar.Api.Core.Domain;
 using Lykke.Service.Stellar.Api.Core.Domain.Observation;
 using Newtonsoft.Json;
 using Common.Log;
+using Lykke.Common.Chaos;
 
 namespace Lykke.Service.Stellar.Api.Services.Transaction
 {
@@ -34,6 +35,7 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
         private readonly TimeSpan _transactionExpirationTime;
         private readonly ILog _log;
         private readonly IBlockchainAssetsService _blockchainAssetsService;
+        private readonly IChaosKitty _chaos;
 
         [UsedImplicitly]
         public TransactionService(IBalanceService balanceService,
@@ -44,7 +46,8 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
                                   ITxBuildRepository buildRepository,
                                   TimeSpan transactionExpirationTime,
                                   ILogFactory logFactory,
-                                  IBlockchainAssetsService blockchainAssetsService)
+                                  IBlockchainAssetsService blockchainAssetsService,
+                                  IChaosKitty chaosKitty)
         {
             _balanceService = balanceService;
             _horizonService = horizonService;
@@ -55,6 +58,7 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
             _transactionExpirationTime = transactionExpirationTime;
             _log = logFactory.CreateLog(this);
             _blockchainAssetsService = blockchainAssetsService;
+            _chaos = chaosKitty;
         }
 
         public bool CheckSignature(string xdrBase64)
@@ -83,72 +87,79 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
         public async Task BroadcastTxAsync(Guid operationId, string xdrBase64)
         {
             long amount = 0;
+            var xdr = Convert.FromBase64String(xdrBase64);
+            var reader = new ByteReader(xdr);
+            var txEnvelope = TransactionEnvelope.Decode(reader);
 
-            try
+            if (!await ProcessDwToHwTransaction(operationId, txEnvelope.Tx))
             {
-                var xdr = Convert.FromBase64String(xdrBase64);
-                var reader = new ByteReader(xdr);
-                var txEnvelope = TransactionEnvelope.Decode(reader);
+                var operation = _horizonService.GetFirstOperationFromTxEnvelope(txEnvelope);
+                var operationType = operation.Discriminant.InnerValue;
 
-                if (!await ProcessDwToHwTransaction(operationId, txEnvelope.Tx))
+                // ReSharper disable once SwitchStatementMissingSomeCases
+                switch (operationType)
                 {
-                    var operation = _horizonService.GetFirstOperationFromTxEnvelope(txEnvelope);
-                    var operationType = operation.Discriminant.InnerValue;
+                    case OperationType.OperationTypeEnum.CREATE_ACCOUNT:
+                        {
+                            amount = operation.CreateAccountOp.StartingBalance.InnerValue;
+                            break;
+                        }
+                    case OperationType.OperationTypeEnum.PAYMENT:
+                        {
+                            amount = operation.PaymentOp.Amount.InnerValue;
+                            break;
+                        }
+                    case OperationType.OperationTypeEnum.ACCOUNT_MERGE:
+                        {
+                            // amount not yet known
+                            break;
+                        }
+                    default:
+                        throw new BusinessException($"Unsupported operation type. type={operationType}");
+                }
 
-                    // ReSharper disable once SwitchStatementMissingSomeCases
-                    switch (operationType)
-                    {
-                        case OperationType.OperationTypeEnum.CREATE_ACCOUNT:
-                            {
-                                amount = operation.CreateAccountOp.StartingBalance.InnerValue;
-                                break;
-                            }
-                        case OperationType.OperationTypeEnum.PAYMENT:
-                            {
-                                amount = operation.PaymentOp.Amount.InnerValue;
-                                break;
-                            }
-                        case OperationType.OperationTypeEnum.ACCOUNT_MERGE:
-                            {
-                                // amount not yet known
-                                break;
-                            }
-                        default:
-                            throw new BusinessException($"Unsupported operation type. type={operationType}");
-                    }
+                string hash;
 
-                    var hash = await _horizonService.SubmitTransactionAsync(xdrBase64);
+                try
+                {
+                    hash = await _horizonService.SubmitTransactionAsync(xdrBase64);
+                }
+                catch (Exception ex)
+                {
                     var broadcast = new TxBroadcast
                     {
                         OperationId = operationId,
-                        State = TxBroadcastState.InProgress,
+                        State = TxBroadcastState.Failed,
                         Amount = amount,
-                        Hash = hash,
-                        CreatedAt = DateTime.UtcNow
+                        CreatedAt = DateTime.UtcNow,
+                        Error = GetErrorMessage(ex),
+                        ErrorCode = GetErrorCode(ex)
                     };
                     await _broadcastRepository.InsertOrReplaceAsync(broadcast);
-                    var observation = new BroadcastObservation
-                    {
-                        OperationId = operationId
-                    };
-                    await _observationRepository.InsertOrReplaceAsync(observation);
+
+                    _log.Error(ex, message: "Broadcasting has failed!", context: new { OperationId = operationId });
+                    throw new BusinessException($"Broadcasting transaction failed. operationId={operationId}, message={broadcast.Error}", ex, broadcast.ErrorCode.ToString());
                 }
-            }
-            catch (Exception ex)
-            {
-                var broadcast = new TxBroadcast
+
+                _chaos.Meow(nameof(BroadcastTxAsync));
+
+                var observation = new BroadcastObservation
+                {
+                    OperationId = operationId
+                };
+
+                await _observationRepository.InsertOrReplaceAsync(observation);
+
+                _chaos.Meow(nameof(BroadcastTxAsync));
+
+                await _broadcastRepository.InsertOrReplaceAsync(new TxBroadcast
                 {
                     OperationId = operationId,
-                    State = TxBroadcastState.Failed,
+                    State = TxBroadcastState.InProgress,
                     Amount = amount,
-                    CreatedAt = DateTime.UtcNow,
-                    Error = GetErrorMessage(ex),
-                    ErrorCode = GetErrorCode(ex)
-                };
-                await _broadcastRepository.InsertOrReplaceAsync(broadcast);
-
-                _log.Error(ex, message: "Broadcasting has failed!", context: new { OperationId = operationId });
-                throw new BusinessException($"Broadcasting transaction failed. operationId={operationId}, message={broadcast.Error}", ex, broadcast.ErrorCode.ToString());
+                    Hash = hash,
+                    CreatedAt = DateTime.UtcNow
+                });
             }
         }
 
@@ -163,10 +174,18 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
 
             var fromAddress = $"{fromKeyPair.Address}{Constants.PublicAddressExtension.Separator}{tx.Memo.Text}";
             var amount = tx.Operations[0].Body.PaymentOp.Amount.InnerValue;
-            var hash = "ut_" + (DateTime.UtcNow.ToUnixTime()).ToString(CultureInfo.InvariantCulture);//_horizonService.GetTransactionHash(tx);
+            
+            // Use our guid-ed OperationId as transaction hash, as it uniquely identifies the transaction,
+            // just without dashes to look more hash-y.
+            var hash = operationId.ToString("N");
+
+            // While we have only single action within DW->HW transaction, 
+            // we can use any value to identify action within transaction.
+            // Use hashed operation ID to add more diversity.
+            var opId = operationId.ToString("N").CalculateHash64();
+
             var ledger = await _horizonService.GetLatestLedger();
             var updateLedger = (ledger.Sequence * 10) + 1;
-
             var broadcast = new TxBroadcast
             {
                 OperationId = operationId,
@@ -179,21 +198,26 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
             };
 
             var assetId = _blockchainAssetsService.GetNativeAsset().Id;
-            if (await _balanceRepository.DecreaseBalanceAsync(assetId, fromAddress, hash, amount))
-            {
-                broadcast.State = TxBroadcastState.Completed;
-            }
-            else
+            var balance = await _balanceRepository.GetAsync(assetId, fromAddress);
+
+            if (balance.Balance < amount)
             {
                 broadcast.State = TxBroadcastState.Failed;
                 broadcast.Error = "Not enough balance!";
                 broadcast.ErrorCode = TxExecutionError.NotEnoughBalance;
             }
+            else
+            {
+                await _balanceRepository.RecordOperationAsync(assetId, fromAddress, updateLedger, opId, hash, (-1) * amount);
+                await _balanceRepository.RefreshBalance(assetId, fromAddress);
+                broadcast.State = TxBroadcastState.Completed;
+            }
 
+            _chaos.Meow(nameof(ProcessDwToHwTransaction));
+
+            // update state
             await _broadcastRepository.InsertOrReplaceAsync(broadcast);
-            await _balanceRepository.DeleteIfBalanceIsZero(assetId, fromAddress);
             return true;
-
         }
 
         private static string GetErrorMessage(Exception ex)

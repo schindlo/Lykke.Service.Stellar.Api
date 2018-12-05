@@ -9,8 +9,6 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Balance
     {
         private long _balance;
         private long _ledger;
-        private int _operationIndex;
-        private string _lastTransactionHash;
 
         public string AssetId => RowKey.Split(':')[0];
 
@@ -35,28 +33,6 @@ namespace Lykke.Service.Stellar.Api.AzureRepositories.Balance
                 if (_ledger == value) return;
                 _ledger = value;
                 MarkValueTypePropertyAsDirty(nameof(Ledger));
-            }
-        }
-
-        public int OperationIndex
-        {
-            get => _operationIndex;
-            set
-            {
-                if (_operationIndex == value) return;
-                _operationIndex = value;
-                MarkValueTypePropertyAsDirty(nameof(OperationIndex));
-            }
-        }
-
-        public string LastTransactionHash
-        {
-            get => _lastTransactionHash;
-            set
-            {
-                if (_lastTransactionHash == value) return;
-                _lastTransactionHash = value;
-                MarkValueTypePropertyAsDirty(nameof(LastTransactionHash));
             }
         }
 

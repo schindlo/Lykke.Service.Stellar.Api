@@ -1,8 +1,10 @@
-﻿using System.Collections.Generic;
+﻿extern alias sdk2;
+using System.Collections.Generic;
 using System.Threading.Tasks;
+using sdk2::stellar_dotnet_sdk.responses.operations;
 using StellarBase.Generated;
-using static StellarBase.Generated.Operation;
 using StellarSdk.Model;
+using static StellarBase.Generated.Operation;
 
 namespace Lykke.Service.Stellar.Api.Core.Services
 {
@@ -19,6 +21,8 @@ namespace Lykke.Service.Stellar.Api.Core.Services
         /// <returns></returns>
         Task<List<TransactionDetails>> GetTransactions(string address, string order = StellarSdkConstants.OrderAsc, string cursor = "", int limit = 100);
 
+        Task<List<OperationResponse>> GetTransactionOperations(string hash);
+
         Task<LedgerDetails> GetLatestLedger();
 
         Task<AccountDetails> GetAccountDetails(string address);
@@ -26,6 +30,8 @@ namespace Lykke.Service.Stellar.Api.Core.Services
         Task<bool> AccountExists(string address);
 
         long GetAccountMergeAmount(string resultXdrBase64, int operationIndex);
+
+        long GetAccountMergeAmount(string metaXdrBase64, string sourceAddress);
 
         OperationBody GetFirstOperationFromTxEnvelopeXdr(string xdrBase64);
 
