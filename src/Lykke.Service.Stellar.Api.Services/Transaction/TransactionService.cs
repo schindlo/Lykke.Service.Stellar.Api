@@ -84,16 +84,14 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
             return await _broadcastRepository.GetAsync(operationId);
         }
 
-        public async Task BroadcastTxAsync(Guid operationId, string xdrBase64, TxBroadcast broadcast = null)
+        public async Task BroadcastTxAsync(Guid operationId, string xdrBase64)
         {
             long amount = 0;
             var xdr = Convert.FromBase64String(xdrBase64);
             var reader = new ByteReader(xdr);
             var txEnvelope = TransactionEnvelope.Decode(reader);
 
-            _chaos.Meow(nameof(BroadcastTxAsync));
-
-            if (!await ProcessDwToHwTransaction(operationId, txEnvelope.Tx, broadcast))
+            if (!await ProcessDwToHwTransaction(operationId, txEnvelope.Tx))
             {
                 var operation = _horizonService.GetFirstOperationFromTxEnvelope(txEnvelope);
                 var operationType = operation.Discriminant.InnerValue;
@@ -128,7 +126,7 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
                 }
                 catch (Exception ex)
                 {
-                    broadcast = new TxBroadcast
+                    var broadcast = new TxBroadcast
                     {
                         OperationId = operationId,
                         State = TxBroadcastState.Failed,
@@ -154,20 +152,18 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
 
                 _chaos.Meow(nameof(BroadcastTxAsync));
 
-                broadcast = new TxBroadcast
+                await _broadcastRepository.InsertOrReplaceAsync(new TxBroadcast
                 {
                     OperationId = operationId,
                     State = TxBroadcastState.InProgress,
                     Amount = amount,
                     Hash = hash,
                     CreatedAt = DateTime.UtcNow
-                };
-
-                await _broadcastRepository.InsertOrReplaceAsync(broadcast);
+                });
             }
         }
 
-        private async Task<bool> ProcessDwToHwTransaction(Guid operationId, StellarBase.Generated.Transaction tx, TxBroadcast broadcast = null)
+        private async Task<bool> ProcessDwToHwTransaction(Guid operationId, StellarBase.Generated.Transaction tx)
         {
             var fromKeyPair = KeyPair.FromXdrPublicKey(tx.SourceAccount.InnerValue);
             if (!_balanceService.IsDepositBaseAddress(fromKeyPair.Address) || tx.Operations.Length != 1 ||
@@ -176,15 +172,21 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
             var toKeyPair = KeyPair.FromXdrPublicKey(tx.Operations[0].Body.PaymentOp.Destination.InnerValue);
             if (!_balanceService.IsDepositBaseAddress(toKeyPair.Address)) return false;
 
-            _chaos.Meow(nameof(ProcessDwToHwTransaction));
-
             var fromAddress = $"{fromKeyPair.Address}{Constants.PublicAddressExtension.Separator}{tx.Memo.Text}";
             var amount = tx.Operations[0].Body.PaymentOp.Amount.InnerValue;
-            var hash = broadcast?.Hash ?? "ut_" + (DateTime.UtcNow.ToUnixTime()).ToString(CultureInfo.InvariantCulture);//_horizonService.GetTransactionHash(tx);
+            
+            // Use our guid-ed OperationId as transaction hash, as it uniquely identifies the transaction,
+            // just without dashes to look more hash-y.
+            var hash = operationId.ToString("N");
+
+            // While we have only single action within DW->HW transaction, 
+            // we can use any value to identify action within transaction.
+            // Use hashed operation ID to add more diversity.
+            var opId = operationId.ToString("N").CalculateHash64();
+
             var ledger = await _horizonService.GetLatestLedger();
             var updateLedger = (ledger.Sequence * 10) + 1;
-
-            broadcast = new TxBroadcast
+            var broadcast = new TxBroadcast
             {
                 OperationId = operationId,
                 Amount = amount,
@@ -194,11 +196,6 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
                 Ledger = updateLedger,
                 CreatedAt = DateTime.UtcNow
             };
-
-            // save without state to prevent changing of tx hash
-            await _broadcastRepository.InsertOrReplaceAsync(broadcast);
-
-            _chaos.Meow(nameof(ProcessDwToHwTransaction));
 
             var assetId = _blockchainAssetsService.GetNativeAsset().Id;
             var balance = await _balanceRepository.GetAsync(assetId, fromAddress);
@@ -211,7 +208,7 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
             }
             else
             {
-                await _balanceRepository.RecordOperationAsync(assetId, fromAddress, updateLedger, 0, hash, (-1) * amount);
+                await _balanceRepository.RecordOperationAsync(assetId, fromAddress, updateLedger, opId, hash, (-1) * amount);
                 await _balanceRepository.RefreshBalance(assetId, fromAddress);
                 broadcast.State = TxBroadcastState.Completed;
             }

@@ -10,7 +10,7 @@ namespace Lykke.Service.Stellar.Api.Core.Services
     {
         Task<TxBroadcast> GetTxBroadcastAsync(Guid operationId);
 
-        Task BroadcastTxAsync(Guid operationId, string xdrBase64, TxBroadcast broadcast = null);
+        Task BroadcastTxAsync(Guid operationId, string xdrBase64);
 
         Task DeleteTxBroadcastAsync(Guid operationId);
 
