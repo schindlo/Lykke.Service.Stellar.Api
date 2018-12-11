@@ -126,19 +126,8 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
                 }
                 catch (Exception ex)
                 {
-                    var broadcast = new TxBroadcast
-                    {
-                        OperationId = operationId,
-                        State = TxBroadcastState.Failed,
-                        Amount = amount,
-                        CreatedAt = DateTime.UtcNow,
-                        Error = GetErrorMessage(ex),
-                        ErrorCode = GetErrorCode(ex)
-                    };
-                    await _broadcastRepository.InsertOrReplaceAsync(broadcast);
-
                     _log.Error(ex, message: "Broadcasting has failed!", context: new { OperationId = operationId });
-                    throw new BusinessException($"Broadcasting transaction failed. operationId={operationId}, message={broadcast.Error}", ex, broadcast.ErrorCode.ToString());
+                    throw new BusinessException($"Broadcasting transaction failed. operationId={operationId}, message={GetErrorMessage(ex)}", ex, GetErrorCode(ex).ToString());
                 }
 
                 _chaos.Meow(nameof(BroadcastTxAsync));
