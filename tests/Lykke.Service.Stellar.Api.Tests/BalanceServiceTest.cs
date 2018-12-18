@@ -8,12 +8,15 @@ using Lykke.Service.Stellar.Api.Core.Domain.Observation;
 using Lykke.Service.Stellar.Api.Core.Services;
 using Lykke.Service.Stellar.Api.Services.Balance;
 using Moq;
+using stellar_dotnet_sdk.responses;
+using stellar_dotnet_sdk.responses.operations;
 using StellarSdk.Model;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Xunit;
+using System.Collections;
 
 namespace Lykke.Service.Stellar.Api.Tests
 {
@@ -45,9 +48,11 @@ namespace Lykke.Service.Stellar.Api.Tests
             horizonService.Setup(x => x.GetMemo(It.IsAny<TransactionDetails>())).Returns(memo);
             walletBalanceRepository
                 .Setup(x => x.RecordOperationAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<long>(), It.IsAny<long>(), It.IsAny<string>(), It.IsAny<long>()))
+                .Returns((string a, string b, long c, long d, string e, long f) => Task.CompletedTask)
                 .Verifiable();
             walletBalanceRepository
                 .Setup(x => x.RefreshBalance(It.IsAny<IEnumerable<(string, string)>>()))
+                .Returns((IEnumerable<(string, string)> a) => Task.CompletedTask)
                 .Verifiable();
 
             horizonService.Setup(x => x.GetTransactions(depositBaseAddress, 
@@ -85,6 +90,12 @@ namespace Lykke.Service.Stellar.Api.Tests
                     }
                 });
 
+            horizonService.Setup(x => x.GetTransactionOperations(It.IsAny<string>()))
+                .ReturnsAsync(new List<OperationResponse>
+                {
+                    JsonSingleton.GetInstance<PaymentOperationResponse>("{\"id\": \"5375855945584641\",\n  \"paging_token\": \"5375855945584641\",\n  \"source_account\": \"GD5BZDV2RPSIEXFA5G6L3GECLKEBQ4C3ZZYT57XM5IWW7NJGXI7NIBPQ\",\n  \"type\": \"payment\",\n  \"type_i\": 1,\n  \"created_at\": \"2018-12-18T07:35:38Z\",\n  \"transaction_hash\": \"97da6620df28655cfb42f25e988f5727c3f54fbd09df35f0fa56f88c7ef9572c\",\n  \"asset_type\": \"native\",\n  \"from\": \"GD5BZDV2RPSIEXFA5G6L3GECLKEBQ4C3ZZYT57XM5IWW7NJGXI7NIBPQ\",\n  \"to\": \"GD5BZDV2RPSIEXFA5G6L3GECLKEBQ4C3ZZYT57XM5IWW7NJGXI7NIBPQ\",\n  \"amount\": \"9.9990000\"}")
+                });
+
             blockchainAssetsService.Setup(x => x.GetNativeAsset())
                 .Returns(new Asset("XLM", "", "Stellar Lumen", "native", 7));
 
@@ -104,7 +115,7 @@ namespace Lykke.Service.Stellar.Api.Tests
             // Assert
 
             walletBalanceRepository.Verify(
-                x => x.RecordOperationAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<long>(), It.IsAny<int>(), It.IsAny<string>(), It.IsAny<long>()),
+                x => x.RecordOperationAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<long>(), It.IsAny<long>(), It.IsAny<string>(), It.IsAny<long>()),
                 Times.Never
             );
 
@@ -138,13 +149,13 @@ namespace Lykke.Service.Stellar.Api.Tests
             };
 
             horizonService.Setup(x => x.GetMemo(It.IsAny<TransactionDetails>())).Returns(memo);
-            walletBalanceRepository.Setup(x => x.RecordOperationAsync(It.IsAny<string>(),
-                It.IsAny<string>(),
-                It.IsAny<long>(),
-                It.IsAny<long>(),
-                It.IsAny<string>(),
-                It.IsAny<long>())).Verifiable();
-            walletBalanceRepository.Setup(x => x.RefreshBalance(It.IsAny<(string, string)[]>()))
+            walletBalanceRepository
+                .Setup(x => x.RecordOperationAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<long>(), It.IsAny<long>(), It.IsAny<string>(), It.IsAny<long>()))
+                .Returns((string a, string b, long c, long d, string e, long f) => Task.CompletedTask)
+                .Verifiable();
+            walletBalanceRepository
+                .Setup(x => x.RefreshBalance(It.IsAny<IEnumerable<(string, string)>>()))
+                .Returns((IEnumerable<(string, string)> a) => Task.CompletedTask)
                 .Verifiable();
 
             horizonService.Setup(x => x.GetTransactions(depositBaseAddress,
@@ -182,6 +193,12 @@ namespace Lykke.Service.Stellar.Api.Tests
                     }
                 });
 
+            horizonService.Setup(x => x.GetTransactionOperations(It.IsAny<string>()))
+                .ReturnsAsync(new List<OperationResponse>
+                {
+                    JsonSingleton.GetInstance<PaymentOperationResponse>("{\"id\": \"5375855945584641\",\n  \"paging_token\": \"5375855945584641\",\n  \"source_account\": \"GD5BZDV2RPSIEXFA5G6L3GECLKEBQ4C3ZZYT57XM5IWW7NJGXI7NIBPQ\",\n  \"type\": \"payment\",\n  \"type_i\": 1,\n  \"created_at\": \"2018-12-18T07:35:38Z\",\n  \"transaction_hash\": \"97da6620df28655cfb42f25e988f5727c3f54fbd09df35f0fa56f88c7ef9572c\",\n  \"asset_type\": \"native\",\n  \"from\": \"GD5BZDV2RPSIEXFA5G6L3GECLKEBQ4C3ZZYT57XM5IWW7NJGXI7NIBPQ\",\n  \"to\": \"GD5BZDV2RPSIEXFA5G6L3GECLKEBQ4C3ZZYT57XM5IWW7NJGXI7NIBPQ\",\n  \"amount\": \"9.9990000\"}")
+                });
+
             blockchainAssetsService.Setup(x => x.GetNativeAsset())
                 .Returns(new Asset("XLM", "", "Stellar Lumen", "native", 7));
 
@@ -205,10 +222,11 @@ namespace Lykke.Service.Stellar.Api.Tests
 
             // Assert
 
-            walletBalanceRepository.Verify(x => x.RecordOperationAsync(It.IsAny<string>(),
+            walletBalanceRepository.Verify(x => x.RecordOperationAsync(
+                It.IsAny<string>(),
                 It.IsAny<string>(),
                 It.IsAny<long>(),
-                It.IsAny<int>(),
+                It.IsAny<long>(),
                 It.IsAny<string>(),
                 It.IsAny<long>()), Times.AtLeastOnce);
             
