@@ -16,33 +16,35 @@ namespace Lykke.Tools.Stellar.Commands
     public class BalanceCalculationCommand : ICommand
     {
         private readonly IConfigurationHelper _helper;
-        private readonly string _settingsUrl;
+        private readonly string _horizonUrl;
+        private readonly string _passPhrase;
         private BigInteger _amountSoFar = 0;
         private readonly string _address;
         private readonly BigInteger? _latestBlock;
 
         public BalanceCalculationCommand(IConfigurationHelper helper,
-            string settingsUrl,
+            string horizonUrl,
+            string passPhrase,
             string address,
             BigInteger? latestBlock)
         {
             _helper = helper;
-            _settingsUrl = settingsUrl;
+            _horizonUrl = horizonUrl;
+            _passPhrase = passPhrase;
             _address = address;
             _latestBlock = latestBlock;
         }
 
         public async Task<int> ExecuteAsync()
         {
-            return await CalculateBalanceAsync(_settingsUrl);
+            return await CalculateBalanceAsync();
         }
 
-        private async Task<int> CalculateBalanceAsync(
-            string settingsUrl)
+        private async Task<int> CalculateBalanceAsync()
         {
             #region RegisterDependencies
 
-            var (resolver, consoleLogger) = _helper.GetResolver(settingsUrl);
+            var (resolver, consoleLogger) = _helper.GetResolver(_horizonUrl, _passPhrase);
 
             #endregion
 

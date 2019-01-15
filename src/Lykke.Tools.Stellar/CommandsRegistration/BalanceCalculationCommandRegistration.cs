@@ -19,8 +19,12 @@ namespace Lykke.Tools.Stellar.CommandsRegistration
             lineApplication.Description = "This is the description for scan-deposits-withdraw.";
             lineApplication.HelpOption("-?|-h|--help");
 
-            var serviceUrlOption = lineApplication.Option("-s|--settings <optionvalue>",
-                "Settings url",
+            var horizonUrlOption = lineApplication.Option("-s|--settings <optionvalue>",
+                "Horizon url",
+                CommandOptionType.SingleValue);
+
+            var passphraseOption = lineApplication.Option("-ph|--pass-phrase <optionvalue>",
+                "Passphrase",
                 CommandOptionType.SingleValue);
 
             var addressOption = lineApplication.Option("-a|--address <optionvalue>",
@@ -41,7 +45,8 @@ namespace Lykke.Tools.Stellar.CommandsRegistration
                 }
 
                 var command = _factory.CreateCommand((helper) => new BalanceCalculationCommand(helper,
-                    serviceUrlOption.Value(),
+                    horizonUrlOption.Value(),
+                    passphraseOption.Value(),
                     addressOption.Value(),
                     latestLedger
                     ));

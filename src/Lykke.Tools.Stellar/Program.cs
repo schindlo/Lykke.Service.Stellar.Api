@@ -41,6 +41,7 @@ namespace Lykke.Tools.Erc20Exporter
             }
 
             application.Execute(args);
+            Console.ReadKey();
         }
     }
 }
