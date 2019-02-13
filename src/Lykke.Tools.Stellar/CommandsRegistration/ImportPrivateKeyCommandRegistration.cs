@@ -1,4 +1,5 @@
-﻿using System.Numerics;
+﻿using System;
+using System.Numerics;
 using Lykke.Tools.Stellar.Commands;
 using Microsoft.Extensions.CommandLineUtils;
 
@@ -33,6 +34,24 @@ namespace Lykke.Tools.Stellar.CommandsRegistration
 
             lineApplication.OnExecute(async () =>
             {
+                if (!signFacadeUrl.HasValue())
+                {
+                    Console.WriteLine($"{signFacadeUrl.Description} is empty");
+                    return -1;
+                }
+
+                if (!apiKey.HasValue())
+                {
+                    Console.WriteLine($"{apiKey.Description} is empty");
+                    return -1;
+                }
+
+                if (!blockchainType.HasValue())
+                {
+                    Console.WriteLine($"{blockchainType.Description} is empty");
+                    return -1;
+                }
+
                 var command = _factory.CreateCommand((helper) => new ImportPrivateKeyCommand(
                     signFacadeUrl.Value(),
                     apiKey.Value(),
