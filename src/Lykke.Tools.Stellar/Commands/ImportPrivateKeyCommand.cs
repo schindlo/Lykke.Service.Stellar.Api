@@ -1,15 +1,5 @@
-﻿using Autofac;
-using Common.Log;
-using Lykke.Common.Log;
-using Lykke.Service.BlockchainSignFacade.Client;
-using Lykke.Service.Stellar.Api.Core;
-using Lykke.Service.Stellar.Api.Core.Exceptions;
-using Lykke.Service.Stellar.Api.Core.Services;
-using Lykke.Tools.Erc20Exporter.Helpers;
-using StellarBase;
-using StellarBase.Generated;
+﻿using Lykke.Service.BlockchainSignFacade.Client;
 using System;
-using System.Numerics;
 using System.Threading.Tasks;
 using Lykke.Service.BlockchainSignFacade.Contract.Models;
 

@@ -1,6 +1,4 @@
-﻿using System;
-using System.Globalization;
-using Autofac;
+﻿using Autofac;
 using Autofac.Core;
 using Lykke.Service.Stellar.Api.Core.Services;
 using Lykke.Service.Stellar.Api.Core.Settings.ServiceSettings;

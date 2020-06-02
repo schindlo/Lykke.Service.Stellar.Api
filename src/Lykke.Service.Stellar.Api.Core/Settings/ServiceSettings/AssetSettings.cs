@@ -1,6 +1,4 @@
-﻿using Lykke.SettingsReader.Attributes;
-
-namespace Lykke.Service.Stellar.Api.Core.Settings.ServiceSettings
+﻿namespace Lykke.Service.Stellar.Api.Core.Settings.ServiceSettings
 {
     public class AssetSettings
     {

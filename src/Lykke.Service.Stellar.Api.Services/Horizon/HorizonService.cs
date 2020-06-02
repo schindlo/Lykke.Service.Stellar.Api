@@ -1,5 +1,4 @@
-﻿extern alias sdk2;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
@@ -9,70 +8,79 @@ using JetBrains.Annotations;
 using Lykke.Service.Stellar.Api.Core;
 using Lykke.Service.Stellar.Api.Core.Exceptions;
 using Lykke.Service.Stellar.Api.Core.Services;
-using sdk2::stellar_dotnet_sdk.requests;
-using sdk2::stellar_dotnet_sdk.responses.operations;
-using StellarBase;
-using StellarBase.Generated;
-using StellarSdk;
-using StellarSdk.Exceptions;
-using StellarSdk.Model;
-using static StellarBase.Generated.LedgerEntryChangeType;
-using static StellarBase.Generated.Operation;
+using stellar_dotnet_sdk;
+using stellar_dotnet_sdk.federation;
+using stellar_dotnet_sdk.requests;
+using stellar_dotnet_sdk.responses;
+using stellar_dotnet_sdk.responses.operations;
+using stellar_dotnet_sdk.xdr;
+using Operation = stellar_dotnet_sdk.xdr.Operation;
+using TransactionResult = stellar_dotnet_sdk.xdr.TransactionResult;
 
 namespace Lykke.Service.Stellar.Api.Services.Horizon
 {
     public class HorizonService : IHorizonService
     {
-        private readonly string _horizonUrl;
+        private readonly Uri _horizonUrl;
         private readonly IHttpClientFactory _httpClientFactory;
+        private readonly Server _server;
 
         [UsedImplicitly]
         public HorizonService(string network,
-                              string horizonUrl,
-                              IHttpClientFactory httpClientFactory)
+                              Uri horizonUrl,
+                              IHttpClientFactory httpClientFactory,
+                              Server server)
         {
-            Network.CurrentNetwork = network;
+            if (network == "")
+                Network.UsePublicNetwork();
+            else
+                Network.UseTestNetwork();
+
             _horizonUrl = horizonUrl;
             _httpClientFactory = httpClientFactory;
+            _server = server;
         }
 
         public async Task<string> SubmitTransactionAsync(string signedTx)
         {
             // submit a tx
-            var builder = new TransactionCallBuilder(_horizonUrl);
-            builder.submitTransaction(signedTx);
-            var tx = await builder.Call();
+            var transaction = stellar_dotnet_sdk.Transaction.FromEnvelopeXdr(signedTx);
+
+            var tx = await _server.SubmitTransaction(transaction);
+
             if (tx == null || string.IsNullOrEmpty(tx.Hash))
             {
                 throw new HorizonApiException("Submitting transaction failed. No valid transaction was returned.");
             }
+
             return tx.Hash;
         }
 
-        public async Task<TransactionDetails> GetTransactionDetails(string hash)
+        public async Task<TransactionResponse> GetTransactionDetails(string hash)
         {
             try
             {
-                var builder = new TransactionCallBuilder(_horizonUrl);
-                builder.transaction(hash);
-                var tx = await builder.Call();
+                var builder = new TransactionsRequestBuilder(_horizonUrl, _httpClientFactory.CreateClient());
+                var tx = await builder.Transaction(hash);
+
                 return tx;
             }
-            catch (ResourceNotFoundException)
+            catch (NotFoundException)
             {
                 // transaction not found
                 return null;
             }
         }
 
-        public async Task<List<TransactionDetails>> GetTransactions(string address, string order = StellarSdkConstants.OrderAsc, string cursor = "", int limit = 100)
+        public async Task<List<TransactionResponse>> GetTransactions(string address,
+            OrderDirection order = OrderDirection.ASC, string cursor = "", int limit = 100)
         {
             try
             {
-                var builder = new AccountTransactionCallBuilder(_horizonUrl);
-                builder.accountId(address);
-                builder.order(order).cursor(cursor).limit(limit);
-                var details = await builder.Call();
+                var builder = new TransactionsRequestBuilder(_horizonUrl, _httpClientFactory.CreateClient());
+                builder.ForAccount(address);
+                builder.Order(order).Cursor(cursor).Limit(limit);
+                var details = await builder.Execute();
                 var transactions = details?.Embedded?.Records;
                 if (transactions != null)
                 {
@@ -81,45 +89,45 @@ namespace Lykke.Service.Stellar.Api.Services.Horizon
                         .ToList();
                 }
             }
-            catch (ResourceNotFoundException)
+            catch (NotFoundException)
             {
                 // address not found
             }
 
-            return new List<TransactionDetails>();
+            return new List<TransactionResponse>();
         }
 
         public async Task<List<OperationResponse>> GetTransactionOperations(string hash)
         {
-            var result = await new OperationsRequestBuilder(new Uri(_horizonUrl), _httpClientFactory.CreateClient())
+            var result = await new OperationsRequestBuilder(_horizonUrl, _httpClientFactory.CreateClient())
                 .ForTransaction(hash)
                 .Execute();
 
             return result?.Records;
         }
 
-        public async Task<LedgerDetails> GetLatestLedger()
+        public async Task<LedgerResponse> GetLatestLedger()
         {
-            var builder = new LedgerCallBuilder(_horizonUrl);
-            builder.order(StellarSdkConstants.OrderDesc).limit(1);
-            var ledgers = await builder.Call();
-            if (ledgers?.Embedded?.Records == null || ledgers.Embedded?.Records.Length < 1)
+            var builder = new LedgersRequestBuilder(_horizonUrl, _httpClientFactory.CreateClient());
+            builder.Order(OrderDirection.DESC).Limit(1);
+            var ledgers = await builder.Execute();
+            if (ledgers?.Embedded?.Records == null || ledgers.Embedded?.Records.Count < 1)
             {
                 throw new HorizonApiException("Latest ledger missing from query result.");
             }
             return ledgers.Embedded.Records[0];
         }
 
-        public async Task<AccountDetails> GetAccountDetails(string address)
+        public async Task<AccountResponse> GetAccountDetails(string address)
         {
             try
             {
-                var builder = new AccountCallBuilder(_horizonUrl);
-                builder.accountId(address);
-                var accountDetails = await builder.Call();
+                var builder = new AccountsRequestBuilder(_horizonUrl, _httpClientFactory.CreateClient());
+                var accountDetails = await builder.Account(address);
+                
                 return accountDetails;
             }
-            catch (ResourceNotFoundException)
+            catch (NotFoundException)
             {
                 // address not found
                 return null;
@@ -135,10 +143,9 @@ namespace Lykke.Service.Stellar.Api.Services.Horizon
         public long GetAccountMergeAmount(string resultXdrBase64, int operationIndex)
         {
             var xdr = Convert.FromBase64String(resultXdrBase64);
-            var reader = new ByteReader(xdr);
-            var txResult = StellarBase.Generated.TransactionResult.Decode(reader);
-            var merge = txResult.Result.Results[operationIndex];
-            var result = merge?.Tr?.AccountMergeResult;
+            var txResult = TransactionMeta.Decode(new XdrDataInputStream(xdr));
+            var merge = txResult.Operations[operationIndex];
+            var result = merge?.Changes?.InnerValue;
             var resultCode = result?.Discriminant?.InnerValue;
             if (resultCode == null ||
                 resultCode != AccountMergeResultCode.AccountMergeResultCodeEnum.ACCOUNT_MERGE_SUCCESS) return 0;
@@ -156,17 +163,17 @@ namespace Lykke.Service.Stellar.Api.Services.Horizon
             {
                 return op.Changes.InnerValue.Any(c =>
                 {
-                    return c.Discriminant.InnerValue == LedgerEntryChangeTypeEnum.LEDGER_ENTRY_REMOVED &&
+                    return c.Discriminant.InnerValue == LedgerEntryChangeType.LedgerEntryChangeTypeEnum.LEDGER_ENTRY_REMOVED &&
                         KeyPair.FromXdrPublicKey(c.Removed.Account.AccountID.InnerValue).Address == sourceAddress;
                 });
             });
-            var sourceAccountStateMeta = mergeMeta.Changes.InnerValue.First(c => 
-                c.Discriminant.InnerValue == LedgerEntryChangeTypeEnum.LEDGER_ENTRY_STATE && KeyPair.FromXdrPublicKey(c.State.Data.Account.AccountID.InnerValue).Address == sourceAddress);
+            var sourceAccountStateMeta = mergeMeta.Changes.InnerValue.First(c =>
+                c.Discriminant.InnerValue == LedgerEntryChangeType.LedgerEntryChangeTypeEnum.LEDGER_ENTRY_STATE && KeyPair.FromXdrPublicKey(c.State.Data.Account.AccountID.InnerValue).Address == sourceAddress);
 
             return sourceAccountStateMeta.State.Data.Account.Balance.InnerValue;
         }
 
-        public OperationBody GetFirstOperationFromTxEnvelopeXdr(string xdrBase64)
+        public Operation.OperationBody GetFirstOperationFromTxEnvelopeXdr(string xdrBase64)
         {
             var xdr = Convert.FromBase64String(xdrBase64);
             var reader = new ByteReader(xdr);
@@ -174,7 +181,7 @@ namespace Lykke.Service.Stellar.Api.Services.Horizon
             return GetFirstOperationFromTxEnvelope(txEnvelope);
         }
 
-        public OperationBody GetFirstOperationFromTxEnvelope(TransactionEnvelope txEnvelope)
+        public Operation.OperationBody GetFirstOperationFromTxEnvelope(TransactionEnvelope txEnvelope)
         {
             if (txEnvelope?.Tx?.Operations == null || txEnvelope.Tx.Operations.Length < 1 ||
                 txEnvelope.Tx.Operations[0].Body == null)
@@ -186,7 +193,7 @@ namespace Lykke.Service.Stellar.Api.Services.Horizon
             return operation;
         }
 
-        public string GetMemo(TransactionDetails tx)
+        public string GetMemo(TransactionResponse tx)
         {
             if ((StellarSdkConstants.MemoTextTypeName.Equals(tx.MemoType, StringComparison.OrdinalIgnoreCase) ||
                 StellarSdkConstants.MemoIdTypeName.Equals(tx.MemoType, StringComparison.OrdinalIgnoreCase)) &&
@@ -218,11 +225,12 @@ namespace Lykke.Service.Stellar.Api.Services.Horizon
             return CryptoBytes.ToHexStringLower(hash);
         }
 
-        public TransactionResultCode.TransactionResultCodeEnum GetTransactionResult(TransactionDetails tx)
+        public TransactionResultCode.TransactionResultCodeEnum GetTransactionResult(TransactionResponse tx)
         {
             var xdr = Convert.FromBase64String(tx.ResultXdr);
             var reader = new ByteReader(xdr);
             var txResult = StellarBase.Generated.TransactionResult.Decode(reader);
+            
             return txResult.Result.Discriminant.InnerValue;
         }
     }

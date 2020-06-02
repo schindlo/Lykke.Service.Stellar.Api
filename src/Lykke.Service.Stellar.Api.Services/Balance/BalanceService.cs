@@ -1,5 +1,4 @@
-﻿extern alias sdk2;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -15,9 +14,8 @@ using Lykke.Service.Stellar.Api.Core.Domain.Observation;
 using Lykke.Service.Stellar.Api.Core.Exceptions;
 using Lykke.Service.Stellar.Api.Core.Services;
 using Lykke.Service.Stellar.Api.Core.Utils;
-using sdk2::stellar_dotnet_sdk.responses.operations;
-using StellarBase;
-using StellarBase.Generated;
+using stellar_dotnet_sdk;
+using stellar_dotnet_sdk.responses.operations;
 
 namespace Lykke.Service.Stellar.Api.Services.Balance
 {
@@ -95,8 +93,8 @@ namespace Lykke.Service.Stellar.Api.Services.Balance
             try
             {
                 var baseAddress = parts[0];
-                byte[] secret = StrKey.DecodeCheck(VersionByte.ed25519Publickey, baseAddress);
-                string encoded = StrKey.EncodeCheck(VersionByte.ed25519Publickey, secret);
+                byte[] secret = StrKey.DecodeCheck(StrKey.VersionByte.ACCOUNT_ID, baseAddress);
+                string encoded = StrKey.EncodeCheck(StrKey.VersionByte.ACCOUNT_ID, secret);
 
                 if (baseAddress != encoded)
                     return false;

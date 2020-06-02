@@ -1,7 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Threading.Tasks;
-using Lykke.Service.Stellar.Api.Core.Domain;
-using Lykke.Service.Stellar.Api.Core.Domain.Balance;
+﻿using Lykke.Service.Stellar.Api.Core.Domain;
 
 namespace Lykke.Service.Stellar.Api.Core.Services
 {

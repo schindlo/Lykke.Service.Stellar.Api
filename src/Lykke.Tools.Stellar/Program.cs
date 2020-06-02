@@ -1,5 +1,4 @@
-﻿using Lykke.Tools.Erc20Exporter.Helpers;
-using Microsoft.Extensions.CommandLineUtils;
+﻿using Microsoft.Extensions.CommandLineUtils;
 using System;
 using System.Linq;
 using System.Reflection;

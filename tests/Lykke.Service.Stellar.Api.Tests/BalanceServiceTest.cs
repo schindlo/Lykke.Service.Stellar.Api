@@ -10,13 +10,11 @@ using Lykke.Service.Stellar.Api.Services.Balance;
 using Moq;
 using stellar_dotnet_sdk.responses;
 using stellar_dotnet_sdk.responses.operations;
-using StellarSdk.Model;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Xunit;
-using System.Collections;
 
 namespace Lykke.Service.Stellar.Api.Tests
 {

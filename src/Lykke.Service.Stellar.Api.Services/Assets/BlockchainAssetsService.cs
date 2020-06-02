@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using Lykke.Service.Stellar.Api.Core.Domain;
+﻿using Lykke.Service.Stellar.Api.Core.Domain;
 using Lykke.Service.Stellar.Api.Core.Services;
 
 namespace Lykke.Service.Stellar.Api.Services.Assets

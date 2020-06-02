@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Numerics;
 using Lykke.Tools.Stellar.Commands;
 using Microsoft.Extensions.CommandLineUtils;
 
