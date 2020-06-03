@@ -15,7 +15,9 @@ using Lykke.Service.Stellar.Api.Core.Exceptions;
 using Lykke.Service.Stellar.Api.Core.Services;
 using Lykke.Service.Stellar.Api.Core.Utils;
 using stellar_dotnet_sdk;
+using stellar_dotnet_sdk.requests;
 using stellar_dotnet_sdk.responses.operations;
+using stellar_dotnet_sdk.responses.results;
 
 namespace Lykke.Service.Stellar.Api.Services.Balance
 {
@@ -164,13 +166,13 @@ namespace Lykke.Service.Stellar.Api.Services.Balance
                 // address not found
                 return result;
             }
-            result.Sequence = long.Parse(accountDetails.Sequence);
+            result.Sequence = accountDetails.SequenceNumber;
 
             var addressExtension = GetPublicAddressExtension(address);
             if (string.IsNullOrEmpty(addressExtension))
             {
                 var nativeBalance = accountDetails.Balances.Single(b => _blockchainAssetsService.GetNativeAsset().TypeName.Equals(b.AssetType, StringComparison.OrdinalIgnoreCase));
-                result.Balance = Convert.ToInt64(decimal.Parse(nativeBalance.Balance, CultureInfo.InvariantCulture) * One.Value);
+                result.Balance = Convert.ToInt64(decimal.Parse(nativeBalance.BalanceString, CultureInfo.InvariantCulture) * One.Value);
             }
             else
             {
@@ -252,7 +254,7 @@ namespace Lykke.Service.Stellar.Api.Services.Balance
 
         private async Task<(int Count, string Cursor)> ProcessDeposits(string cursor)
         {
-            var transactions = await _horizonService.GetTransactions(_depositBaseAddress, StellarSdkConstants.OrderAsc, cursor);
+            var transactions = await _horizonService.GetTransactions(_depositBaseAddress, OrderDirection.ASC, cursor);
             var count = 0;
             var walletsToRefresh = new HashSet<(string assetId, string address)>();
             var asset = _blockchainAssetsService.GetNativeAsset();
@@ -291,22 +293,22 @@ namespace Lykke.Service.Stellar.Api.Services.Balance
                                 var payment = (PaymentOperationResponse)op;
                                 if (payment.AssetType == "native")
                                 {
-                                    toAddress = payment.To.Address;
+                                    toAddress = payment.To;
                                     amount = asset.ParseDecimal(payment.Amount);
                                 }
                                 break;
 
                             case "account_merge":
                                 var accountMerge = (AccountMergeOperationResponse)op;
-                                toAddress = accountMerge.Into.Address;
-                                amount = _horizonService.GetAccountMergeAmount(transaction.ResultMetaXdr, accountMerge.SourceAccount.Address);
+                                toAddress = accountMerge.Into;
+                                amount = _horizonService.GetAccountMergeAmount(transaction.ResultMetaXdr, accountMerge.SourceAccount);
                                 break;
 
                             case "path_payment":
-                                var pathPayment = (PathPaymentOperationResponse)op;
+                                var pathPayment = (PathPaymentStrictReceiveOperationResponse)op;
                                 if (pathPayment.AssetType == "native")
                                 {
-                                    toAddress = pathPayment.To.Address;
+                                    toAddress = pathPayment.To;
                                     amount = asset.ParseDecimal(pathPayment.Amount);
                                 }
                                 break;

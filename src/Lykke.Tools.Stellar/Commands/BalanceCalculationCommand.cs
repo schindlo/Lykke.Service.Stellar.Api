@@ -8,6 +8,9 @@ using Lykke.Tools.Erc20Exporter.Helpers;
 using System;
 using System.Numerics;
 using System.Threading.Tasks;
+using stellar_dotnet_sdk;
+using stellar_dotnet_sdk.requests;
+using stellar_dotnet_sdk.xdr;
 
 namespace Lykke.Tools.Stellar.Commands
 {
@@ -78,7 +81,7 @@ namespace Lykke.Tools.Stellar.Commands
 
         private async Task<(int Count, string Cursor)> ProcessTransactionsAsync(IHorizonService horizonService, ILog logger, string cursor)
         {
-            var transactions = await horizonService.GetTransactions(_address, StellarSdkConstants.OrderAsc, cursor);
+            var transactions = await horizonService.GetTransactions(_address, OrderDirection.ASC, cursor);
             var count = 0;
             cursor = null;
             foreach (var transaction in transactions)
@@ -103,13 +106,13 @@ namespace Lykke.Tools.Stellar.Commands
                     }
 
                     var xdr = Convert.FromBase64String(transaction.EnvelopeXdr);
-                    var reader = new ByteReader(xdr);
+                    var reader = new XdrDataInputStream(xdr);
                     var txEnvelope = TransactionEnvelope.Decode(reader);
-                    var tx = txEnvelope.Tx;
+                    var tx = txEnvelope.V0.Tx.Operations;
 
-                    for (short i = 0; i < tx.Operations.Length; i++)
+                    for (short i = 0; i < tx.Length; i++)
                     {
-                        var operation = tx.Operations[i];
+                        var operation = tx[i];
                         var operationType = operation.Body.Discriminant.InnerValue;
 
                         string toAddress = null;
@@ -122,7 +125,7 @@ namespace Lykke.Tools.Stellar.Commands
                                     var op = operation.Body.PaymentOp;
                                     if (op.Asset.Discriminant.InnerValue == AssetType.AssetTypeEnum.ASSET_TYPE_NATIVE)
                                     {
-                                        var keyPair = KeyPair.FromXdrPublicKey(op.Destination.InnerValue);
+                                        var keyPair = KeyPair.FromPublicKey(op.Destination.Ed25519.InnerValue);
                                         toAddress = keyPair.Address;
                                         amount = op.Amount.InnerValue;
                                     }
@@ -131,17 +134,17 @@ namespace Lykke.Tools.Stellar.Commands
                             case OperationType.OperationTypeEnum.ACCOUNT_MERGE:
                                 {
                                     var op = operation.Body;
-                                    var keyPair = KeyPair.FromXdrPublicKey(op.Destination.InnerValue);
+                                    var keyPair = KeyPair.FromPublicKey(op.Destination.Ed25519.InnerValue);
                                     toAddress = keyPair.Address;
                                     amount = horizonService.GetAccountMergeAmount(transaction.ResultXdr, i);
                                     break;
                                 }
-                            case OperationType.OperationTypeEnum.PATH_PAYMENT:
+                            case OperationType.OperationTypeEnum.PATH_PAYMENT_STRICT_RECEIVE:
                                 {
-                                    var op = operation.Body.PathPaymentOp;
+                                    var op = operation.Body.PathPaymentStrictReceiveOp;
                                     if (op.DestAsset.Discriminant.InnerValue == AssetType.AssetTypeEnum.ASSET_TYPE_NATIVE)
                                     {
-                                        var keyPair = KeyPair.FromXdrPublicKey(op.Destination.InnerValue);
+                                        var keyPair = KeyPair.FromPublicKey(op.Destination.Ed25519.InnerValue);
                                         toAddress = keyPair.Address;
                                         amount = op.DestAmount.InnerValue;
                                     }

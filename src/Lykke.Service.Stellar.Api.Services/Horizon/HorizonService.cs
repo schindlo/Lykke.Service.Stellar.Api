@@ -143,22 +143,22 @@ namespace Lykke.Service.Stellar.Api.Services.Horizon
         public long GetAccountMergeAmount(string resultXdrBase64, int operationIndex)
         {
             var xdr = Convert.FromBase64String(resultXdrBase64);
-            var txResult = TransactionMeta.Decode(new XdrDataInputStream(xdr));
-            var merge = txResult.Operations[operationIndex];
-            var result = merge?.Changes?.InnerValue;
-            var resultCode = result?.Discriminant?.InnerValue;
-            if (resultCode == null ||
-                resultCode != AccountMergeResultCode.AccountMergeResultCodeEnum.ACCOUNT_MERGE_SUCCESS) return 0;
+            var txResult = TransactionResult.Decode(new XdrDataInputStream(xdr));
+            var merge = txResult.Result.Results[operationIndex];
+            if (merge.Tr.AccountMergeResult != null && merge.Tr.AccountMergeResult.Discriminant.InnerValue == AccountMergeResultCode.AccountMergeResultCodeEnum.ACCOUNT_MERGE_SUCCESS)
+            {
+                var amount = merge.Tr.AccountMergeResult.SourceAccountBalance.InnerValue;
+                return amount;
+            }
 
-            var amount = result.SourceAccountBalance.InnerValue;
-            return amount;
+            return 0;
         }
 
         public long GetAccountMergeAmount(string metaXdrBase64, string sourceAddress)
         {
             var xdr = Convert.FromBase64String(metaXdrBase64);
-            var reader = new ByteReader(xdr);
-            var txMeta = StellarBase.Generated.TransactionMeta.Decode(reader);
+            var reader = new XdrDataInputStream(xdr);
+            var txMeta = TransactionMeta.Decode(reader);
             var mergeMeta = txMeta.Operations.First(op =>
             {
                 return op.Changes.InnerValue.Any(c =>
@@ -176,20 +176,20 @@ namespace Lykke.Service.Stellar.Api.Services.Horizon
         public Operation.OperationBody GetFirstOperationFromTxEnvelopeXdr(string xdrBase64)
         {
             var xdr = Convert.FromBase64String(xdrBase64);
-            var reader = new ByteReader(xdr);
+            var reader = new XdrDataInputStream(xdr);
             var txEnvelope = TransactionEnvelope.Decode(reader);
             return GetFirstOperationFromTxEnvelope(txEnvelope);
         }
 
         public Operation.OperationBody GetFirstOperationFromTxEnvelope(TransactionEnvelope txEnvelope)
         {
-            if (txEnvelope?.Tx?.Operations == null || txEnvelope.Tx.Operations.Length < 1 ||
-                txEnvelope.Tx.Operations[0].Body == null)
+            if (txEnvelope?.V0?.Tx.Operations == null || txEnvelope?.V0?.Tx.Operations.Length < 1 ||
+                txEnvelope?.V0?.Tx.Operations[0].Body == null)
             {
                 throw new HorizonApiException($"Failed to extract first operation from transaction.");
             }
 
-            var operation = txEnvelope.Tx.Operations[0].Body;
+            var operation = txEnvelope?.V0?.Tx.Operations[0].Body;
             return operation;
         }
 
@@ -197,39 +197,44 @@ namespace Lykke.Service.Stellar.Api.Services.Horizon
         {
             if ((StellarSdkConstants.MemoTextTypeName.Equals(tx.MemoType, StringComparison.OrdinalIgnoreCase) ||
                 StellarSdkConstants.MemoIdTypeName.Equals(tx.MemoType, StringComparison.OrdinalIgnoreCase)) &&
-                !string.IsNullOrEmpty(tx.Memo))
+                !string.IsNullOrEmpty(tx.Memo.ToXdr().Text))
             {
-                return tx.Memo;
+                return tx.Memo.ToXdr().Text;
             }
 
             return null;
         }
 
-        public string GetTransactionHash(StellarBase.Generated.Transaction tx)
+        public string GetTransactionHash(stellar_dotnet_sdk.xdr.Transaction tx)
         {
-            var writer = new ByteWriter();
+            throw new NotImplementedException();
+        }
 
-            // Hashed NetworkID
-            writer.Write(Network.CurrentNetworkId);
-
-            // Envelope Type - 4 bytes
-            EnvelopeType.Encode(writer, EnvelopeType.Create(EnvelopeType.EnvelopeTypeEnum.ENVELOPE_TYPE_TX));
-
-            // Transaction XDR bytes
-            var txWriter = new ByteWriter();
-            StellarBase.Generated.Transaction.Encode(txWriter, tx);
-            writer.Write(txWriter.ToArray());
-
-            var data = writer.ToArray();
-            var hash = Utilities.Hash(data);
-            return CryptoBytes.ToHexStringLower(hash);
+        public string GetTransactionHash(stellar_dotnet_sdk.Transaction tx)
+        {
+            //var writer = new ByteWriter();
+            //
+            //// Hashed NetworkID
+            //writer.Write(Network.CurrentNetworkId);
+            //
+            //// Envelope Type - 4 bytes
+            //EnvelopeType.Encode(writer, EnvelopeType.Create(EnvelopeType.EnvelopeTypeEnum.ENVELOPE_TYPE_TX));
+            //
+            //// Transaction XDR bytes
+            //var txWriter = new ByteWriter();
+            //StellarBase.Generated.Transaction.Encode(txWriter, tx);
+            //writer.Write(txWriter.ToArray());
+            //
+            //var data = writer.ToArray();
+            //var hash = Utilities.Hash(data);
+            return CryptoBytes.ToHexStringLower(tx.Hash(Network.Current));
         }
 
         public TransactionResultCode.TransactionResultCodeEnum GetTransactionResult(TransactionResponse tx)
         {
             var xdr = Convert.FromBase64String(tx.ResultXdr);
-            var reader = new ByteReader(xdr);
-            var txResult = StellarBase.Generated.TransactionResult.Decode(reader);
+            var reader = new XdrDataInputStream(xdr);
+            var txResult = TransactionResult.Decode(reader);
             
             return txResult.Result.Discriminant.InnerValue;
         }

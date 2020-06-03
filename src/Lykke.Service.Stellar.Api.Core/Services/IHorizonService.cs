@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
+using stellar_dotnet_sdk.requests;
 using stellar_dotnet_sdk.responses;
 using stellar_dotnet_sdk.xdr;
 using OperationResponse = stellar_dotnet_sdk.responses.operations.OperationResponse;
@@ -17,7 +18,8 @@ namespace Lykke.Service.Stellar.Api.Core.Services
         /// <param name="cursor"></param>
         /// <param name="limit">200 is max</param>
         /// <returns></returns>
-        Task<List<TransactionResponse>> GetTransactions(string address, string order = StellarSdkConstants.OrderAsc, string cursor = "", int limit = 100);
+        Task<List<TransactionResponse>> GetTransactions(string address,
+            OrderDirection order = OrderDirection.ASC, string cursor = "", int limit = 100);
 
         Task<List<OperationResponse>> GetTransactionOperations(string hash);
 

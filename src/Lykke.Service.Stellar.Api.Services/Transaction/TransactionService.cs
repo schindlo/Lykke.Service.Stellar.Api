@@ -337,9 +337,9 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
                 MinTime = new TimePoint(new Uint64(0)),
             };
 
-            var writer = new ByteWriter();
-            StellarBase.Generated.Transaction.Encode(writer, xdr);
-            var xdrBase64 = Convert.ToBase64String(xdr.);
+            var writer = new XdrDataOutputStream();
+            stellar_dotnet_sdk.xdr.Transaction.Encode(writer, xdr);
+            var xdrBase64 = Convert.ToBase64String(writer.ToArray());
 
             var build = new TxBuild
             {

@@ -11,7 +11,11 @@ using System.Threading.Tasks;
 using Lykke.Common.Log;
 using Lykke.Service.Stellar.Api.Core.Domain.Transaction;
 using Lykke.Service.Stellar.Api.Services.Transaction;
+using stellar_dotnet_sdk;
+using stellar_dotnet_sdk.requests;
+using stellar_dotnet_sdk.responses;
 using Xunit;
+using Asset = Lykke.Service.Stellar.Api.Core.Domain.Asset;
 
 namespace Lykke.Service.Stellar.Api.Tests
 {
@@ -34,29 +38,21 @@ namespace Lykke.Service.Stellar.Api.Tests
             Mock<ILog> l1 = new Mock<ILog>();
             Mock<ILogFactory> log = new Mock<ILogFactory>();
             log.Setup(x => x.CreateLog(It.IsAny<object>())).Returns(l1.Object);
-            var transactionDetails = new TransactionDetails()
-            {
-                Memo = memo,
-                CreatedAt = DateTime.UtcNow,
-            };
+            
 
-            horizonService.Setup(x => x.GetMemo(It.IsAny<TransactionDetails>())).Returns(memo);
+            horizonService.Setup(x => x.GetMemo(It.IsAny<TransactionResponse>())).Returns(memo);
             balanceService.Setup(x => x.GetDepositBaseAddress()).Returns(depositBaseAddress);
             txHistoryRepository.Setup(x => x.InsertOrReplaceAsync(It.IsAny<TxDirectionType>(), It.IsAny<TxHistory>()))
                 .Returns(Task.FromResult(0)).Verifiable();
             horizonService.Setup(x => x.GetTransactions(depositBaseAddress,
-                StellarSdkConstants.OrderAsc,
+                OrderDirection.ASC,
                 null,
                 It.IsAny<int>()))
-                .ReturnsAsync(new EditableList<TransactionDetails>()
+                .ReturnsAsync(new EditableList<TransactionResponse>()
                 {
-                    new TransactionDetails()
-                    {
-                        Hash = "hash",
-                        Memo = memo,
-                        CreatedAt = DateTime.UtcNow,
-                        EnvelopeXdr = "AAAAAM2Tf7J/6Vt6MRtYUwilF0fY5ndYLYtRWBHT6QU6LO5VAAAAZAByK8oAAAAlAAAAAAAAAAAAAAABAAAAAQAAAADNk3+yf+lbejEbWFMIpRdH2OZ3WC2LUVgR0+kFOizuVQAAAAEAAAAAhWx5ja2dE7vh2v1urosxY739XaABMGs7LJ8AdZiNu30AAAAAAAAAAAABhqEAAAAAAAAAATos7lUAAABAbYa73/EQqpadqoXuVhQyzcjf0jWOAAqsIiRmi0Qlmqbh8EyrhIlkPYgiteg2tTGujhiGN9EhNodGCIKyfmvjAA=="
-                    }
+                    new TransactionResponse("hash", 1, DateTime.UtcNow.ToString(), "", true, "", 1, 1000, 1,
+                        "AAAAAM2Tf7J/6Vt6MRtYUwilF0fY5ndYLYtRWBHT6QU6LO5VAAAAZAByK8oAAAAlAAAAAAAAAAAAAAABAAAAAQAAAADNk3+yf+lbejEbWFMIpRdH2OZ3WC2LUVgR0+kFOizuVQAAAAEAAAAAhWx5ja2dE7vh2v1urosxY739XaABMGs7LJ8AdZiNu30AAAAAAAAAAAABhqEAAAAAAAAAATos7lUAAABAbYa73/EQqpadqoXuVhQyzcjf0jWOAAqsIiRmi0Qlmqbh8EyrhIlkPYgiteg2tTGujhiGN9EhNodGCIKyfmvjAA==",
+                        "", "", Memo.Text(memo), null)
                 });
 
             blockchainAssetsService.Setup(x => x.GetNativeAsset())
@@ -95,29 +91,20 @@ namespace Lykke.Service.Stellar.Api.Tests
             Mock<ILog> l1 = new Mock<ILog>();
             Mock<ILogFactory> log = new Mock<ILogFactory>();
             log.Setup(x => x.CreateLog(It.IsAny<object>())).Returns(l1.Object);
-            var transactionDetails = new TransactionDetails()
-            {
-                Memo = memo,
-                CreatedAt = DateTime.UtcNow,
-            };
 
-            horizonService.Setup(x => x.GetMemo(It.IsAny<TransactionDetails>())).Returns(memo);
+            horizonService.Setup(x => x.GetMemo(It.IsAny<TransactionResponse>())).Returns(memo);
             balanceService.Setup(x => x.GetDepositBaseAddress()).Returns(depositBaseAddress);
             txHistoryRepository.Setup(x => x.InsertOrReplaceAsync(It.IsAny<TxDirectionType>(), It.IsAny<TxHistory>()))
                 .Returns(Task.FromResult(0)).Verifiable();
             horizonService.Setup(x => x.GetTransactions(depositBaseAddress,
-                StellarSdkConstants.OrderAsc,
+                OrderDirection.ASC,
                 null,
                 It.IsAny<int>()))
-                .ReturnsAsync(new EditableList<TransactionDetails>()
+                .ReturnsAsync(new EditableList<TransactionResponse>()
                 {
-                    new TransactionDetails()
-                    {
-                        Hash = "hash",
-                        Memo = memo,
-                        CreatedAt = DateTime.UtcNow,
-                        EnvelopeXdr = "AAAAAM2Tf7J/6Vt6MRtYUwilF0fY5ndYLYtRWBHT6QU6LO5VAAAAZAByK8oAAAAlAAAAAAAAAAAAAAABAAAAAQAAAADNk3+yf+lbejEbWFMIpRdH2OZ3WC2LUVgR0+kFOizuVQAAAAEAAAAAhWx5ja2dE7vh2v1urosxY739XaABMGs7LJ8AdZiNu30AAAAAAAAAAAABhqEAAAAAAAAAATos7lUAAABAbYa73/EQqpadqoXuVhQyzcjf0jWOAAqsIiRmi0Qlmqbh8EyrhIlkPYgiteg2tTGujhiGN9EhNodGCIKyfmvjAA=="
-                    }
+                    new TransactionResponse("hash", 1, DateTime.UtcNow.ToString(), "", true, "", 1, 1000, 1,
+                        "AAAAAM2Tf7J/6Vt6MRtYUwilF0fY5ndYLYtRWBHT6QU6LO5VAAAAZAByK8oAAAAlAAAAAAAAAAAAAAABAAAAAQAAAADNk3+yf+lbejEbWFMIpRdH2OZ3WC2LUVgR0+kFOizuVQAAAAEAAAAAhWx5ja2dE7vh2v1urosxY739XaABMGs7LJ8AdZiNu30AAAAAAAAAAAABhqEAAAAAAAAAATos7lUAAABAbYa73/EQqpadqoXuVhQyzcjf0jWOAAqsIiRmi0Qlmqbh8EyrhIlkPYgiteg2tTGujhiGN9EhNodGCIKyfmvjAA==",
+                        "", "", Memo.Text(memo), null)
                 });
 
             blockchainAssetsService.Setup(x => x.GetNativeAsset())

@@ -2,6 +2,7 @@
 using System;
 using System.Threading.Tasks;
 using Lykke.Service.BlockchainSignFacade.Contract.Models;
+using stellar_dotnet_sdk;
 
 namespace Lykke.Tools.Stellar.Commands
 {
@@ -22,12 +23,12 @@ namespace Lykke.Tools.Stellar.Commands
         public async Task<int> ExecuteAsync()
         {
             Console.WriteLine("Creating Key");
-            var stellarPrivateKeyPair = StellarBase.KeyPair.Random();
+            var stellarPrivateKeyPair = KeyPair.Random();
             Console.WriteLine($"Address(PublicAddress): {stellarPrivateKeyPair.Address}");
             Console.WriteLine("Importing Key");
             await _signFacadeClient.ImportWalletAsync(_blockchainType, new ImportWalletRequest()
             {
-                PrivateKey = stellarPrivateKeyPair.Seed,
+                PrivateKey = stellarPrivateKeyPair.SecretSeed,
                 PublicAddress = stellarPrivateKeyPair.Address
             });
             Console.WriteLine("Address has been imported");
