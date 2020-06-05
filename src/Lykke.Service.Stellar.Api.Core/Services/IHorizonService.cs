@@ -39,6 +39,5 @@ namespace Lykke.Service.Stellar.Api.Core.Services
 
         string GetMemo(TransactionResponse tx);
 
-        string GetTransactionHash(Transaction tx);
     }
 }

@@ -5,12 +5,14 @@ using Common.Log;
 using JetBrains.Annotations;
 using Lykke.Common.Chaos;
 using Lykke.Common.Log;
+using Lykke.Service.Stellar.Api.Core;
 using Lykke.Service.Stellar.Api.Core.Domain;
 using Lykke.Service.Stellar.Api.Core.Domain.Balance;
 using Lykke.Service.Stellar.Api.Core.Domain.Observation;
 using Lykke.Service.Stellar.Api.Core.Domain.Transaction;
 using Lykke.Service.Stellar.Api.Core.Exceptions;
 using Lykke.Service.Stellar.Api.Core.Services;
+using Newtonsoft.Json;
 using stellar_dotnet_sdk;
 using stellar_dotnet_sdk.requests;
 using stellar_dotnet_sdk.xdr;
@@ -210,36 +212,37 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
         {
             var errorMessage = ex.Message;
             // ReSharper disable once InvertIf
-            if (ex is HttpResponseException badRequest)
+            if (ex is BadRequestHorizonApiException badRequest)
             {
                 //TODO:
-                //var resultCodes = JsonConvert.SerializeObject(badRequest.ErrorDetails.Extras.ResultCodes);
-                //errorMessage += $". ResultCodes={resultCodes}";
+                var resultCodes = JsonConvert.SerializeObject(badRequest.ErrorCodes);
+                errorMessage += $"{badRequest.Message}. ResultCodes={resultCodes}";
             }
+
             return errorMessage;
         }
 
         private static TxExecutionError GetErrorCode(Exception ex)
         {
             //TODO:
-            //var bre = ex as HttpResponseException;
-            //var resultCodes = bre?.ErrorDetails?.Extras?.ResultCodes;
-            //var ops = resultCodes?.Operations;
-            //var transactionDetail = resultCodes?.Transaction;
-            //if (bre?.ErrorDetails != null && bre.ErrorDetails.Status == (int)HttpStatusCode.BadRequest
-            //    && ops != null
-            //    && ops.Length > 0
-            //    && (ops[0].Equals(StellarSdkConstants.OperationUnderfunded)
-            //        || ops[0].Equals(StellarSdkConstants.OperationLowReserve)))
-            //{
-            //    return TxExecutionError.NotEnoughBalance;
-            //}
+            var bre = ex as BadRequestHorizonApiException;
+            var resultCodes = bre?.ErrorCodes;
+            var transactionDetail = bre?.Message;
 
-            //if (transactionDetail == "tx_too_late" ||
-            //    transactionDetail == "tx_bad_seq")
-            //{
-            //    return TxExecutionError.BuildingShouldBeRepeated;
-            //}
+            if (transactionDetail != null
+                && resultCodes != null
+                && resultCodes.Length > 0
+                && (resultCodes[0].Equals(StellarSdkConstants.OperationUnderfunded)
+                    || resultCodes[0].Equals(StellarSdkConstants.OperationLowReserve)))
+            {
+                return TxExecutionError.NotEnoughBalance;
+            }
+            
+            if (transactionDetail == "tx_too_late" ||
+                transactionDetail == "tx_bad_seq")
+            {
+                return TxExecutionError.BuildingShouldBeRepeated;
+            }
 
             return TxExecutionError.Unknown;
         }

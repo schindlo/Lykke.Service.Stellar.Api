@@ -49,11 +49,17 @@ namespace Lykke.Service.Stellar.Api.Services.Horizon
             var acc = await _server.Accounts.Account(transaction.SourceAccount.AccountId);
             var tx = await _server.SubmitTransaction(transaction);
 
-
-            if (tx == null || string.IsNullOrEmpty(tx.Hash))
+            if (string.IsNullOrEmpty(tx?.Hash))
             {
+                if (!tx.Result.IsSuccess)
+                {
+                    throw new BadRequestHorizonApiException(tx.SubmitTransactionResponseExtras.ExtrasResultCodes.TransactionResultCode, tx.SubmitTransactionResponseExtras.ExtrasResultCodes.OperationsResultCodes);
+
+                }
                 throw new HorizonApiException("Submitting transaction failed. No valid transaction was returned.");
             }
+
+            
 
             return tx.Hash;
         }
@@ -224,32 +230,6 @@ namespace Lykke.Service.Stellar.Api.Services.Horizon
 
             return null;
         }
-
-        public string GetTransactionHash(stellar_dotnet_sdk.xdr.Transaction tx)
-        {
-            throw new NotImplementedException();
-        }
-
-        public string GetTransactionHash(stellar_dotnet_sdk.Transaction tx)
-        {
-            //var writer = new ByteWriter();
-            //
-            //// Hashed NetworkID
-            //writer.Write(Network.CurrentNetworkId);
-            //
-            //// Envelope Type - 4 bytes
-            //EnvelopeType.Encode(writer, EnvelopeType.Create(EnvelopeType.EnvelopeTypeEnum.ENVELOPE_TYPE_TX));
-            //
-            //// Transaction XDR bytes
-            //var txWriter = new ByteWriter();
-            //StellarBase.Generated.Transaction.Encode(txWriter, tx);
-            //writer.Write(txWriter.ToArray());
-            //
-            //var data = writer.ToArray();
-            //var hash = Utilities.Hash(data);
-            return CryptoBytes.ToHexStringLower(tx.Hash(Network.Current));
-        }
-
         public TransactionResultCode.TransactionResultCodeEnum GetTransactionResult(TransactionResponse tx)
         {
             var xdr = Convert.FromBase64String(tx.ResultXdr);
