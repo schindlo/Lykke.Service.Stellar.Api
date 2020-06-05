@@ -7,6 +7,7 @@ using Lykke.SettingsReader;
 using Lykke.Service.Stellar.Api.Services.Transaction;
 using Lykke.Service.Stellar.Api.Services.Horizon;
 using Lykke.Service.Stellar.Api.Services.Balance;
+using stellar_dotnet_sdk;
 
 namespace Lykke.Service.Stellar.Api.Services.Modules
 {
@@ -33,8 +34,6 @@ namespace Lykke.Service.Stellar.Api.Services.Modules
             
             builder.RegisterType<HorizonService>()
                    .As<IHorizonService>()
-                   .WithParameter("network", _settings.CurrentValue.NetworkPassphrase)
-                   .WithParameter("horizonUrl", _settings.CurrentValue.HorizonUrl)
                    .SingleInstance();
 
             builder.RegisterType<BalanceService>()
@@ -50,7 +49,12 @@ namespace Lykke.Service.Stellar.Api.Services.Modules
 
             builder.RegisterType<TransactionHistoryService>()
                    .As<ITransactionHistoryService>()
-                   .SingleInstance(); 
+                   .SingleInstance();
+
+            builder.RegisterType<Server>()
+                .As<Server>()
+                .WithParameter("uri", _settings.CurrentValue.HorizonUrl)
+                .SingleInstance();
 
             var nativeAsset = _settings.CurrentValue.NativeAsset;
             builder.RegisterType<BlockchainAssetsService>()

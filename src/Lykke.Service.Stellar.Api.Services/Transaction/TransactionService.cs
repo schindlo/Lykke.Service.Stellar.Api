@@ -1,23 +1,19 @@
 ﻿using System;
-using System.Net;
 using System.Threading.Tasks;
 using Common;
+using Common.Log;
 using JetBrains.Annotations;
+using Lykke.Common.Chaos;
 using Lykke.Common.Log;
-using Lykke.Service.Stellar.Api.Core;
-using Lykke.Service.Stellar.Api.Core.Domain.Transaction;
+using Lykke.Service.Stellar.Api.Core.Domain;
 using Lykke.Service.Stellar.Api.Core.Domain.Balance;
+using Lykke.Service.Stellar.Api.Core.Domain.Observation;
+using Lykke.Service.Stellar.Api.Core.Domain.Transaction;
 using Lykke.Service.Stellar.Api.Core.Exceptions;
 using Lykke.Service.Stellar.Api.Core.Services;
-using Lykke.Service.Stellar.Api.Core.Domain;
-using Lykke.Service.Stellar.Api.Core.Domain.Observation;
-using Newtonsoft.Json;
-using Common.Log;
-using Lykke.Common.Chaos;
 using stellar_dotnet_sdk;
 using stellar_dotnet_sdk.requests;
 using stellar_dotnet_sdk.xdr;
-using Asset = stellar_dotnet_sdk.Asset;
 using Operation = stellar_dotnet_sdk.Operation;
 using TimeBounds = stellar_dotnet_sdk.xdr.TimeBounds;
 
@@ -159,7 +155,7 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
             if (!_balanceService.IsDepositBaseAddress(fromKeyPair.Address) || tx.Operations.Length != 1 ||
                 tx.Operations[0].Body.PaymentOp == null || string.IsNullOrWhiteSpace(tx.Memo.Text)) return false;
 
-            var toKeyPair = KeyPair.FromSecretSeed(tx.Operations[0].Body.PaymentOp.Destination.Ed25519.InnerValue);
+            var toKeyPair = KeyPair.FromPublicKey(tx.Operations[0].Body.PaymentOp.Destination.Ed25519.InnerValue);
             if (!_balanceService.IsDepositBaseAddress(toKeyPair.Address)) return false;
 
             var fromAddress = $"{fromKeyPair.Address}{Constants.PublicAddressExtension.Separator}{tx.Memo.Text}";
@@ -286,7 +282,7 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
                 if (amount <= transferableBalance)
                 {
                     var asset = new AssetTypeNative();
-                    operation = new PaymentOperation.Builder(toKeyPair, asset, amount.ToString())
+                    operation = new PaymentOperation.Builder(toKeyPair, asset, Operation.FromXdrAmount(amount))
                                                     .SetSourceAccount(fromKeyPair)
                                                     .Build();
                 }
@@ -315,8 +311,6 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
                 }
             }
 
-            fromAccount.IncrementSequenceNumber();
-
             var builder = new TransactionBuilder(fromAccount)
                                          .AddOperation(operation);
             if (!string.IsNullOrWhiteSpace(memoText))
@@ -327,18 +321,18 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
 
             var tx = builder.Build();
 
-            var xdr = tx.ToXdrV1();
+            var xdr = tx.ToUnsignedEnvelopeXdr(TransactionBase.TransactionXdrVersion.V1);
             var expirationDate = (DateTime.UtcNow + _transactionExpirationTime);
             var maxUnixTimeDouble = expirationDate.ToUnixTime() / 1000;//ms to seconds
             var maxTimeUnix = (ulong)maxUnixTimeDouble;
-            xdr.TimeBounds = new TimeBounds()
+            xdr.V1.Tx.TimeBounds = new TimeBounds()
             {
                 MaxTime = new TimePoint(new Uint64(maxTimeUnix)),
                 MinTime = new TimePoint(new Uint64(0)),
             };
 
             var writer = new XdrDataOutputStream();
-            stellar_dotnet_sdk.xdr.Transaction.Encode(writer, xdr);
+            stellar_dotnet_sdk.xdr.TransactionEnvelope.Encode(writer, xdr);
             var xdrBase64 = Convert.ToBase64String(writer.ToArray());
 
             var build = new TxBuild

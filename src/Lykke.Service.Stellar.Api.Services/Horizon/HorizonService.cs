@@ -8,6 +8,7 @@ using JetBrains.Annotations;
 using Lykke.Service.Stellar.Api.Core;
 using Lykke.Service.Stellar.Api.Core.Exceptions;
 using Lykke.Service.Stellar.Api.Core.Services;
+using Lykke.Service.Stellar.Api.Core.Settings;
 using stellar_dotnet_sdk;
 using stellar_dotnet_sdk.federation;
 using stellar_dotnet_sdk.requests;
@@ -26,17 +27,17 @@ namespace Lykke.Service.Stellar.Api.Services.Horizon
         private readonly Server _server;
 
         [UsedImplicitly]
-        public HorizonService(string network,
-                              Uri horizonUrl,
+        public HorizonService(AppSettings appSettings,
                               IHttpClientFactory httpClientFactory,
                               Server server)
         {
-            if (network == "")
+            var network = appSettings.StellarApiService.NetworkPassphrase;
+            if (network != "Test SDF Network ; September 2015")
                 Network.UsePublicNetwork();
             else
                 Network.UseTestNetwork();
 
-            _horizonUrl = horizonUrl;
+            _horizonUrl = new Uri(appSettings.StellarApiService.HorizonUrl);
             _httpClientFactory = httpClientFactory;
             _server = server;
         }
@@ -45,8 +46,9 @@ namespace Lykke.Service.Stellar.Api.Services.Horizon
         {
             // submit a tx
             var transaction = stellar_dotnet_sdk.Transaction.FromEnvelopeXdr(signedTx);
-
+            var acc = await _server.Accounts.Account(transaction.SourceAccount.AccountId);
             var tx = await _server.SubmitTransaction(transaction);
+
 
             if (tx == null || string.IsNullOrEmpty(tx.Hash))
             {
@@ -183,14 +185,32 @@ namespace Lykke.Service.Stellar.Api.Services.Horizon
 
         public Operation.OperationBody GetFirstOperationFromTxEnvelope(TransactionEnvelope txEnvelope)
         {
-            if (txEnvelope?.V0?.Tx.Operations == null || txEnvelope?.V0?.Tx.Operations.Length < 1 ||
-                txEnvelope?.V0?.Tx.Operations[0].Body == null)
+            if (txEnvelope.Discriminant.InnerValue == EnvelopeType.EnvelopeTypeEnum.ENVELOPE_TYPE_TX_V0)
             {
-                throw new HorizonApiException($"Failed to extract first operation from transaction.");
+                if (txEnvelope?.V0?.Tx.Operations == null || txEnvelope?.V0?.Tx.Operations.Length < 1 ||
+                    txEnvelope?.V0?.Tx.Operations[0].Body == null)
+                {
+                    throw new HorizonApiException($"Failed to extract first operation from transaction.");
+                }
+
+                var operation = txEnvelope?.V0?.Tx.Operations[0].Body;
+                return operation;
             }
 
-            var operation = txEnvelope?.V0?.Tx.Operations[0].Body;
-            return operation;
+            if (txEnvelope.Discriminant.InnerValue == EnvelopeType.EnvelopeTypeEnum.ENVELOPE_TYPE_TX)
+            {
+                if (txEnvelope?.V1?.Tx.Operations == null || txEnvelope?.V1?.Tx.Operations.Length < 1 ||
+                    txEnvelope?.V1?.Tx.Operations[0].Body == null)
+                {
+                    throw new HorizonApiException($"Failed to extract first operation from transaction.");
+                }
+
+                var operation = txEnvelope?.V1?.Tx.Operations[0].Body;
+                return operation;
+            }
+
+
+            throw new HorizonApiException($"Failed to extract first operation from transaction.");
         }
 
         public string GetMemo(TransactionResponse tx)

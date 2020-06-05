@@ -266,7 +266,7 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
                     var xdr = Convert.FromBase64String(transaction.EnvelopeXdr);
                     var reader = new XdrDataInputStream(xdr);
                     var txEnvelope = TransactionEnvelope.Decode(reader);
-                    var tx = txEnvelope.V0;
+                    var tx = txEnvelope.V1;
 
                     for (short i = 0; i < tx.Tx.Operations.Length; i++)
                     {
