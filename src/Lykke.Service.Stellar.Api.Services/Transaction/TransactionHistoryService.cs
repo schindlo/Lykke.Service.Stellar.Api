@@ -267,10 +267,11 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
                     var reader = new XdrDataInputStream(xdr);
                     var txEnvelope = TransactionEnvelope.Decode(reader);
                     var tx = txEnvelope.V1;
+                    var operations = txEnvelope?.V1?.Tx?.Operations ?? txEnvelope.V0.Tx.Operations;
 
-                    for (short i = 0; i < tx.Tx.Operations.Length; i++)
+                    for (short i = 0; i < operations.Length; i++)
                     {
-                        var operation = tx.Tx.Operations[i];
+                        var operation = operations[i];
                         var operationType = operation.Body.Discriminant.InnerValue;
 
                         DateTime.TryParse(transaction.CreatedAt, out var createdAt);
