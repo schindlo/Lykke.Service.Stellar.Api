@@ -9,7 +9,6 @@ using JetBrains.Annotations;
 using Lykke.Common.Log;
 using Lykke.Service.Stellar.Api.Core.Domain.Balance;
 using Lykke.SettingsReader;
-using Microsoft.WindowsAzure.Storage.Table;
 
 namespace Lykke.Service.Stellar.Api.AzureRepositories.Balance
 {

@@ -72,6 +72,8 @@ namespace Lykke.Service.Stellar.Api
                     options.SenderName = AppEnvironment.Name;
                 });
 
+                services.AddSingleton<Lykke.Service.Stellar.Api.Core.Settings.AppSettings>(appSettings.CurrentValue);
+
                 services.AddLykkeLogging(
                     appSettings.ConnectionString(x => x.StellarApiService.Db.LogsConnString),
                     "ServiceStellarApiLog",

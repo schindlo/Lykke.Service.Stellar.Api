@@ -1,10 +1,9 @@
-﻿extern alias sdk2;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Threading.Tasks;
-using sdk2::stellar_dotnet_sdk.responses.operations;
-using StellarBase.Generated;
-using StellarSdk.Model;
-using static StellarBase.Generated.Operation;
+using stellar_dotnet_sdk.requests;
+using stellar_dotnet_sdk.responses;
+using stellar_dotnet_sdk.xdr;
+using OperationResponse = stellar_dotnet_sdk.responses.operations.OperationResponse;
 
 namespace Lykke.Service.Stellar.Api.Core.Services
 {
@@ -12,20 +11,21 @@ namespace Lykke.Service.Stellar.Api.Core.Services
     {
         Task<string> SubmitTransactionAsync(string signedTx);
 
-        Task<TransactionDetails> GetTransactionDetails(string hash);
+        Task<TransactionResponse> GetTransactionDetails(string hash);
 
         /// <param name="address"></param>
         /// <param name="order"></param>
         /// <param name="cursor"></param>
         /// <param name="limit">200 is max</param>
         /// <returns></returns>
-        Task<List<TransactionDetails>> GetTransactions(string address, string order = StellarSdkConstants.OrderAsc, string cursor = "", int limit = 100);
+        Task<List<TransactionResponse>> GetTransactions(string address,
+            OrderDirection order = OrderDirection.ASC, string cursor = "", int limit = 100);
 
         Task<List<OperationResponse>> GetTransactionOperations(string hash);
 
-        Task<LedgerDetails> GetLatestLedger();
+        Task<LedgerResponse> GetLatestLedger();
 
-        Task<AccountDetails> GetAccountDetails(string address);
+        Task<AccountResponse> GetAccountDetails(string address);
 
         Task<bool> AccountExists(string address);
 
@@ -33,12 +33,11 @@ namespace Lykke.Service.Stellar.Api.Core.Services
 
         long GetAccountMergeAmount(string metaXdrBase64, string sourceAddress);
 
-        OperationBody GetFirstOperationFromTxEnvelopeXdr(string xdrBase64);
+        Operation.OperationBody GetFirstOperationFromTxEnvelopeXdr(string xdrBase64);
 
-        OperationBody GetFirstOperationFromTxEnvelope(TransactionEnvelope txEnvelope);
+        Operation.OperationBody GetFirstOperationFromTxEnvelope(TransactionEnvelope txEnvelope);
 
-        string GetMemo(TransactionDetails tx);
+        string GetMemo(TransactionResponse tx);
 
-        string GetTransactionHash(Transaction tx);
     }
 }

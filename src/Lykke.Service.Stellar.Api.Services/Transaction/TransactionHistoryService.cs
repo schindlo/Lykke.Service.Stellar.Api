@@ -4,8 +4,6 @@ using System.Threading.Tasks;
 using Common.Log;
 using JetBrains.Annotations;
 using Lykke.Common.Log;
-using StellarBase;
-using StellarBase.Generated;
 using Lykke.Service.Stellar.Api.Core.Domain.Observation;
 using Lykke.Service.Stellar.Api.Core.Domain.Transaction;
 using Lykke.Service.Stellar.Api.Core.Services;
@@ -13,7 +11,9 @@ using Lykke.Service.Stellar.Api.Core.Exceptions;
 using Lykke.Service.Stellar.Api.Core;
 using Lykke.Service.Stellar.Api.Core.Domain;
 using Lykke.Service.Stellar.Api.Core.Utils;
-using Lykke.Service.Stellar.Api.Services.Assets;
+using stellar_dotnet_sdk;
+using stellar_dotnet_sdk.requests;
+using stellar_dotnet_sdk.xdr;
 
 namespace Lykke.Service.Stellar.Api.Services.Transaction
 {
@@ -252,7 +252,7 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
 
         private async Task<int> QueryAndProcessTransactions(string address, TransactionContext context, Func<TxDirectionType, TxHistory, Task<bool>> process)
         {
-            var transactions = await _horizonService.GetTransactions(address, StellarSdkConstants.OrderAsc, context.Cursor);
+            var transactions = await _horizonService.GetTransactions(address, OrderDirection.ASC, context.Cursor);
 
             var count = 0;
             context.Cursor = null;
@@ -264,15 +264,17 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
                     count++;
 
                     var xdr = Convert.FromBase64String(transaction.EnvelopeXdr);
-                    var reader = new ByteReader(xdr);
+                    var reader = new XdrDataInputStream(xdr);
                     var txEnvelope = TransactionEnvelope.Decode(reader);
-                    var tx = txEnvelope.Tx;
+                    var tx = txEnvelope.V1;
+                    var operations = txEnvelope?.V1?.Tx?.Operations ?? txEnvelope.V0.Tx.Operations;
 
-                    for (short i = 0; i < tx.Operations.Length; i++)
+                    for (short i = 0; i < operations.Length; i++)
                     {
-                        var operation = tx.Operations[i];
+                        var operation = operations[i];
                         var operationType = operation.Body.Discriminant.InnerValue;
 
+                        DateTime.TryParse(transaction.CreatedAt, out var createdAt);
                         var history = new TxHistory
                         {
                             FromAddress = transaction.SourceAccount,
@@ -280,7 +282,7 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
                             Hash = transaction.Hash,
                             OperationIndex = i,
                             PagingToken = transaction.PagingToken,
-                            CreatedAt = transaction.CreatedAt,
+                            CreatedAt = createdAt,
                             Memo = _horizonService.GetMemo(transaction)
                         };
 
@@ -301,7 +303,7 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
                                 var op = operation.Body.PaymentOp;
                                 if (op.Asset.Discriminant.InnerValue == AssetType.AssetTypeEnum.ASSET_TYPE_NATIVE)
                                 {
-                                    var keyPair = KeyPair.FromXdrPublicKey(op.Destination.InnerValue);
+                                    var keyPair = KeyPair.FromPublicKey(op.Destination.Ed25519.InnerValue);
                                     history.ToAddress = keyPair.Address;
                                     history.Amount = op.Amount.InnerValue;
                                     history.PaymentType = PaymentType.Payment;
@@ -311,18 +313,18 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
                             case OperationType.OperationTypeEnum.ACCOUNT_MERGE:
                             {
                                 var op = operation.Body;
-                                var keyPair = KeyPair.FromXdrPublicKey(op.Destination.InnerValue);
+                                var keyPair = KeyPair.FromPublicKey(op.Destination.Ed25519.InnerValue);
                                 history.ToAddress = keyPair.Address;
                                 history.Amount = _horizonService.GetAccountMergeAmount(transaction.ResultXdr, i);
                                 history.PaymentType = PaymentType.AccountMerge;
                                 break;
                             }
-                            case OperationType.OperationTypeEnum.PATH_PAYMENT:
+                            case OperationType.OperationTypeEnum.PATH_PAYMENT_STRICT_RECEIVE:
                             {
-                                var op = operation.Body.PathPaymentOp;
+                                var op = operation.Body.PathPaymentStrictReceiveOp;
                                 if (op.DestAsset.Discriminant.InnerValue == AssetType.AssetTypeEnum.ASSET_TYPE_NATIVE)
                                 {
-                                    var keyPair = KeyPair.FromXdrPublicKey(op.Destination.InnerValue);
+                                    var keyPair = KeyPair.FromPublicKey(op.Destination.Ed25519.InnerValue);
                                     history.ToAddress = keyPair.Address;
                                     history.Amount = op.DestAmount.InnerValue;
                                     history.PaymentType = PaymentType.PathPayment;

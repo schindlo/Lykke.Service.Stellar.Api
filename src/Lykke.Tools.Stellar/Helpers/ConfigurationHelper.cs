@@ -1,22 +1,11 @@
-﻿using System.Collections.Generic;
-using System.Net.Http;
-using Autofac;
+﻿using Autofac;
 using Autofac.Extensions.DependencyInjection;
 using Common.Log;
-using Lykke.Common;
 using Lykke.Logs;
 using Lykke.Logs.Loggers.LykkeConsole;
-using Lykke.Service.Assets.Client;
-using Lykke.Service.Stellar.Api.AzureRepositories.Modules;
 using Lykke.Service.Stellar.Api.Core.Services;
-using Lykke.Service.Stellar.Api.Core.Settings;
-using Lykke.Service.Stellar.Api.Modules;
 using Lykke.Service.Stellar.Api.Services.Horizon;
-using Lykke.Service.Stellar.Api.Services.Modules;
-using Lykke.SettingsReader;
 using Lykke.Tools.Erc20Exporter.Helpers;
-using Microsoft.Extensions.Caching.Memory;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Lykke.Tools.Stellar.Helpers

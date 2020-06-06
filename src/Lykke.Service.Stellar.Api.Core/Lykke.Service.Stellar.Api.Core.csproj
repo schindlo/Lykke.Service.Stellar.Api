@@ -8,17 +8,15 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Folder Include="Exceptions\" />
     <Folder Include="Domain\Balance\" />
     <Folder Include="Domain\Observation\" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="csharp-stellar-sdk" Version="1.0.4" />
-    <PackageReference Include="csharp-stellar-base" Version="1.0.3" />
     <PackageReference Include="Lykke.Common" Version="7.0.3" />
     <PackageReference Include="Lykke.SettingsReader" Version="4.0.1" />
-    <PackageReference Include="stellar-dotnet-sdk" Version="2.0.6" />
+    <PackageReference Include="Swisschain.stellar-dotnet-sdk" Version="4.2.11" />
+    <PackageReference Include="Swisschain.stellar-dotnet-sdk-xdr" Version="4.2.11" />
   </ItemGroup>
 
   <ItemGroup>
