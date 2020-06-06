@@ -51,15 +51,15 @@ namespace Lykke.Service.Stellar.Api.Services.Horizon
 
             if (string.IsNullOrEmpty(tx?.Hash))
             {
+                if (tx == null)
+                {
+                    throw new HorizonApiException("Submitting transaction failed. No valid transaction was returned.");
+                }
                 if (!tx.Result.IsSuccess)
                 {
                     throw new BadRequestHorizonApiException(tx.SubmitTransactionResponseExtras.ExtrasResultCodes.TransactionResultCode, tx.SubmitTransactionResponseExtras.ExtrasResultCodes.OperationsResultCodes);
-
                 }
-                throw new HorizonApiException("Submitting transaction failed. No valid transaction was returned.");
             }
-
-            
 
             return tx.Hash;
         }
