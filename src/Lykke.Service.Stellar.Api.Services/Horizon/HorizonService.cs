@@ -140,13 +140,10 @@ namespace Lykke.Service.Stellar.Api.Services.Horizon
                 // address not found
                 return null;
             }
-            catch (HttpResponseException ex)
+            catch (HttpResponseException ex) when (ex.StatusCode == 404)
             {
                 // address not found
-                if (ex.StatusCode == 404)
-                    return null;
-
-                throw;
+                return null;
             }
         }
 
