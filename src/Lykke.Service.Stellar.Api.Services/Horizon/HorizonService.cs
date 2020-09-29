@@ -132,13 +132,21 @@ namespace Lykke.Service.Stellar.Api.Services.Horizon
             {
                 var builder = new AccountsRequestBuilder(_horizonUrl, _httpClientFactory.CreateClient());
                 var accountDetails = await builder.Account(address);
-                
+
                 return accountDetails;
             }
             catch (NotFoundException)
             {
                 // address not found
                 return null;
+            }
+            catch (HttpResponseException ex)
+            {
+                // address not found
+                if (ex.StatusCode == 404)
+                    return null;
+
+                throw;
             }
         }
 
@@ -235,7 +243,7 @@ namespace Lykke.Service.Stellar.Api.Services.Horizon
             var xdr = Convert.FromBase64String(tx.ResultXdr);
             var reader = new XdrDataInputStream(xdr);
             var txResult = TransactionResult.Decode(reader);
-            
+
             return txResult.Result.Discriminant.InnerValue;
         }
     }
