@@ -162,12 +162,12 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
 
             var fromAddress = $"{fromKeyPair.Address}{Constants.PublicAddressExtension.Separator}{tx.Memo.Text}";
             var amount = tx.Operations[0].Body.PaymentOp.Amount.InnerValue;
-            
+
             // Use our guid-ed OperationId as transaction hash, as it uniquely identifies the transaction,
             // just without dashes to look more hash-y.
             var hash = operationId.ToString("N");
 
-            // While we have only single action within DW->HW transaction, 
+            // While we have only single action within DW->HW transaction,
             // we can use any value to identify action within transaction.
             // Use hashed operation ID to add more diversity.
             var opId = operationId.ToString("N").CalculateHash64();
@@ -237,7 +237,7 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
             {
                 return TxExecutionError.NotEnoughBalance;
             }
-            
+
             if (transactionDetail == "tx_too_late" ||
                 transactionDetail == "tx_bad_seq")
             {
@@ -304,7 +304,7 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
             {
                 if (amount <= transferableBalance)
                 {
-                    operation = new CreateAccountOperation.Builder(toKeyPair, amount.ToString())
+                    operation = new CreateAccountOperation.Builder(toKeyPair, Operation.FromXdrAmount(amount))
                                                       .SetSourceAccount(fromKeyPair)
                                                       .Build();
                 }
