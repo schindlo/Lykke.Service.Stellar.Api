@@ -123,7 +123,7 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
                 {
                     hash = await _horizonService.SubmitTransactionAsync(xdrBase64);
                 }
-                catch (Exception ex)
+                catch (BadRequestHorizonApiException ex)
                 {
                     _log.Error(ex, message: "Broadcasting has failed!", context: new { OperationId = operationId });
                     throw new BusinessException($"Broadcasting transaction failed. operationId={operationId}, message={GetErrorMessage(ex)}", ex, GetErrorCode(ex).ToString());
@@ -239,7 +239,8 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
             }
 
             if (transactionDetail == "tx_too_late" ||
-                transactionDetail == "tx_bad_seq")
+                transactionDetail == "tx_bad_seq" ||
+                transactionDetail == "transient_error_happened") // this line is custom and does not belong to stellar protocol
             {
                 return TxExecutionError.BuildingShouldBeRepeated;
             }

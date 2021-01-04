@@ -4,11 +4,14 @@ using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
 using Chaos.NaCl;
+using Common.Log;
 using JetBrains.Annotations;
+using Lykke.Common.Log;
 using Lykke.Service.Stellar.Api.Core;
 using Lykke.Service.Stellar.Api.Core.Exceptions;
 using Lykke.Service.Stellar.Api.Core.Services;
 using Lykke.Service.Stellar.Api.Core.Settings;
+using Microsoft.Extensions.Logging;
 using stellar_dotnet_sdk;
 using stellar_dotnet_sdk.federation;
 using stellar_dotnet_sdk.requests;
@@ -25,11 +28,13 @@ namespace Lykke.Service.Stellar.Api.Services.Horizon
         private readonly Uri _horizonUrl;
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly Server _server;
+        private readonly ILog _log;
 
         [UsedImplicitly]
         public HorizonService(AppSettings appSettings,
                               IHttpClientFactory httpClientFactory,
-                              Server server)
+                              Server server,
+                              ILogFactory log)
         {
             var network = appSettings.StellarApiService.NetworkPassphrase;
             if (network != "Test SDF Network ; September 2015")
@@ -40,6 +45,7 @@ namespace Lykke.Service.Stellar.Api.Services.Horizon
             _horizonUrl = new Uri(appSettings.StellarApiService.HorizonUrl);
             _httpClientFactory = httpClientFactory;
             _server = server;
+            _log = log.CreateLog(nameof(HorizonService));
         }
 
         public async Task<string> SubmitTransactionAsync(string signedTx)
@@ -55,6 +61,15 @@ namespace Lykke.Service.Stellar.Api.Services.Horizon
                 {
                     throw new HorizonApiException("Submitting transaction failed. No valid transaction was returned.");
                 }
+
+                //Can't find error in tx fields
+                if (!tx.IsSuccess() && tx.Result == null)
+                {
+                    _log.Error(nameof(SubmitTransactionAsync), null, "Error happened during broadcast", tx);
+                    //throw new BadRequestHorizonApiException("transient_error_happened", Array.Empty<string>());
+                    throw new HorizonApiException("Error happened during broadcast. Result is empty");
+                }
+
                 if (!tx.Result.IsSuccess)
                 {
                     throw new BadRequestHorizonApiException(tx.SubmitTransactionResponseExtras.ExtrasResultCodes.TransactionResultCode, tx.SubmitTransactionResponseExtras.ExtrasResultCodes.OperationsResultCodes);
