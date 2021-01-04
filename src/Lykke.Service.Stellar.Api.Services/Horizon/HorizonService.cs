@@ -66,7 +66,6 @@ namespace Lykke.Service.Stellar.Api.Services.Horizon
                 if (!tx.IsSuccess() && tx.Result == null)
                 {
                     _log.Error(nameof(SubmitTransactionAsync), null, "Error happened during broadcast", tx);
-                    //throw new BadRequestHorizonApiException("transient_error_happened", Array.Empty<string>());
                     throw new HorizonApiException("Error happened during broadcast. Result is empty");
                 }
 

@@ -239,8 +239,7 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
             }
 
             if (transactionDetail == "tx_too_late" ||
-                transactionDetail == "tx_bad_seq" ||
-                transactionDetail == "transient_error_happened") // this line is custom and does not belong to stellar protocol
+                transactionDetail == "tx_bad_seq")
             {
                 return TxExecutionError.BuildingShouldBeRepeated;
             }
