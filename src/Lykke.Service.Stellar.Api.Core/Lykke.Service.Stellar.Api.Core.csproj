@@ -15,8 +15,8 @@
   <ItemGroup>
     <PackageReference Include="Lykke.Common" Version="7.0.3" />
     <PackageReference Include="Lykke.SettingsReader" Version="4.0.1" />
-    <PackageReference Include="stellar-dotnet-sdk" Version="5.1.1" />
-    <PackageReference Include="stellar-dotnet-sdk-xdr" Version="5.1.1" />
+    <PackageReference Include="stellar-dotnet-sdk" Version="6.0.31" />
+    <PackageReference Include="stellar-dotnet-sdk-xdr" Version="6.0.31" />
   </ItemGroup>
 
   <ItemGroup>

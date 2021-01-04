@@ -123,7 +123,7 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
                 {
                     hash = await _horizonService.SubmitTransactionAsync(xdrBase64);
                 }
-                catch (Exception ex)
+                catch (BadRequestHorizonApiException ex)
                 {
                     _log.Error(ex, message: "Broadcasting has failed!", context: new { OperationId = operationId });
                     throw new BusinessException($"Broadcasting transaction failed. operationId={operationId}, message={GetErrorMessage(ex)}", ex, GetErrorCode(ex).ToString());
