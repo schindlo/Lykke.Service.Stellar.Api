@@ -16,8 +16,8 @@
   <ItemGroup>
     <PackageReference Include="Lykke.Common" Version="7.0.3" />
     <PackageReference Include="Microsoft.Extensions.Http" Version="2.1.1" />
-    <PackageReference Include="stellar-dotnet-sdk" Version="6.0.31" />
-    <PackageReference Include="stellar-dotnet-sdk-xdr" Version="6.0.31" />
+    <PackageReference Include="stellar-dotnet-sdk" Version="7.2.0" />
+    <PackageReference Include="stellar-dotnet-sdk-xdr" Version="7.2.0" />
   </ItemGroup>
 
   <ItemGroup>
