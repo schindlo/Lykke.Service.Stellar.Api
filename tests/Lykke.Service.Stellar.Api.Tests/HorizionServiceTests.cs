@@ -1,5 +1,6 @@
 ﻿using System.Net.Http;
 using System.Threading.Tasks;
+using Lykke.Common.Log;
 using Lykke.Service.Stellar.Api.Core.Settings;
 using Lykke.Service.Stellar.Api.Core.Settings.ServiceSettings;
 using Lykke.Service.Stellar.Api.Services.Horizon;
@@ -24,7 +25,8 @@ namespace Lykke.Service.Stellar.Api.Tests
                 }
             };
             httpClientFactory.Setup(x => x.CreateClient(It.IsAny<string>())).Returns(new HttpClient());
-            _service = new HorizonService(settings, httpClientFactory.Object, new Server(settings.StellarApiService.HorizonUrl));
+            var logFactory = new Mock<ILogFactory>();
+            _service = new HorizonService(settings, httpClientFactory.Object, new Server(settings.StellarApiService.HorizonUrl), logFactory.Object);
         }
 
         [Fact]
