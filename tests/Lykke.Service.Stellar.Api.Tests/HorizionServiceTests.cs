@@ -35,5 +35,15 @@ namespace Lykke.Service.Stellar.Api.Tests
             var result = await _service.GetAccountDetails("GDB7DGHKANDVS3F4N3AZH2AYZL6Q36PZ5EP6LEMGGLQC3N6BI76UHOIZ");
             Assert.Null(result);
         }
+
+        [Theory]
+        [InlineData("GBOLA6HPHKI42ENJ4CAG6B5C54W4EGTDO4WPKF5QXRM42UCCWHONVL25")]
+        [InlineData("GASOFHPPH66A3NKLZDIRHLN4CZT7WF6INRNBVF7UODNZK3J2DBILEBLP")]
+        public async Task CanGetTransactions(string address)
+        {
+
+            var t = await _service.GetTransactions(address);
+
+        }
     }
 }
