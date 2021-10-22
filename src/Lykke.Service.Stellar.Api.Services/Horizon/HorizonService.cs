@@ -87,9 +87,10 @@ namespace Lykke.Service.Stellar.Api.Services.Horizon
 
                 return tx;
             }
-            catch (NotFoundException)
+            catch (Exception e) when (IsNotFound(e))
             {
-                // transaction not found
+                // address not found
+
                 return null;
             }
         }
@@ -111,7 +112,7 @@ namespace Lykke.Service.Stellar.Api.Services.Horizon
                         .ToList();
                 }
             }
-            catch (NotFoundException)
+            catch (Exception e) when (IsNotFound(e))
             {
                 // address not found
             }
@@ -149,12 +150,7 @@ namespace Lykke.Service.Stellar.Api.Services.Horizon
 
                 return accountDetails;
             }
-            catch (NotFoundException)
-            {
-                // address not found
-                return null;
-            }
-            catch (HttpResponseException ex) when (ex.StatusCode == 404)
+            catch (Exception e) when (IsNotFound(e))
             {
                 // address not found
                 return null;
@@ -256,6 +252,18 @@ namespace Lykke.Service.Stellar.Api.Services.Horizon
             var txResult = TransactionResult.Decode(reader);
 
             return txResult.Result.Discriminant.InnerValue;
+        }
+
+        private static bool IsNotFound(Exception e)
+        {
+            switch (e)
+            {
+                case NotFoundException _:
+                case HttpResponseException httpResponseException when httpResponseException.StatusCode == 404:
+                    return true;
+                default:
+                    return false;
+            }
         }
     }
 }
