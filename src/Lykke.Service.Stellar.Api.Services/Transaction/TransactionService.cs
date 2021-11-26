@@ -353,7 +353,7 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
                 Amount = amount,
                 Fee = tx.Fee,
                 Sequence = tx.SequenceNumber,
-                MaxTime = tx.TimeBounds.MaxTime
+                MaxTimeUnix = maxTimeUnix
             });
 
             var build = new TxBuild
