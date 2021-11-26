@@ -23,5 +23,8 @@ namespace Lykke.Service.Stellar.Api.Core.Settings.ServiceSettings
         
         [Optional]
         public ChaosSettings ChaosKitty { get; set; }
+
+        [Optional]
+        public uint OperationFee { get; set; } = 100U;
     }
 }

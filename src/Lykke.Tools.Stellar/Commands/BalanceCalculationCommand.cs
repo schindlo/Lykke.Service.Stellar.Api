@@ -88,7 +88,7 @@ namespace Lykke.Tools.Stellar.Commands
             {
                 try
                 {
-                    if (_latestBlock.HasValue && transaction.Ledger > _latestBlock)
+                    if (_latestBlock.HasValue && (long)transaction.Ledger > _latestBlock)
                     {
                         cursor = null;
                         break;

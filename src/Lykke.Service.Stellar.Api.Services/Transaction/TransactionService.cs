@@ -12,6 +12,7 @@ using Lykke.Service.Stellar.Api.Core.Domain.Observation;
 using Lykke.Service.Stellar.Api.Core.Domain.Transaction;
 using Lykke.Service.Stellar.Api.Core.Exceptions;
 using Lykke.Service.Stellar.Api.Core.Services;
+using Lykke.Service.Stellar.Api.Core.Settings;
 using Newtonsoft.Json;
 using stellar_dotnet_sdk;
 using stellar_dotnet_sdk.requests;
@@ -35,6 +36,7 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
         private readonly ILog _log;
         private readonly IBlockchainAssetsService _blockchainAssetsService;
         private readonly IChaosKitty _chaos;
+        private readonly AppSettings _appSettings;
 
         [UsedImplicitly]
         public TransactionService(IBalanceService balanceService,
@@ -46,7 +48,8 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
                                   TimeSpan transactionExpirationTime,
                                   ILogFactory logFactory,
                                   IBlockchainAssetsService blockchainAssetsService,
-                                  IChaosKitty chaosKitty)
+                                  IChaosKitty chaosKitty,
+                                  AppSettings appSettings)
         {
             _balanceService = balanceService;
             _horizonService = horizonService;
@@ -58,6 +61,7 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
             _log = logFactory.CreateLog(this);
             _blockchainAssetsService = blockchainAssetsService;
             _chaos = chaosKitty;
+            _appSettings = appSettings;
         }
 
         public bool CheckSignature(string xdrBase64)
@@ -315,7 +319,9 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
             }
 
             var builder = new TransactionBuilder(fromAccount)
-                                         .AddOperation(operation);
+                .AddOperation(operation)
+                .SetFee(_appSettings.StellarApiService.OperationFee);
+
             if (!string.IsNullOrWhiteSpace(memoText))
             {
                 var memo = new MemoText(memoText);
@@ -333,10 +339,22 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
                 MaxTime = new TimePoint(new Uint64(maxTimeUnix)),
                 MinTime = new TimePoint(new Uint64(0)),
             };
-
+            
             var writer = new XdrDataOutputStream();
             stellar_dotnet_sdk.xdr.TransactionEnvelope.Encode(writer, xdr);
             var xdrBase64 = Convert.ToBase64String(writer.ToArray());
+
+            _log.Info("Transaction has been built", new
+            {
+                OperationId = operationId,
+                From = from,
+                To = toAddress,
+                Memo = memoText,
+                Amount = amount,
+                Fee = tx.Fee,
+                Sequence = tx.SequenceNumber,
+                MaxTime = tx.TimeBounds.MaxTime
+            });
 
             var build = new TxBuild
             {
