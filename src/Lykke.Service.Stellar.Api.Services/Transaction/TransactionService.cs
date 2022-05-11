@@ -331,14 +331,7 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
             var tx = builder.Build();
 
             var xdr = tx.ToUnsignedEnvelopeXdr(TransactionBase.TransactionXdrVersion.V1);
-            var expirationDate = (DateTime.UtcNow + _transactionExpirationTime);
-            var maxUnixTimeDouble = expirationDate.ToUnixTime() / 1000;//ms to seconds
-            var maxTimeUnix = (ulong)maxUnixTimeDouble;
-            xdr.V1.Tx.TimeBounds = new TimeBounds()
-            {
-                MaxTime = new TimePoint(new Uint64(maxTimeUnix)),
-                MinTime = new TimePoint(new Uint64(0)),
-            };
+
             
             var writer = new XdrDataOutputStream();
             stellar_dotnet_sdk.xdr.TransactionEnvelope.Encode(writer, xdr);
@@ -352,8 +345,7 @@ namespace Lykke.Service.Stellar.Api.Services.Transaction
                 Memo = memoText,
                 Amount = amount,
                 Fee = tx.Fee,
-                Sequence = tx.SequenceNumber,
-                MaxTimeUnix = maxTimeUnix
+                Sequence = tx.SequenceNumber
             });
 
             var build = new TxBuild
