@@ -63,7 +63,7 @@ namespace Lykke.Service.Stellar.Api.Services.Horizon
                 }
 
                 //Can't find error in tx fields
-                if (!tx.IsSuccess() && tx.Result == null)
+                if (!tx.IsSuccess() && tx.SubmitTransactionResponseExtras?.ResultXdr == null)
                 {
                     _log.Error(nameof(SubmitTransactionAsync), null, "Error happened during broadcast", tx);
                     throw new HorizonApiException("Error happened during broadcast. Result is empty");
